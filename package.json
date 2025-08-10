@@ -1,5 +1,5 @@
 {
-  "name": "workspace",
+  "name": "Arciumint",
   "version": "1.0.0",
   "description": "NFT minting platform using Arcium MPC technology",
   "main": "index.js",
