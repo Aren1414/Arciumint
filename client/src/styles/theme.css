@@ -1,0 +1,11 @@
+:root {
+  --primary-color: #6c44fc;
+  --secondary-color: #3b2789;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9f9ff;
+  color: #333;
+}
