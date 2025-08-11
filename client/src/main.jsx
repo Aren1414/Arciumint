@@ -1,13 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './styles/theme.css'
+import Home from './pages/Home'
 
 const App = () => {
   return (
-    <div style={{ backgroundColor: 'var(--primary-color)', color: 'white', padding: '2rem' }}>
-      <h1>Welcome to Arciumint</h1>
-      <p>This is your starting point.</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        {/* masir */}
+        {/* <Route path="/upload" element={<Upload />} /> */}
+        {/* <Route path="/profile" element={<Profile />} /> */}
+      </Routes>
+    </BrowserRouter>
   )
 }
 
