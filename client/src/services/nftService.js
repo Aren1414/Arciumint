@@ -9,3 +9,9 @@ export const getCollectedNFTs = async (userAddress) => {
   if (!response.ok) throw new Error('Failed to fetch collected NFTs')
   return await response.json()
 }
+
+export const getNFTById = async (id) => {
+  const response = await fetch(`/api/nft/${id}`)
+  if (!response.ok) throw new Error('Failed to fetch NFT')
+  return await response.json()
+}
