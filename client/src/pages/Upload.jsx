@@ -8,11 +8,12 @@ const Upload = () => {
   const [description, setDescription] = useState('')
   const [mintCount, setMintCount] = useState(1)
   const [price, setPrice] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024
 
     if (!file) return
     if (!allowedTypes.includes(file.type)) {
@@ -28,21 +29,44 @@ const Upload = () => {
     setPreview(URL.createObjectURL(file))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!image || !name || !mintCount || !price) {
       alert('Please fill in all required fields.')
       return
     }
 
-    // connect Arcium 
-    console.log({
-      image,
-      name,
-      description,
-      mintCount,
-      price
-    })
+    const formData = new FormData()
+    formData.append('image', image)
+    formData.append('name', name)
+    formData.append('description', description)
+    formData.append('mintCount', mintCount)
+    formData.append('price', price)
+
+    try {
+      setLoading(true)
+      const response = await fetch('http://localhost:5000/api/nfts', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+      if (response.ok) {
+        alert('NFT created successfully!')
+        setImage(null)
+        setPreview(null)
+        setName('')
+        setDescription('')
+        setMintCount(1)
+        setPrice('')
+      } else {
+        alert(result.error || 'Something went wrong.')
+      }
+    } catch (error) {
+      alert('Server error.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,7 +90,9 @@ const Upload = () => {
         <label>Price (in SOL) *</label>
         <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
 
-        <button type="submit">Convert to NFT</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Uploading...' : 'Convert to NFT'}
+        </button>
       </form>
     </div>
   )
