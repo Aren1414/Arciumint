@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import './profile.css'
-import { getCreatedNFTs, getCollectedNFTs } from '../services/nftService'
 
 const Profile = ({ userAddress }) => {
   const [createdNFTs, setCreatedNFTs] = useState([])
@@ -8,17 +7,15 @@ const Profile = ({ userAddress }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const created = await getCreatedNFTs(userAddress)
-        const collected = await getCollectedNFTs(userAddress)
-        setCreatedNFTs(created)
-        setCollectedNFTs(collected)
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
+    const fetchData = () => {
+      const allNFTs = JSON.parse(localStorage.getItem('nfts')) || []
+
+      const created = allNFTs.filter(nft => nft.creator === userAddress)
+      const collected = []
+
+      setCreatedNFTs(created)
+      setCollectedNFTs(collected)
+      setLoading(false)
     }
 
     if (userAddress) fetchData()
@@ -38,8 +35,10 @@ const Profile = ({ userAddress }) => {
           ) : (
             createdNFTs.map(nft => (
               <div key={nft.id} className="nft-card">
+                <img src={nft.imagePreview} alt={nft.name} />
                 <p>{nft.name}</p>
-                <span>Minted: {nft.mintedCount}</span>
+                <span>Minted: {nft.mintCount}</span>
+                <span>Price: {nft.price} SOL</span>
               </div>
             ))
           )}
@@ -54,6 +53,7 @@ const Profile = ({ userAddress }) => {
           ) : (
             collectedNFTs.map(nft => (
               <div key={nft.id} className="nft-card">
+                <img src={nft.imagePreview} alt={nft.name} />
                 <p>{nft.name}</p>
                 <span>Creator: {nft.creator}</span>
               </div>
