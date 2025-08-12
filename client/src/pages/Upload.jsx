@@ -29,44 +29,36 @@ const Upload = () => {
     setPreview(URL.createObjectURL(file))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (!image || !name || !mintCount || !price) {
       alert('Please fill in all required fields.')
       return
     }
 
-    const formData = new FormData()
-    formData.append('image', image)
-    formData.append('name', name)
-    formData.append('description', description)
-    formData.append('mintCount', mintCount)
-    formData.append('price', price)
+    setLoading(true)
 
-    try {
-      setLoading(true)
-      const response = await fetch('http://localhost:5000/api/nfts', {
-        method: 'POST',
-        body: formData
-      })
-
-      const result = await response.json()
-      if (response.ok) {
-        alert('NFT created successfully!')
-        setImage(null)
-        setPreview(null)
-        setName('')
-        setDescription('')
-        setMintCount(1)
-        setPrice('')
-      } else {
-        alert(result.error || 'Something went wrong.')
-      }
-    } catch (error) {
-      alert('Server error.')
-    } finally {
-      setLoading(false)
+    const newNFT = {
+      id: Date.now(),
+      name,
+      description,
+      mintCount: parseInt(mintCount),
+      price: parseFloat(price),
+      imagePreview: preview
     }
+
+    const existingNFTs = JSON.parse(localStorage.getItem('nfts')) || []
+    localStorage.setItem('nfts', JSON.stringify([...existingNFTs, newNFT]))
+
+    alert('NFT saved locally!')
+
+    setImage(null)
+    setPreview(null)
+    setName('')
+    setDescription('')
+    setMintCount(1)
+    setPrice('')
+    setLoading(false)
   }
 
   return (
@@ -91,7 +83,7 @@ const Upload = () => {
         <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Uploading...' : 'Convert to NFT'}
+          {loading ? 'Saving...' : 'Convert to NFT'}
         </button>
       </form>
     </div>
