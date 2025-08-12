@@ -5,6 +5,7 @@ const Mint = () => {
   const { id } = useParams();
   const [nft, setNft] = useState(null);
   const [minted, setMinted] = useState(false);
+  const userAddress = localStorage.getItem('userAddress');
 
   useEffect(() => {
     const storedNFTs = JSON.parse(localStorage.getItem('nfts')) || [];
@@ -13,17 +14,25 @@ const Mint = () => {
   }, [id]);
 
   const handleMint = () => {
-    if (!nft) return;
+    if (!nft || !userAddress) return;
 
     const updatedNFTs = JSON.parse(localStorage.getItem('nfts')).map(item => {
-      if (item.id === id) {
-        return { ...item, mintCount: item.mintCount + 1 };
+      if (item.id === id && !(item.mintedBy || []).includes(userAddress)) {
+        return {
+          ...item,
+          mintCount: item.mintCount + 1,
+          mintedBy: [...(item.mintedBy || []), userAddress]
+        };
       }
       return item;
     });
 
     localStorage.setItem('nfts', JSON.stringify(updatedNFTs));
-    setNft(prev => ({ ...prev, mintCount: prev.mintCount + 1 }));
+    setNft(prev => ({
+      ...prev,
+      mintCount: prev.mintCount + 1,
+      mintedBy: [...(prev.mintedBy || []), userAddress]
+    }));
     setMinted(true);
   };
 
@@ -35,9 +44,11 @@ const Mint = () => {
     );
   }
 
+  const alreadyMinted = (nft.mintedBy || []).includes(userAddress);
+
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h2>🎨 {nft.name}</h2>
+      <h2>{nft.name}</h2>
       <img
         src={nft.image}
         alt={nft.name}
@@ -45,7 +56,11 @@ const Mint = () => {
       />
       <p style={{ fontSize: '16px', marginBottom: '0.5rem' }}>{nft.description}</p>
       <p style={{ fontWeight: 'bold' }}>Minted: {nft.mintCount}</p>
-      {!minted ? (
+      {alreadyMinted ? (
+        <p style={{ color: 'orange', fontWeight: 'bold', marginTop: '1rem' }}>
+          You’ve already minted this NFT.
+        </p>
+      ) : !minted ? (
         <button
           onClick={handleMint}
           style={{
@@ -63,7 +78,7 @@ const Mint = () => {
         </button>
       ) : (
         <p style={{ color: 'green', fontWeight: 'bold', marginTop: '1rem' }}>
-          ✅ Successfully minted!
+          Successfully minted!
         </p>
       )}
     </div>
