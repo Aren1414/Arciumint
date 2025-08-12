@@ -9,6 +9,7 @@ const Upload = ({ userAddress }) => {
   const [mintCount, setMintCount] = useState(1)
   const [price, setPrice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mintLink, setMintLink] = useState('')
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -39,7 +40,7 @@ const Upload = ({ userAddress }) => {
     setLoading(true)
 
     const newNFT = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name,
       description,
       mintCount: parseInt(mintCount),
@@ -51,7 +52,8 @@ const Upload = ({ userAddress }) => {
     const existingNFTs = JSON.parse(localStorage.getItem('nfts')) || []
     localStorage.setItem('nfts', JSON.stringify([...existingNFTs, newNFT]))
 
-    alert('NFT saved locally!')
+    const link = `${window.location.origin}/mint/${newNFT.id}`
+    setMintLink(link)
 
     setImage(null)
     setPreview(null)
@@ -60,6 +62,11 @@ const Upload = ({ userAddress }) => {
     setMintCount(1)
     setPrice('')
     setLoading(false)
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(mintLink)
+    alert('Mint link copied to clipboard!')
   }
 
   return (
@@ -87,6 +94,14 @@ const Upload = ({ userAddress }) => {
           {loading ? 'Saving...' : 'Convert to NFT'}
         </button>
       </form>
+
+      {mintLink && (
+        <div className="mint-link-box">
+          <p>Your mint link:</p>
+          <input type="text" value={mintLink} readOnly />
+          <button onClick={handleCopy}>Copy Link</button>
+        </div>
+      )}
     </div>
   )
 }
