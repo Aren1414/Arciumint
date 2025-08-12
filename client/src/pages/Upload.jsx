@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './upload.css'
 
-const Upload = () => {
+const Upload = ({ userAddress }) => {
   const [image, setImage] = useState(null)
   const [preview, setPreview] = useState(null)
   const [name, setName] = useState('')
@@ -44,7 +44,8 @@ const Upload = () => {
       description,
       mintCount: parseInt(mintCount),
       price: parseFloat(price),
-      imagePreview: preview
+      imagePreview: preview,
+      creator: userAddress
     }
 
     const existingNFTs = JSON.parse(localStorage.getItem('nfts')) || []
