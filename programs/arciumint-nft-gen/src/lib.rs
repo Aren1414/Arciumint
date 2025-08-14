@@ -57,4 +57,4 @@ pub struct UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-  }
+}
