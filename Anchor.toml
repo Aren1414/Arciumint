@@ -1,5 +1,5 @@
 [programs.localnet]
-arciumint_nft_gen = "Fg6PaFpoGXkYsidMpWxTWqkZgZz5gZQYjzvY4vXkX4ZQ"
+arciumintnftgen = "Fg6PaFpoGXkYsidMpWxTWqkZgZz5gZQYjzvY4vXkX4ZQ"
 
 [provider]
 cluster = "localnet"
@@ -9,4 +9,4 @@ wallet = "~/.config/solana/id.json"
 test = "mocha -t 1000000 tests/"
 
 [toolchain]
-anchor_version = "0.28.0"
+anchor_version = "0.31.1"
