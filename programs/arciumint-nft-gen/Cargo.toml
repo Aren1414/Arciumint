@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anchor-lang = "0.24.2"
 anchor-spl = "0.24.2"
-solana-program = "1.14.19"
+solana-program = "=1.9.13"
 
 [lib]
 crate-type = ["cdylib", "lib"]
