@@ -1,12 +1,11 @@
 [package]
-name = "arciumint_nft_gen"
+name = "arciumintnftgen"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anchor-lang = "0.28.0"
-anchor-spl = "0.28.0"
-solana-program = "1.18.0"
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
 
 [features]
 default = ["idl-build"]
