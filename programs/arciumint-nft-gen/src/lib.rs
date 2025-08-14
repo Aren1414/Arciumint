@@ -9,6 +9,7 @@ pub mod arciumint_nft_gen {
 
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
+
         if user_record.has_minted {
             return Err(error!(ErrorCode::AlreadyMinted));
         }
@@ -18,8 +19,10 @@ pub mod arciumint_nft_gen {
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.authority.to_account_info(),
         };
+
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
         mint_to(cpi_ctx, 1)?;
 
         user_record.has_minted = true;
