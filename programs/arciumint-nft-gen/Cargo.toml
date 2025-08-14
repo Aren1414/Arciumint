@@ -4,9 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anchor-lang = "0.24.2"
-anchor-spl = "0.24.2"
-solana-program = "=1.9.13"
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+solana-program = "1.18.0"
+
+[features]
+default = ["idl-build"]
+idl-build = ["anchor-lang/idl-build"]
 
 [lib]
 crate-type = ["cdylib", "lib"]
