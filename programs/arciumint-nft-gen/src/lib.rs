@@ -32,9 +32,12 @@ pub mod arciumint_nft_gen {
 pub struct MintNFT<'info> {
     #[account(mut)]
     pub mint: Account<'info, Mint>,
+
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
+
     pub authority: Signer<'info>,
+
     pub token_program: Program<'info, Token>,
 
     #[account(
@@ -45,6 +48,7 @@ pub struct MintNFT<'info> {
         space = 8 + 1
     )]
     pub user_record: Account<'info, UserRecord>,
+
     pub system_program: Program<'info, System>,
 }
 
