@@ -9,4 +9,4 @@ wallet = "~/.config/solana/id.json"
 test = "mocha -t 1000000 tests/"
 
 [toolchain]
-anchor_version = "0.24.2"
+anchor_version = "0.28.0"
