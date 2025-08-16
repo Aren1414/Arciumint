@@ -18,7 +18,7 @@ jobs:
         toolchain: nightly
         override: true
 
-    - name: Install Solana CLI (from GitHub release)
+    - name: Install Solana CLI
       run: |
         curl -sL https://github.com/solana-labs/solana/releases/download/v1.18.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
         tar -xjf solana.tar.bz2
@@ -33,11 +33,16 @@ jobs:
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
 
-    - name: Set up wallet
+    - name: Restore wallet keypair
       run: |
         echo "${{ secrets.WALLET_KEY }}" > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
+
+    - name: Restore program keypair
+      run: |
+        mkdir -p target/deploy
+        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
