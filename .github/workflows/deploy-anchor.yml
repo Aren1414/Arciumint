@@ -42,7 +42,7 @@ jobs:
         solana config set --url https://api.devnet.solana.com
 
     - name: Airdrop SOL to wallet
-      run: solana airdrop 2
+      run: solana airdrop 0.2
 
     - name: Deploy program
       run: |
