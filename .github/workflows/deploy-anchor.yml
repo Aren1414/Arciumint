@@ -42,8 +42,15 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Build with Cargo
-      run: cargo build --manifest-path programs/arciumint-nft-gen/Cargo.toml -Znext-lockfile-bump
+    - name: Update and clean dependencies
+      run: |
+        cargo update -p anchor-spl
+        cargo update -p anchor-lang
+        cargo update -p solana-program
+        cargo clean
+
+    - name: Build program
+      run: anchor build
 
     - name: Deploy program
       run: anchor deploy
