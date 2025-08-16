@@ -39,6 +39,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
 
+    #[account(mut)] // ← این خط اضافه شده
     pub authority: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
