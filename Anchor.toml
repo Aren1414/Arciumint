@@ -1,9 +1,9 @@
-[programs.localnet]
+[programs.devnet]
 arciumintnftgen = "Fg6PaFpoGXkYsidMpWxTWqkZgZz5gZQYjzvY4vXkX4ZQ"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "devnet"
+wallet = "wallet.json"
 
 [scripts]
 test = "mocha -t 1000000 tests/"
