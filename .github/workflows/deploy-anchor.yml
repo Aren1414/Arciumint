@@ -48,9 +48,12 @@ jobs:
         cargo update -p anchor-lang
         cargo update -p solana-program
         cargo clean
+      working-directory: programs/arciumint-nft-gen
 
     - name: Build program
       run: anchor build
+      working-directory: programs/arciumint-nft-gen
 
     - name: Deploy program
       run: anchor deploy
+      working-directory: programs/arciumint-nft-gen
