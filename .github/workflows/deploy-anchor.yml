@@ -1,0 +1,38 @@
+name: Deploy Anchor Program
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install Solana CLI
+      run: |
+        sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+    - name: Install Anchor
+      run: cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+
+    - name: Set up wallet
+      run: |
+        echo "${{ secrets.WALLET_KEY }}" > wallet.json
+        solana config set --keypair wallet.json
+        solana config set --url https://api.devnet.solana.com
+
+    - name: Deploy program
+      run: |
+        anchor build
+        anchor deploy
