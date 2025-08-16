@@ -47,9 +47,9 @@ jobs:
         cargo update -p anchor-spl
         cargo update -p anchor-lang
         cargo update -p solana-program
-        cargo update -p anchor_attribute_program
-        cargo update -p anchor_derive_accounts
-        cargo update -p solana_program_entrypoint
+        cargo update -p anchor-attribute-program
+        cargo update -p anchor-derive-accounts
+        cargo update -p solana-program-entrypoint
         cargo clean
       working-directory: programs/arciumint-nft-gen
 
@@ -58,5 +58,5 @@ jobs:
       working-directory: programs/arciumint-nft-gen
 
     - name: Deploy program
-      run: anchor deploy
+      run: anchor deploy --provider.cluster devnet
       working-directory: programs/arciumint-nft-gen
