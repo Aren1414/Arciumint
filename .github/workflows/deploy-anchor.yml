@@ -12,11 +12,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust
+    - name: Install Rust (nightly)
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         source $HOME/.cargo/env
+        rustup default nightly
+        rustup update
 
     - name: Install Solana CLI (from GitHub release)
       run: |
