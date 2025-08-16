@@ -47,6 +47,9 @@ jobs:
         cargo update -p anchor-spl
         cargo update -p anchor-lang
         cargo update -p solana-program
+        cargo update -p anchor_attribute_program
+        cargo update -p anchor_derive_accounts
+        cargo update -p solana_program_entrypoint
         cargo clean
       working-directory: programs/arciumint-nft-gen
 
