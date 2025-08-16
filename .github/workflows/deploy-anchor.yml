@@ -12,13 +12,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust (nightly)
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-        source $HOME/.cargo/env
-        rustup default nightly
-        rustup update
+    - name: Install Rust nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
 
     - name: Install Solana CLI (from GitHub release)
       run: |
@@ -42,7 +40,7 @@ jobs:
         solana config set --url https://api.devnet.solana.com
 
     - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2
+      run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
     - name: Deploy program
       run: |
