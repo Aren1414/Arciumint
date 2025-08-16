@@ -22,11 +22,15 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        solana --version
 
     - name: Install Anchor
       run: |
         cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.cargo/bin:$PATH"
+        anchor --version
 
     - name: Set up wallet
       run: |
