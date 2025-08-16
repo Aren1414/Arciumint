@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, mint_to, MintTo};
 
-declare_id!("FJbJDhJ8cRN2qjMwqQw5UwbqznjXxDxPwQtpzaojLaHi");
+declare_id!("Hx6jdiv9A7LVoa83LYRNXb2SaTGTPdfKQ75hB3hyRuHW");
 
 #[program]
 pub mod arciumint_nft_gen {
