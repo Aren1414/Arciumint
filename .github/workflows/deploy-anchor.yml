@@ -50,8 +50,8 @@ jobs:
         cargo clean
       working-directory: programs/arciumint-nft-gen
 
-    - name: Build program
-      run: anchor build
+    - name: Build program with Cargo
+      run: cargo build --manifest-path Cargo.toml -Znext-lockfile-bump
       working-directory: programs/arciumint-nft-gen
 
     - name: Deploy program
