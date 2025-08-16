@@ -7,7 +7,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWxTWqkZgZz5gZQYjzvY4vXkX4ZQ");
 pub mod arciumint_nft_gen {
     use super::*;
 
-    pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
+    pub fn mint_nft(ctx: &Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
 
         if user_record.has_minted {
