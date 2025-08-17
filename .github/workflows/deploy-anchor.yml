@@ -15,7 +15,7 @@ jobs:
     - name: Install Rust nightly (compatible with solana-program v2.1.0)
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2024-07-01
+        toolchain: nightly-2024-06-15
         override: true
         components: rust-src
 
@@ -29,7 +29,7 @@ jobs:
 
     - name: Install Anchor CLI
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
+        cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
@@ -65,7 +65,7 @@ jobs:
       working-directory: programs/arciumint-nft-gen
 
     - name: Build program with Anchor
-      run: anchor build
+      run: anchor build --verbose
       working-directory: programs/arciumint-nft-gen
 
     - name: Deploy program to devnet
