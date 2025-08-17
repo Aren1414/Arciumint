@@ -12,7 +12,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly (compatible with solana-program v2.3+)
+    - name: Install Rust nightly (compatible with Cargo.lock v4)
       uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly-2025-08-01
@@ -48,18 +48,11 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Debug file structure
-      run: |
-        echo "Listing project files:"
-        ls -la programs/arciumint-nft-gen
-        echo "Listing deploy folder:"
-        ls -la programs/arciumint-nft-gen/target/deploy
-
     - name: Fix Cargo.lock compatibility
       run: |
         cd programs/arciumint-nft-gen
         cargo update
-        cargo generate-lockfile
+        cargo +nightly generate-lockfile -Znext-lockfile-bump
         cd ../..
 
     - name: Build program with Anchor
