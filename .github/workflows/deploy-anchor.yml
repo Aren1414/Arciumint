@@ -12,10 +12,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly (with lockfile v4 support)
+    - name: Install Rust nightly (compatible with solana-program v2.1.0)
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2024-01-10
+        toolchain: nightly-2024-07-01
         override: true
         components: rust-src
 
@@ -29,13 +29,10 @@ jobs:
 
     - name: Install Anchor CLI
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+        cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
-
-    - name: Enable lockfile v4 support
-      run: echo 'RUSTFLAGS="-Znext-lockfile-bump"' >> $GITHUB_ENV
 
     - name: Restore wallet keypair
       run: |
