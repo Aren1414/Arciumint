@@ -19,9 +19,6 @@ jobs:
         override: true
         components: rust-src
 
-    - name: Set RUSTFLAGS for lockfile v4
-      run: echo 'RUSTFLAGS="-Znext-lockfile-bump"' >> $GITHUB_ENV
-
     - name: Install Solana CLI v1.18.2
       run: |
         curl -sL https://github.com/solana-labs/solana/releases/download/v1.18.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
@@ -36,6 +33,9 @@ jobs:
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
+
+    - name: Enable lockfile v4 support
+      run: echo 'RUSTFLAGS="-Znext-lockfile-bump"' >> $GITHUB_ENV
 
     - name: Restore wallet keypair
       run: |
