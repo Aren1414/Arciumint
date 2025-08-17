@@ -40,29 +40,17 @@ jobs:
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
 
-    - name: Restore program keypair
-      run: |
-        mkdir -p programs/arciumint-nft-gen/target/deploy
-        echo "${{ secrets.PROGRAM_KEYPAIR }}" > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
-
-    - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
-
-    - name: Debug file structure
-      run: |
-        echo "Listing project files:"
-        ls -la programs/arciumint-nft-gen
-        echo "Listing deploy folder:"
-        ls -la programs/arciumint-nft-gen/target/deploy
+    - name: Ensure program deploy folder exists
+      run: mkdir -p programs/arciumint-nft-gen/target/deploy
 
     - name: Fix Cargo.lock compatibility
-      run: |
-        cargo generate-lockfile
+      run: cargo generate-lockfile
       working-directory: programs/arciumint-nft-gen
 
     - name: Build program with Anchor
       run: |
         cd programs/arciumint-nft-gen
+        cargo update
         anchor build --skip-lint
         cd ../..
 
