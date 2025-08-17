@@ -6,8 +6,6 @@ edition = "2021"
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", features = ["idl-build"] }
-solana-program = { version = "2.1.0" }
-solana-pubkey = { version = "2.1.0", features = [] }
 
 [features]
 default = ["idl-build"]
