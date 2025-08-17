@@ -9,4 +9,4 @@ wallet = "wallet.json"
 test = "mocha -t 1000000 tests/"
 
 [toolchain]
-anchor_version = "0.32.0"
+anchor_version = "0.31.1"
