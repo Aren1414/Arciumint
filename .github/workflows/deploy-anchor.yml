@@ -12,11 +12,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        override: true
+    - name: Install Rust 1.70+
+      run: |
+        rustup toolchain install 1.70.0
+        rustup default 1.70.0
+        rustc --version
+        cargo --version
 
     - name: Install Solana CLI
       run: |
@@ -46,10 +47,6 @@ jobs:
 
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
-
-    - name: Remove Cargo.lock (fix lockfile version error)
-      run: rm -f Cargo.lock
-      working-directory: programs/arciumint-nft-gen
 
     - name: Update and clean dependencies
       run: |
