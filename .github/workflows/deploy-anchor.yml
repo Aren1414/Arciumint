@@ -27,7 +27,7 @@ jobs:
         export PATH="$PWD/solana-release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor
+    - name: Install Anchor CLI
       run: |
         cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -50,10 +50,7 @@ jobs:
 
     - name: Update and clean dependencies
       run: |
-        cargo update -p anchor-spl
-        cargo update -p anchor-lang
-        cargo update -p anchor-attribute-program
-        cargo update -p anchor-derive-accounts
+        cargo update
         cargo clean
       working-directory: programs/arciumint-nft-gen
 
