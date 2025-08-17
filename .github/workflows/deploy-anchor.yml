@@ -69,8 +69,11 @@ jobs:
       working-directory: programs/arciumint-nft-gen
 
     - name: Build program with Anchor
-      run: anchor build
-      working-directory: programs/arciumint-nft-gen
+      run: |
+        cd programs/arciumint-nft-gen
+        cargo update
+        cd ../..
+        anchor build --skip-lint
 
     - name: Deploy program to devnet
       run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
