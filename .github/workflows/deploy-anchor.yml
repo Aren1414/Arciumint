@@ -43,7 +43,7 @@ jobs:
     - name: Restore program keypair
       run: |
         mkdir -p programs/arciumint-nft-gen/target/deploy
-        echo '${{ secrets.PROGRAM_KEYPAIR }}' > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
+        echo "${{ secrets.PROGRAM_KEYPAIR }}" > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
@@ -55,13 +55,9 @@ jobs:
         echo "Listing deploy folder:"
         ls -la programs/arciumint-nft-gen/target/deploy
 
-    - name: Update and clean dependencies
+    - name: Fix Cargo.lock compatibility
       run: |
-        cargo update -p anchor-spl || true
-        cargo update -p anchor-lang || true
-        cargo update -p anchor-attribute-program || true
-        cargo update -p anchor-derive-accounts || true
-        cargo clean
+        cargo generate-lockfile
       working-directory: programs/arciumint-nft-gen
 
     - name: Build program with Anchor
@@ -71,5 +67,6 @@ jobs:
         cd ../..
 
     - name: Deploy program to devnet
-      run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
-      working-directory: programs/arciumint-nft-gen
+      run: |
+        cd programs/arciumint-nft-gen
+        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
