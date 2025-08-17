@@ -12,10 +12,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly (compatible with solana-program v2.1.0)
+    - name: Install Rust nightly (compatible with solana-program v2.3+)
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2024-06-15
+        toolchain: nightly-2025-08-01
         override: true
         components: rust-src
 
@@ -40,8 +40,20 @@ jobs:
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
 
-    - name: Ensure deploy folder exists
-      run: mkdir -p programs/arciumint-nft-gen/target/deploy
+    - name: Restore program keypair
+      run: |
+        mkdir -p programs/arciumint-nft-gen/target/deploy
+        echo "${{ secrets.PROGRAM_KEYPAIR }}" > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
+
+    - name: Airdrop SOL to wallet
+      run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
+
+    - name: Debug file structure
+      run: |
+        echo "Listing project files:"
+        ls -la programs/arciumint-nft-gen
+        echo "Listing deploy folder:"
+        ls -la programs/arciumint-nft-gen/target/deploy
 
     - name: Fix Cargo.lock compatibility
       run: |
