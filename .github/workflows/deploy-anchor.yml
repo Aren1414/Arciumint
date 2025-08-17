@@ -12,14 +12,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust 1.70+
+    - name: Install Rust 1.70.0
       run: |
         rustup toolchain install 1.70.0
         rustup default 1.70.0
         rustc --version
         cargo --version
 
-    - name: Install Solana CLI
+    - name: Install Solana CLI v1.18.2
       run: |
         curl -sL https://github.com/solana-labs/solana/releases/download/v1.18.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
         tar -xjf solana.tar.bz2
@@ -27,9 +27,9 @@ jobs:
         export PATH="$PWD/solana-release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor CLI
+    - name: Install Anchor CLI v0.32.0
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+        cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.0 anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
