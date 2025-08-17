@@ -57,10 +57,8 @@ jobs:
         cargo clean
       working-directory: programs/arciumint-nft-gen
 
-    - name: Build program with Anchor (nightly + lockfile v4)
-      run: |
-        export RUSTFLAGS="-Znext-lockfile-bump"
-        anchor build
+    - name: Build program with Anchor (nightly, no RUSTFLAGS)
+      run: anchor build
       working-directory: programs/arciumint-nft-gen
 
     - name: Deploy program to devnet
