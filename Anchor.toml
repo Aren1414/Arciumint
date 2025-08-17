@@ -1,5 +1,6 @@
 [programs.devnet]
-arciumintnftgen = "Hx6jdiv9A7LVoa83LYRNXb2SaTGTPdfKQ75hB3hyRuHW"
+
+arciumintnftgen = ""
 
 [provider]
 cluster = "devnet"
