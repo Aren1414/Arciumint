@@ -61,10 +61,6 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
 
-    - name: Remove Cargo.lock to avoid version conflict
-      working-directory: programs/arciumint-nft-gen
-      run: rm -f Cargo.lock
-
     - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
       run: |
