@@ -63,6 +63,12 @@ jobs:
         anchor keys list
         cd ../..
 
+    - name: Regenerate Cargo.lock with nightly
+      run: |
+        cd programs/arciumint-nft-gen
+        cargo generate-lockfile -Znext-lockfile-bump
+        cd ../..
+
     - name: Build Anchor program (nightly)
       run: |
         cd programs/arciumint-nft-gen
