@@ -64,7 +64,7 @@ jobs:
     - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
       run: |
-        cargo build-bpf
+        cargo build-bpf -Znext-lockfile-bump
         cargo install --force --path . --locked
         anchor build --skip-lint --locked
 
