@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: nightly
+  RUSTUP_TOOLCHAIN: nightly-2025-08-01
 
 jobs:
   deploy:
@@ -22,11 +22,17 @@ jobs:
         override: true
         components: rust-src
 
+    - name: Verify Rust toolchain
+      run: |
+        rustup show
+        rustc --version
+        cargo --version
+
     - name: Update Cargo.lock (fix version 4 issue)
       run: |
         cd programs/arciumint-nft-gen
         rm -f Cargo.lock
-        cargo +nightly generate-lockfile -Znext-lockfile-bump
+        rustup run nightly-2025-08-01 cargo generate-lockfile -Znext-lockfile-bump
         cd ../..
 
     - name: Install Solana CLI v1.18.2
@@ -39,7 +45,7 @@ jobs:
 
     - name: Install Anchor CLI
       run: |
-        cargo +nightly install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+        rustup run nightly-2025-08-01 cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
@@ -61,18 +67,18 @@ jobs:
     - name: Sync Program ID automatically
       run: |
         cd programs/arciumint-nft-gen
-        anchor keys list
+        rustup run nightly-2025-08-01 anchor keys list
         cd ../..
 
     - name: Build Anchor program (nightly)
       run: |
         cd programs/arciumint-nft-gen
-        cargo +nightly build-bpf
-        cargo +nightly install --force --path .
-        anchor build --skip-lint
+        rustup run nightly-2025-08-01 cargo build-bpf
+        rustup run nightly-2025-08-01 cargo install --force --path .
+        rustup run nightly-2025-08-01 anchor build --skip-lint
         cd ../..
 
     - name: Deploy program to devnet
       run: |
         cd programs/arciumint-nft-gen
-        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+        rustup run nightly-2025-08-01 anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
