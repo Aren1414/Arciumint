@@ -12,6 +12,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    
     - name: Install Rust nightly (compatible with Cargo.lock v4)
       uses: actions-rs/toolchain@v1
       with:
@@ -19,6 +20,7 @@ jobs:
         override: true
         components: rust-src
 
+    
     - name: Install Solana CLI v1.18.2
       run: |
         curl -sL https://github.com/solana-labs/solana/releases/download/v1.18.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
@@ -27,6 +29,7 @@ jobs:
         export PATH="$PWD/solana-release/bin:$PATH"
         solana --version
 
+    
     - name: Install Anchor CLI
       run: |
         cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
@@ -34,42 +37,46 @@ jobs:
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
 
+    
     - name: Restore wallet keypair
       run: |
         echo "${{ secrets.WALLET_KEY }}" > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
 
+    
     - name: Restore program keypair
       run: |
         mkdir -p programs/arciumint-nft-gen/target/deploy
         echo "${{ secrets.PROGRAM_KEYPAIR }}" > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
 
+    
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
     
-    - name: Update Cargo.lock
+    - name: Update Cargo.lock to v4
       run: |
         cd programs/arciumint-nft-gen
-        cargo update
+        rm -f Cargo.lock
         cargo +nightly generate-lockfile -Znext-lockfile-bump
         cd ../..
 
     
-    - name: Sync Program ID
+    - name: Sync Program ID automatically
       run: |
         cd programs/arciumint-nft-gen
         anchor keys list
         cd ../..
 
     
-    - name: Build program
+    - name: Build Anchor program
       run: |
         cd programs/arciumint-nft-gen
         anchor build --skip-lint
         cd ../..
 
+    
     - name: Deploy program to devnet
       run: |
         cd programs/arciumint-nft-gen
