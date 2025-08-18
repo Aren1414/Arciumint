@@ -65,6 +65,10 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: cargo generate-lockfile -Znext-lockfile-bump
 
+    - name: Remove incompatible Cargo.lock
+      working-directory: programs/arciumint-nft-gen
+      run: rm -f Cargo.lock
+
     - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
       run: |
