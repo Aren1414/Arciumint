@@ -58,26 +58,20 @@ jobs:
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
     - name: Sync Program ID automatically
-      run: |
-        cd programs/arciumint-nft-gen
-        anchor keys list
-        cd ../..
+      working-directory: programs/arciumint-nft-gen
+      run: anchor keys list
 
     - name: Regenerate Cargo.lock with nightly
-      run: |
-        cd programs/arciumint-nft-gen
-        cargo generate-lockfile -Znext-lockfile-bump
-        cd ../..
+      working-directory: programs/arciumint-nft-gen
+      run: cargo generate-lockfile -Znext-lockfile-bump
 
     - name: Build Anchor program (nightly)
+      working-directory: programs/arciumint-nft-gen
       run: |
-        cd programs/arciumint-nft-gen
         cargo build-bpf
         cargo install --force --path .
         anchor build --skip-lint
-        cd ../..
 
     - name: Deploy program to devnet
-      run: |
-        cd programs/arciumint-nft-gen
-        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+      working-directory: programs/arciumint-nft-gen
+      run: anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
