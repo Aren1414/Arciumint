@@ -2905,3 +2905,4 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
+# updated for CI compatibility
