@@ -48,16 +48,17 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Fix Cargo.lock compatibility
+    - name: Update Cargo.lock
       run: |
         cd programs/arciumint-nft-gen
         cargo update
         cargo +nightly generate-lockfile -Znext-lockfile-bump
         cd ../..
 
-    - name: Build program with Anchor
+    - name: Sync Program ID automatically
       run: |
         cd programs/arciumint-nft-gen
+        anchor keys list
         anchor build --skip-lint
         cd ../..
 
