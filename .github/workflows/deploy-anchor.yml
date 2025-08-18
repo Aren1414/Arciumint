@@ -36,9 +36,9 @@ jobs:
         export PATH="$PWD/solana-release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor CLI
+    - name: Install Anchor CLI (stable version)
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+        cargo install anchor-cli --version 0.28.0 --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
@@ -61,16 +61,12 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
 
-    - name: Remove Cargo.lock to avoid version conflict
-      working-directory: programs/arciumint-nft-gen
-      run: rm -f Cargo.lock
-
     - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
       run: |
         cargo build-bpf
-        cargo install --force --path .
-        anchor build --skip-lint
+        cargo install --force --path . --locked
+        anchor build --skip-lint --locked
 
     - name: Deploy program to devnet
       working-directory: programs/arciumint-nft-gen
