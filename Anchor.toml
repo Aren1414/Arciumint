@@ -10,3 +10,4 @@ test = "mocha -t 1000000 tests/"
 
 [toolchain]
 anchor_version = "0.31.1"
+solana_version = "2.1.0"
