@@ -36,9 +36,9 @@ jobs:
         export PATH="$PWD/solana-release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor CLI (stable version)
+    - name: Install Anchor CLI (v0.28.0 from GitHub)
       run: |
-        cargo install anchor-cli --version 0.28.0 --locked
+        cargo install --git https://github.com/coral-xyz/anchor --tag v0.28.0 anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
