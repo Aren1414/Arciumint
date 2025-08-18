@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: 1.89.0
+  RUSTUP_TOOLCHAIN: nightly-2024-08-01
 
 jobs:
   deploy:
@@ -15,10 +15,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust 1.89.0 (stable)
+    - name: Install Rust nightly (rustc ≥ 1.89.0)
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.89.0
+        toolchain: nightly-2024-08-01
         override: true
         components: rust-src
 
@@ -61,10 +61,10 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
 
-    - name: Build Anchor program
+    - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
       run: |
-        cargo build-bpf
+        cargo build-bpf -- -Znext-lockfile-bump
         cargo install --force --path . --locked
         anchor build --skip-lint --locked
 
