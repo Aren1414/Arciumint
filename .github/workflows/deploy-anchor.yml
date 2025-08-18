@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  RUSTUP_TOOLCHAIN: nightly-2024-08-15
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -12,11 +15,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust manually (rustc ≥ 1.89.0)
+    - name: Install Rust nightly (rustc ≥ 1.89.0)
       run: |
         rustup self update
         rustup install nightly-2024-08-15
-        rustup override set nightly-2024-08-15
+        rustup default nightly-2024-08-15
         rustc --version
         cargo --version
 
@@ -52,6 +55,12 @@ jobs:
     - name: Sync Program ID automatically
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
+
+    - name: Confirm Rust version before build
+      working-directory: programs/arciumint-nft-gen
+      run: |
+        rustc --version
+        cargo --version
 
     - name: Build Anchor program
       working-directory: programs/arciumint-nft-gen
