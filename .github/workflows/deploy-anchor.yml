@@ -25,7 +25,7 @@ jobs:
     - name: Update Cargo.lock (fix version 4 issue)
       run: |
         cd programs/arciumint-nft-gen
-        cargo +nightly update
+        rm -f Cargo.lock
         cargo +nightly generate-lockfile -Znext-lockfile-bump
         cd ../..
 
@@ -68,6 +68,7 @@ jobs:
       run: |
         cd programs/arciumint-nft-gen
         cargo +nightly build-bpf
+        cargo +nightly install --force --path .
         anchor build --skip-lint
         cd ../..
 
