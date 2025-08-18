@@ -22,6 +22,13 @@ jobs:
         override: true
         components: rust-src
 
+    - name: Update Cargo.lock (fix version 4 issue)
+      run: |
+        cd programs/arciumint-nft-gen
+        cargo +nightly update
+        cargo +nightly generate-lockfile -Znext-lockfile-bump
+        cd ../..
+
     - name: Install Solana CLI v1.18.2
       run: |
         curl -sL https://github.com/solana-labs/solana/releases/download/v1.18.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
@@ -32,7 +39,7 @@ jobs:
 
     - name: Install Anchor CLI
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+        cargo +nightly install --git https://github.com/coral-xyz/anchor anchor-cli --locked
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         export PATH="$HOME/.cargo/bin:$PATH"
         anchor --version
@@ -51,13 +58,6 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Update Cargo.lock
-      run: |
-        cd programs/arciumint-nft-gen
-        cargo update
-        cargo +nightly generate-lockfile -Znext-lockfile-bump
-        cd ../..
-
     - name: Sync Program ID automatically
       run: |
         cd programs/arciumint-nft-gen
@@ -67,6 +67,7 @@ jobs:
     - name: Build Anchor program (nightly)
       run: |
         cd programs/arciumint-nft-gen
+        cargo +nightly build-bpf
         anchor build --skip-lint
         cd ../..
 
