@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Token, mint_to, MintTo};
+use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
 
 declare_id!("Hx6jdiv9A7LVoa83LYRNXb2SaTGTPdfKQ75hB3hyRuHW");
 
@@ -10,21 +10,18 @@ pub mod arciumint_nft_gen {
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
 
-        if user_record.has_minted {
-            return Err(error!(ErrorCode::AlreadyMinted));
-        }
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        let cpi_accounts = MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-        };
-
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        let cpi_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.token_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+        );
 
         mint_to(cpi_ctx, 1)?;
-
         user_record.has_minted = true;
 
         Ok(())
@@ -49,7 +46,7 @@ pub struct MintNFT<'info> {
         seeds = [b"user_record", authority.key().as_ref()],
         bump,
         payer = authority,
-        space = 8 + 1
+        space = 8 + 1 // discriminator + bool
     )]
     pub user_record: Account<'info, UserRecord>,
 
