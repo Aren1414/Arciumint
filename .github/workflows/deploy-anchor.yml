@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: nightly-2024-06-01
+  RUSTUP_TOOLCHAIN: nightly-2024-07-15
 
 jobs:
   deploy:
@@ -15,10 +15,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly
+    - name: Install Rust nightly (with rustc ≥ 1.79.0)
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly-2024-06-01
+        toolchain: nightly-2024-07-15
         override: true
         components: rust-src
 
