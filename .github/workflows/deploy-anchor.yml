@@ -15,10 +15,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly and Rust 1.69
-      run: |
-        rustup update nightly
-        rustup install 1.69.0
+    - name: Install Rust nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly-2025-08-01
+        override: true
+        components: rust-src
 
     - name: Verify Rust toolchain
       run: |
@@ -59,9 +61,9 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
 
-    - name: Generate compatible Cargo.lock (version 3)
+    - name: Remove Cargo.lock to avoid version conflict
       working-directory: programs/arciumint-nft-gen
-      run: cargo +1.69.0 generate-lockfile
+      run: rm -f Cargo.lock
 
     - name: Build Anchor program (nightly)
       working-directory: programs/arciumint-nft-gen
