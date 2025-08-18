@@ -61,11 +61,7 @@ jobs:
       working-directory: programs/arciumint-nft-gen
       run: anchor keys list
 
-    - name: Regenerate Cargo.lock with nightly
-      working-directory: programs/arciumint-nft-gen
-      run: cargo generate-lockfile -Znext-lockfile-bump
-
-    - name: Remove incompatible Cargo.lock
+    - name: Remove Cargo.lock to avoid version conflict
       working-directory: programs/arciumint-nft-gen
       run: rm -f Cargo.lock
 
