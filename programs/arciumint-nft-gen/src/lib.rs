@@ -30,8 +30,9 @@ pub mod arciumintnftgen {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
+    
     #[account(mut)]
-    pub authority: Signer<'info>, 
+    pub authority: Signer<'info>,
 
     #[account(mut)]
     pub mint: Box<Account<'info, Mint>>,
@@ -46,7 +47,7 @@ pub struct MintNFT<'info> {
         seeds = [b"userrecord", authority.key().as_ref()],
         bump,
         payer = authority,
-        space = 8 + 1 // discriminator + bool
+        space = 8 + 1
     )]
     pub user_record: Box<Account<'info, UserRecord>>,
 
