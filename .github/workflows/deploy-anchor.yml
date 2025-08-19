@@ -15,6 +15,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Install system dependencies for hidapi
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev pkg-config
+
     - name: Install Rust nightly (rustc ≥ 1.81.0)
       run: |
         rustup self update
