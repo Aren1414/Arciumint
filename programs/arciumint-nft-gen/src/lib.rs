@@ -35,7 +35,7 @@ pub struct MintNFT<'info> {
 
     #[account(
         init_if_needed,
-        seeds = [b"userrecord", &authority.key()],
+        seeds = [b"userrecord", authority.key().as_ref()],
         bump,
         payer = authority,
         space = 8 + 1
@@ -61,4 +61,4 @@ pub struct UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-      }
+}
