@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", features = ["idl-build"] }
+anchor-spl  = { version = "0.31.1", features = ["idl-build"] }
 
 [features]
 default = ["idl-build"]
@@ -13,6 +13,3 @@ idl-build = [
   "anchor-lang/idl-build",
   "anchor-spl/idl-build"
 ]
-
-[patch.crates-io]
-solana-precompiles = { version = "2.2.2" }
