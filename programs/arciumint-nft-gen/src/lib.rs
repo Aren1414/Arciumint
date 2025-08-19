@@ -38,7 +38,7 @@ pub struct MintNFT<'info> {
 
     #[account(
         init_if_needed,
-        seeds = [b"userrecord", authority.key().as_ref()],
+        seeds = [b"userrecord", authority.as_ref()], 
         bump,
         payer = authority,
         space = 8 + 1
