@@ -68,9 +68,9 @@ jobs:
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
-    - name: Build Anchor program (skip tests)
+    - name: Build Anchor program
       working-directory: programs/arciumint-nft-gen
-      run: anchor build --skip-lint -- --lib
+      run: anchor build --skip-lint
 
     - name: Deploy Anchor program to devnet
       working-directory: programs/arciumint-nft-gen
