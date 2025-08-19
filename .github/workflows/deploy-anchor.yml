@@ -58,15 +58,20 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Build and Deploy Anchor Program
+    - name: Confirm Program ID consistency
       working-directory: programs/arciumint-nft-gen
       run: |
-        
-        echo "Program ID consistency check:"
+        echo "Program ID in lib.rs:"
         grep "declare_id!" src/lib.rs
+        echo "Program ID in Anchor.toml:"
         grep "arciumintnftgen" ../../Anchor.toml
+        echo "Program ID from keypair file:"
+        solana address -k target/deploy/arciumintnftgen-keypair.json
 
-      
-        anchor build --skip-lint
+    - name: Build Anchor program
+      working-directory: programs/arciumint-nft-gen
+      run: anchor build --skip-lint
 
-        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+    - name: Deploy Anchor program to devnet
+      working-directory: programs/arciumint-nft-gen
+      run: anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
