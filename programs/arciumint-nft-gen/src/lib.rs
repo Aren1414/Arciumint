@@ -35,9 +35,9 @@ pub struct MintNFT<'info> {
 
     #[account(
         init_if_needed,
-        seeds = [b"userrecord", signer.key().as_ref()],
+        seeds = [b"userrecord", authority.key().as_ref()],
         bump,
-        payer = signer,
+        payer = authority,
         space = 8 + 1
     )]
     pub user_record: Account<'info, UserRecord>,
@@ -50,6 +50,7 @@ pub struct MintNFT<'info> {
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[account]
