@@ -61,5 +61,12 @@ jobs:
     - name: Build and Deploy Anchor Program
       working-directory: programs/arciumint-nft-gen
       run: |
-        anchor build --skip-lint -- --locked
+        
+        echo "Program ID consistency check:"
+        grep "declare_id!" src/lib.rs
+        grep "arciumintnftgen" ../../Anchor.toml
+
+      
+        anchor build --skip-lint
+
         anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
