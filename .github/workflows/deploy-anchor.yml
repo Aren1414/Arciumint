@@ -15,34 +15,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install system dependencies for hidapi
+    - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config
 
-    - name: Install Rust nightly (rustc ≥ 1.81.0)
+    - name: Install Rust nightly
       run: |
         rustup self update
-        rustup install nightly-2024-08-18
-        rustup default nightly-2024-08-18
-        rustc --version
-        cargo --version
+        rustup install ${{ env.RUSTUP_TOOLCHAIN }}
+        rustup default ${{ env.RUSTUP_TOOLCHAIN }}
 
-    - name: Install Solana CLI v2.1.0 (Agave transition)
+    - name: Install Solana CLI
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-        solana --version
 
-    - name: Install Anchor CLI 0.31.1 via AVM
+    - name: Install Anchor CLI
       run: |
         cargo install --git https://github.com/coral-xyz/anchor avm --force
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.avm/bin:$PATH"
-        anchor --version
 
     - name: Restore wallet keypair
       run: |
@@ -58,26 +52,8 @@ jobs:
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
 
-    - name: Sync Program ID automatically
-      working-directory: programs/arciumint-nft-gen
-      run: anchor keys list
-
-    - name: Confirm Rust version before build
+    - name: Build and Deploy Anchor Program
       working-directory: programs/arciumint-nft-gen
       run: |
-        rustc --version
-        cargo --version
-
-    - name: Update Cargo dependencies
-      working-directory: programs/arciumint-nft-gen
-      run: cargo update
-
-    - name: Build Anchor program
-      working-directory: programs/arciumint-nft-gen
-      run: |
-        cargo build-bpf -- -Znext-lockfile-bump
         anchor build --skip-lint --locked
-
-    - name: Deploy program to devnet
-      working-directory: programs/arciumint-nft-gen
-      run: anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
