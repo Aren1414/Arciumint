@@ -20,6 +20,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config
 
+    - name: Set up Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Install Rust
       run: |
         rustup self update
@@ -37,7 +43,7 @@ jobs:
 
     - name: Install Anchor CLI
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor avm --force
+        cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
