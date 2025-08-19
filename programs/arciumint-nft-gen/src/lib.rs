@@ -4,7 +4,7 @@ use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
 declare_id!("Hx6jdiv9A7LVoa83LYRNXb2SaTGTPdfKQ75hB3hyRuHW");
 
 #[program]
-pub mod arciumint_nft_gen {
+pub mod arciumintnftgen {
     use super::*;
 
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
@@ -31,10 +31,10 @@ pub mod arciumint_nft_gen {
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    pub mint: Box<Account<'info, Mint>>,
 
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -43,12 +43,12 @@ pub struct MintNFT<'info> {
 
     #[account(
         init_if_needed,
-        seeds = [b"user_record", authority.key().as_ref()],
+        seeds = [b"userrecord", authority.key().as_ref()],
         bump,
         payer = authority,
         space = 8 + 1 // discriminator + bool
     )]
-    pub user_record: Account<'info, UserRecord>,
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     pub system_program: Program<'info, System>,
 }
