@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: nightly-2024-08-15
+  RUSTUP_TOOLCHAIN: nightly-2024-08-18
 
 jobs:
   deploy:
@@ -15,11 +15,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust nightly (rustc ≥ 1.89.0)
+    - name: Install Rust nightly (rustc ≥ 1.81.0)
       run: |
         rustup self update
-        rustup install nightly-2024-08-15
-        rustup default nightly-2024-08-15
+        rustup install nightly-2024-08-18
+        rustup default nightly-2024-08-18
         rustc --version
         cargo --version
 
