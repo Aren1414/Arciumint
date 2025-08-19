@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: nightly-2024-08-19
+  RUSTUP_TOOLCHAIN: 1.89.0
 
 jobs:
   deploy:
@@ -20,7 +20,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config
 
-    - name: Install Rust nightly
+    - name: Install Rust
       run: |
         rustup self update
         rustup install ${{ env.RUSTUP_TOOLCHAIN }}
