@@ -30,18 +30,11 @@ pub mod arciumintnftgen {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    
+    /// Signer who pays for account creation and owns the NFT
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut)]
-    pub mint: Box<Account<'info, Mint>>,
-
-    #[account(mut)]
-    pub token_account: Box<Account<'info, TokenAccount>>,
-
-    pub token_program: Program<'info, Token>,
-
+    /// PDA to track if this user has minted
     #[account(
         init_if_needed,
         seeds = [b"userrecord", authority.key().as_ref()],
@@ -49,8 +42,20 @@ pub struct MintNFT<'info> {
         payer = authority,
         space = 8 + 1
     )]
-    pub user_record: Box<Account<'info, UserRecord>>,
+    pub user_record: Account<'info, UserRecord>,
 
+    /// Mint account for the NFT
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+
+    /// Token account to receive the minted NFT
+    #[account(mut)]
+    pub token_account: Account<'info, TokenAccount>,
+
+    /// SPL Token program
+    pub token_program: Program<'info, Token>,
+
+    /// System program
     pub system_program: Program<'info, System>,
 }
 
