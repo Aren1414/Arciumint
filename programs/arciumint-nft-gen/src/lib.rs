@@ -30,6 +30,7 @@ pub mod arciumintnftgen {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
+    
     #[account(mut)]
     pub authority: Signer<'info>,
 
