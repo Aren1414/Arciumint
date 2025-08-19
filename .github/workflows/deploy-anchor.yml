@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: nightly-2024-08-18
+  RUSTUP_TOOLCHAIN: nightly-2024-08-19
 
 jobs:
   deploy:
