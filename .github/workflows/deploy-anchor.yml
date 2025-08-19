@@ -25,11 +25,15 @@ jobs:
         rustup self update
         rustup install ${{ env.RUSTUP_TOOLCHAIN }}
         rustup default ${{ env.RUSTUP_TOOLCHAIN }}
+        rustc --version
+        cargo --version
 
     - name: Install Solana CLI
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        solana --version
 
     - name: Install Anchor CLI
       run: |
@@ -37,6 +41,8 @@ jobs:
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.avm/bin:$PATH"
+        anchor --version
 
     - name: Restore wallet keypair
       run: |
@@ -55,5 +61,5 @@ jobs:
     - name: Build and Deploy Anchor Program
       working-directory: programs/arciumint-nft-gen
       run: |
-        anchor build --skip-lint --locked
+        anchor build --skip-lint -- --locked
         anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
