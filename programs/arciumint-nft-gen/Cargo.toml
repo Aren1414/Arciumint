@@ -15,4 +15,4 @@ idl-build = [
 ]
 
 [patch.crates-io]
-solana-precompiles = { version = "2.2.1" }
+solana-precompiles = { version = "2.2.3" }
