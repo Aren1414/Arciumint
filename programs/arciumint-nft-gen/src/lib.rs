@@ -31,13 +31,13 @@ pub mod arciumintnftgen {
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
+    pub authority: Signer<'info>, 
+
+    #[account(mut)]
     pub mint: Box<Account<'info, Mint>>,
 
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
-
-    #[account(mut)]
-    pub authority: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
 
