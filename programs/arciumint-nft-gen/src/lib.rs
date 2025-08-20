@@ -27,8 +27,7 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
 
-        
-        mint_to(cpi_ctx, 1)?;
+        mint_to(cpi_ctx, 1)?; 
 
         
         user_record.has_minted = true;
@@ -39,11 +38,9 @@ pub mod arciumintnftgen {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    
     #[account(
         init_if_needed,
         seeds = [b"userrecord", signer.key().as_ref()],
@@ -53,22 +50,20 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
-    
     #[account(mut)]
     pub mint: Account<'info, Mint>,
 
-    
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
 
-    
-    #[account(seeds = [b"mint_authority"], bump)]
+    #[account(
+        seeds = [b"mint_authority"],
+        bump
+    )]
     pub mint_authority: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
-
-    
     pub rent: Sysvar<'info, Rent>,
 }
 
