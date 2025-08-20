@@ -90,4 +90,4 @@ jobs:
       run: |
         anchor deploy \
           --provider.cluster devnet \
-          --provider.wallet ../../wallet.json
+          --provider.wallet ../../../wallet.json
