@@ -55,18 +55,14 @@ jobs:
         echo '${{ secrets.WALLET_KEY }}' > programs/arciumint-nft-gen/wallet.json
         solana config set --keypair programs/arciumint-nft-gen/wallet.json
         solana config set --url https://api.devnet.solana.com
-        echo "Wallet address:"
         solana address -k programs/arciumint-nft-gen/wallet.json
 
-    - name: Restore program keypair
+    - name: Restore program keypair (must match declare_id!)
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
-
-    - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2 -k programs/arciumint-nft-gen/wallet.json || echo "Airdrop failed, continuing anyway"
 
     - name: Confirm Program ID consistency
       run: |
@@ -76,6 +72,9 @@ jobs:
         grep "arciumintnftgen" Anchor.toml
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
+
+    - name: Airdrop SOL to wallet
+      run: solana airdrop 0.2 -k programs/arciumint-nft-gen/wallet.json || echo "Airdrop failed, continuing anyway"
 
     - name: Clean build artifacts
       run: |
