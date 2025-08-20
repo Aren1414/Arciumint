@@ -9,14 +9,10 @@ pub mod arciumintnftgen {
 
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
-
-        
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
@@ -27,9 +23,7 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
 
-        mint_to(cpi_ctx, 1)?; 
-
-        
+        mint_to(cpi_ctx, 1)?;
         user_record.has_minted = true;
 
         Ok(())
@@ -73,7 +67,7 @@ pub struct UserRecord {
 }
 
 impl UserRecord {
-    pub const SIZE: usize = 1; 
+    pub const SIZE: usize = 1;
 }
 
 #[error_code]
