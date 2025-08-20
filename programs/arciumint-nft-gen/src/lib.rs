@@ -10,8 +10,10 @@ pub mod arciumintnftgen {
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
 
+        
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
+        
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
         let cpi_ctx = CpiContext::new_with_signer(
@@ -24,7 +26,10 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
 
+        
         mint_to(cpi_ctx, 1)?;
+
+        
         user_record.has_minted = true;
 
         Ok(())
@@ -33,14 +38,16 @@ pub mod arciumintnftgen {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
+    
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub user: Signer<'info>,
 
+    
     #[account(
         init_if_needed,
-        seeds = [b"userrecord", authority.as_ref()], 
+        seeds = [b"userrecord", user.key().as_ref()],
         bump,
-        payer = authority,
+        payer = user,
         space = 8 + 1
     )]
     pub user_record: Account<'info, UserRecord>,
@@ -51,11 +58,13 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
 
+    
     #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    
     pub rent: Sysvar<'info, Rent>,
 }
 
