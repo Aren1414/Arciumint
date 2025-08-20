@@ -19,7 +19,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config
-
     - name: Set up Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
@@ -33,14 +32,12 @@ jobs:
         rustup default ${{ env.RUSTUP_TOOLCHAIN }}
         rustc --version
         cargo --version
-
     - name: Install Solana CLI
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
-        echo "$HOME/.local/share/solana/install/activerelease/bin" >> $GITHUBPATH
+        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
-
     - name: Install Anchor CLI
       run: |
         cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
@@ -49,7 +46,6 @@ jobs:
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
         export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
-
     - name: Restore wallet keypair (signer)
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
@@ -57,14 +53,12 @@ jobs:
         solana config set --url https://api.devnet.solana.com
         echo "Wallet address:"
         solana address -k wallet.json
-
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
-
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 -k wallet.json || echo "Airdrop failed, continuing anyway"
 
@@ -77,17 +71,15 @@ jobs:
         grep "arciumintnftgen" ../../Anchor.toml
         echo "Program ID from keypair file:"
         solana address -k ../../target/deploy/arciumintnftgen-keypair.json
-
     - name: Clean build artifacts
       working-directory: programs/arciumint-nft-gen
       run: |
+        rm -rf target
         rm -rf .anchor
-
     - name: Build Anchor program
       working-directory: programs/arciumint-nft-gen
       run: |
         ANCHOR_LOG=true anchor build --skip-lint
-
     - name: Deploy Anchor program to devnet
       working-directory: programs/arciumint-nft-gen
       run: |
