@@ -52,7 +52,7 @@ jobs:
 
     - name: Restore wallet keypair (signer)
       run: |
-        echo '${{ secrets.WALLET_KEY }}' > wallet.json
+        echo "${{ secrets.WALLET_KEY }}" > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
         echo "Wallet address:"
@@ -61,7 +61,7 @@ jobs:
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
-        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
+        echo "${{ secrets.PROGRAM_KEYPAIR }}" > target/deploy/arciumintnftgen-keypair.json
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
@@ -84,6 +84,7 @@ jobs:
         rm -rf programs/arciumint-nft-gen/.anchor
 
     - name: Build Anchor program
+      working-directory: programs/arciumint-nft-gen
       run: |
         ANCHOR_LOG=true anchor build --skip-lint
 
