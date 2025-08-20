@@ -58,8 +58,8 @@ jobs:
 
     - name: Restore program keypair
       run: |
-        mkdir -p programs/arciumint-nft-gen/target/deploy
-        echo "${{ secrets.PROGRAM_KEYPAIR }}" > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
+        mkdir -p keys
+        echo "${{ secrets.PROGRAM_KEYPAIR }}" > keys/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
       run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
@@ -72,7 +72,7 @@ jobs:
         echo "Program ID in Anchor.toml:"
         grep "arciumintnftgen" ../../Anchor.toml
         echo "Program ID from keypair file:"
-        solana address -k target/deploy/arciumintnftgen-keypair.json
+        solana address -k ../../keys/arciumintnftgen-keypair.json
 
     - name: Clean build artifacts
       working-directory: programs/arciumint-nft-gen
@@ -86,4 +86,7 @@ jobs:
 
     - name: Deploy Anchor program to devnet
       working-directory: programs/arciumint-nft-gen
-      run: anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+      run: anchor deploy \
+        --provider.cluster devnet \
+        --provider.wallet ../../wallet.json \
+        --program-keypair ../../keys/arciumintnftgen-keypair.json
