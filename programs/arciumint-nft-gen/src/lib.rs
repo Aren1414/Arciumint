@@ -9,7 +9,10 @@ pub mod arciumintnftgen {
 
     pub fn mint_nft(ctx: Context<MintNFT>) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+
+        if user_record.has_minted {
+            return err!(ErrorCode::AlreadyMinted);
+        }
 
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
@@ -35,11 +38,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    #[account(
-        mut,
-        seeds = [b"userrecord", signer.key().as_ref()],
-        bump
-    )]
+    #[account(mut)]
     pub user_record: Account<'info, UserRecord>,
 
     #[account(mut)]
