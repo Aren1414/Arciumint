@@ -50,20 +50,20 @@ jobs:
         export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
-    - name: Restore wallet keypair
+    - name: Restore wallet keypair (signer)
       run: |
-        mkdir -p target/deploy
-        echo '${{ secrets.WALLET_KEY }}' > target/deploy/arciumintnftgen-keypair.json
-        solana config set --keypair target/deploy/arciumintnftgen-keypair.json
+        echo '${{ secrets.WALLET_KEY }}' > wallet.json
+        solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
-        solana address -k target/deploy/arciumintnftgen-keypair.json
+        solana address -k wallet.json
 
     - name: Restore program keypair
       run: |
+        mkdir -p target/deploy
         echo "${{ secrets.PROGRAM_KEYPAIR }}" > target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2 || echo "Airdrop failed, continuing anyway"
+      run: solana airdrop 0.2 -k wallet.json || echo "Airdrop failed, continuing anyway"
 
     - name: Confirm Program ID consistency
       working-directory: programs/arciumint-nft-gen
@@ -89,4 +89,6 @@ jobs:
     - name: Deploy Anchor program to devnet
       working-directory: programs/arciumint-nft-gen
       run: |
-        anchor deploy --provider.cluster devnet
+        anchor deploy \
+          --provider.cluster devnet \
+          --provider.wallet ../../../wallet.json
