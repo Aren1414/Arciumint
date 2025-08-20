@@ -55,6 +55,7 @@ jobs:
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
+        echo "Wallet address:"
         solana address -k wallet.json
 
     - name: Restore program keypair
@@ -91,4 +92,4 @@ jobs:
       run: |
         anchor deploy \
           --provider.cluster devnet \
-          --provider.wallet ../../../wallet.json
+          --provider.wallet ../../wallet.json
