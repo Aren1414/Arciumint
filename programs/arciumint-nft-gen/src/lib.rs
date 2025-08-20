@@ -36,11 +36,9 @@ pub struct MintNFT<'info> {
     pub signer: Signer<'info>,
 
     #[account(
-        init_if_needed,
+        mut,
         seeds = [b"userrecord", signer.key().as_ref()],
-        bump,
-        payer = signer,
-        space = 8 + UserRecord::SIZE
+        bump
     )]
     pub user_record: Account<'info, UserRecord>,
 
