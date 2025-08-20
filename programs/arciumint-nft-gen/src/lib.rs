@@ -14,7 +14,10 @@ pub mod arciumintnftgen {
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
         
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"mint_authority",
+            &[ctx.bumps.mint_authority],
+        ]];
 
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -40,21 +43,23 @@ pub mod arciumintnftgen {
 pub struct MintNFT<'info> {
     
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub payer: Signer<'info>,
 
     
     #[account(
         init_if_needed,
-        seeds = [b"userrecord", user.key().as_ref()],
+        seeds = [b"userrecord", payer.key().as_ref()],
         bump,
-        payer = user,
-        space = 8 + 1
+        payer = payer,
+        space = 8 + UserRecord::SIZE
     )]
     pub user_record: Account<'info, UserRecord>,
 
+    
     #[account(mut)]
     pub mint: Account<'info, Mint>,
 
+    
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
 
@@ -64,6 +69,7 @@ pub struct MintNFT<'info> {
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+
     
     pub rent: Sysvar<'info, Rent>,
 }
@@ -71,6 +77,10 @@ pub struct MintNFT<'info> {
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
+}
+
+impl UserRecord {
+    pub const SIZE: usize = 1; 
 }
 
 #[error_code]
