@@ -37,7 +37,7 @@ jobs:
     - name: Install Solana CLI
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/share/solana/install/activerelease/bin" >> $GITHUBPATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
@@ -52,7 +52,7 @@ jobs:
 
     - name: Restore wallet keypair (signer)
       run: |
-        echo "${{ secrets.WALLET_KEY }}" > wallet.json
+        echo '${{ secrets.WALLET_KEY }}' > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
         echo "Wallet address:"
@@ -61,7 +61,7 @@ jobs:
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
-        echo "${{ secrets.PROGRAM_KEYPAIR }}" > target/deploy/arciumintnftgen-keypair.json
+        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
         echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
@@ -79,9 +79,9 @@ jobs:
         solana address -k ../../target/deploy/arciumintnftgen-keypair.json
 
     - name: Clean build artifacts
+      working-directory: programs/arciumint-nft-gen
       run: |
-        rm -rf target
-        rm -rf programs/arciumint-nft-gen/.anchor
+        rm -rf .anchor
 
     - name: Build Anchor program
       working-directory: programs/arciumint-nft-gen
