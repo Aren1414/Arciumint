@@ -79,13 +79,11 @@ jobs:
         solana address -k ../../target/deploy/arciumintnftgen-keypair.json
 
     - name: Clean build artifacts
-      working-directory: programs/arciumint-nft-gen
       run: |
         rm -rf target
-        rm -rf .anchor
+        rm -rf programs/arciumint-nft-gen/.anchor
 
     - name: Build Anchor program
-      working-directory: programs/arciumint-nft-gen
       run: |
         ANCHOR_LOG=true anchor build --skip-lint
 
