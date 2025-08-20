@@ -52,9 +52,10 @@ jobs:
 
     - name: Restore wallet keypair
       run: |
-        echo "${{ secrets.WALLET_KEY }}" > wallet.json
+        echo '${{ secrets.WALLET_KEY }}' > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
+        solana address -k wallet.json
 
     - name: Restore program keypair
       run: |
