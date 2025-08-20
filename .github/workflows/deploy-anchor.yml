@@ -81,7 +81,7 @@ jobs:
         rm -rf target
         rm -rf programs/arciumint-nft-gen/.anchor
 
-    - name: Build Anchor program
+    - name: Build Anchor program (after keypair is restored)
       run: |
         ANCHOR_LOG=true anchor build --skip-lint
 
