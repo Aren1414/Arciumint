@@ -3,7 +3,7 @@ arciumintnftgen = "Hx6jdiv9A7LVoa83LYRNXb2SaTGTPdKfQ75hB3hyRuHW"
 
 [provider]
 cluster = "devnet"
-wallet = "programs/arciumint-nft-gen/wallet.json"
+wallet = "wallet.json"
 
 [toolchain]
 anchor_version = "0.31.1"
