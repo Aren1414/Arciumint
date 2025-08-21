@@ -38,7 +38,6 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
     - name: Install Anchor CLI
@@ -47,20 +46,15 @@ jobs:
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
     - name: Restore wallet keypair (signer)
       run: |
-        
         echo '${{ secrets.WALLET_KEY }}' > "$GITHUB_WORKSPACE/wallet.json"
-        
         solana config set --keypair "$GITHUB_WORKSPACE/wallet.json"
         solana config set --url https://api.devnet.solana.com
         echo "Wallet address:"
         solana address -k "$GITHUB_WORKSPACE/wallet.json"
-        echo "Solana config:"
-        solana config get
 
     - name: Restore program keypair
       run: |
@@ -70,7 +64,7 @@ jobs:
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2 -k "$GITHUB_WORKSPACE/wallet.json" || echo "Airdrop failed, continuing anyway"
+      run: solana airdrop 2 -k "$GITHUB_WORKSPACE/wallet.json" || echo "Airdrop failed, continuing anyway"
 
     - name: Confirm Program ID consistency
       working-directory: programs/arciumint-nft-gen
@@ -81,12 +75,6 @@ jobs:
         grep "arciumintnftgen" ../../Anchor.toml
         echo "Program ID from keypair file:"
         solana address -k ../../target/deploy/arciumintnftgen-keypair.json
-
-    - name: Clean build artifacts
-      working-directory: programs/arciumint-nft-gen
-      run: |
-        rm -rf target
-        rm -rf .anchor
 
     - name: Build Anchor program
       working-directory: programs/arciumint-nft-gen
