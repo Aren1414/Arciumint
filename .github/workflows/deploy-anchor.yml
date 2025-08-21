@@ -38,6 +38,9 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        which solana
         solana --version
 
     - name: Install Anchor CLI
