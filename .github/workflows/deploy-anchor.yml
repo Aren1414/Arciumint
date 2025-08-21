@@ -52,11 +52,15 @@ jobs:
 
     - name: Restore wallet keypair (signer)
       run: |
-        echo '${{ secrets.WALLET_KEY }}' > wallet.json
-        solana config set --keypair wallet.json
+        
+        echo '${{ secrets.WALLET_KEY }}' > "$GITHUB_WORKSPACE/wallet.json"
+        
+        solana config set --keypair "$GITHUB_WORKSPACE/wallet.json"
         solana config set --url https://api.devnet.solana.com
         echo "Wallet address:"
-        solana address -k wallet.json
+        solana address -k "$GITHUB_WORKSPACE/wallet.json"
+        echo "Solana config:"
+        solana config get
 
     - name: Restore program keypair
       run: |
@@ -66,7 +70,7 @@ jobs:
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
-      run: solana airdrop 0.2 -k wallet.json || echo "Airdrop failed, continuing anyway"
+      run: solana airdrop 0.2 -k "$GITHUB_WORKSPACE/wallet.json" || echo "Airdrop failed, continuing anyway"
 
     - name: Confirm Program ID consistency
       working-directory: programs/arciumint-nft-gen
@@ -94,4 +98,4 @@ jobs:
       run: |
         anchor deploy \
           --provider.cluster devnet \
-          --provider.wallet ../../wallet.json
+          --provider.wallet "$GITHUB_WORKSPACE/wallet.json"
