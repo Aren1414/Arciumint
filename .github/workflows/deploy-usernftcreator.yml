@@ -3,6 +3,9 @@ name: Deploy usernftcreator Program
 on:
   push:
     branches: [main]
+    paths:
+      - 'programs/usernftcreator/**'
+      - 'Anchor.toml'
 
 env:
   RUSTUP_TOOLCHAIN: 1.89.0
@@ -78,7 +81,7 @@ jobs:
     - name: Build Anchor program
       run: |
         echo "🔧 Running anchor build..."
-        anchor build --skip-lint
+        anchor build --program-name usernftcreator --skip-lint
         echo "📦 Build complete. Listing .so files:"
         find programs/usernftcreator/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
