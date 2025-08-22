@@ -91,5 +91,10 @@ jobs:
         fi
         echo "✅ .so file found at $SO_PATH"
 
+    - name: Move .so file to root deploy folder
+      run: |
+        mkdir -p target/deploy
+        cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so target/deploy/arciumintnftgen.so
+
     - name: Deploy Anchor program to devnet
       run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
