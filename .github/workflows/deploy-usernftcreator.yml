@@ -37,16 +37,14 @@ jobs:
         rustc --version
         cargo --version
 
-    - name: Install Solana CLI
+    - name: Install Solana CLI (v2.1.0)
       run: |
-        curl -sSfL https://github.com/solana-labs/solana/releases/download/v1.18.11/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
-        tar -xjf solana.tar.bz2
-        ./solana-release/solana-install init v1.18.11
+        curl -sSfL https://release.anza.xyz/v2.1.0/install | sh
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor CLI
+    - name: Install Anchor CLI (v0.31.1)
       run: |
         cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
         avm install 0.31.1
