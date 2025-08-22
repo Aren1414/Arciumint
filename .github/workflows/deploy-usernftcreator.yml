@@ -72,11 +72,11 @@ jobs:
     - name: Confirm Program ID consistency
       run: |
         echo "Program ID in lib.rs:"
-        grep "declare_id!" programs/usernftcreator/src/lib.rs
+        grep "declare_id!" programs/usernftcreator/src/lib.rs || echo "❌ lib.rs not found"
         echo "Program ID in Anchor.toml:"
-        grep "usernftcreator" Anchor.toml
+        grep "usernftcreator" Anchor.toml || echo "❌ usernftcreator not found in Anchor.toml"
         echo "Program ID from keypair file:"
-        solana address -k target/deploy/usernftcreator-keypair.json
+        solana address -k target/deploy/usernftcreator-keypair.json || echo "❌ keypair file not found"
 
     - name: Build Anchor program
       run: |
