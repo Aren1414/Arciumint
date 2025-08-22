@@ -1,5 +1,5 @@
 [programs.devnet]
-arciumintnftgen = "22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn"
+arciumintnftgen = { path = "programs/arciumint-nft-gen", address = "22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn" }
 
 [provider]
 cluster = "devnet"
