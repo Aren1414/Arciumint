@@ -1,6 +1,5 @@
 [programs.devnet]
 usernftcreator = { path = "programs/usernftcreator", address = "BajbA5RqB7CnhsbNKtpS6oQr8wNwXYBZxg4AK4jRrD9i" }
-arciumintnftgen = { path = "programs/arciumint-nft-gen", address = "22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn" }
 
 [provider]
 cluster = "devnet"
