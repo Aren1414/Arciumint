@@ -60,7 +60,7 @@ jobs:
         solana config set --url https://api.devnet.solana.com
         solana address -k wallet.json
 
-    - name: Restore program keypair
+    - name: Restore program keypair for usernftcreator
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.USERNFTCREATOR_KEYPAIR }}' > target/deploy/usernftcreator-keypair.json
