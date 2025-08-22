@@ -80,15 +80,16 @@ jobs:
         echo "🔧 Running anchor build..."
         anchor build --skip-lint
         echo "📦 Build complete. Listing .so files:"
-        find target/deploy -name "*.so" || echo "⚠️ No .so files found."
+        find . -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
       run: |
-        if [ ! -f target/deploy/arciumintnftgen.so ]; then
+        SO_PATH=$(find target/deploy -name "arciumintnftgen.so")
+        if [ -z "$SO_PATH" ]; then
           echo "❌ ERROR: .so file not found. Build may have failed."
           exit 1
         fi
-        echo "✅ .so file found."
+        echo "✅ .so file found at $SO_PATH"
 
     - name: Deploy Anchor program to devnet
       run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
