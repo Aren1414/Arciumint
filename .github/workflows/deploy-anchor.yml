@@ -47,6 +47,7 @@ jobs:
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
     - name: Restore wallet keypair (signer)
@@ -75,7 +76,11 @@ jobs:
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
     - name: Build Anchor program
-      run: anchor build --skip-lint
+      run: |
+        echo "🔧 Running anchor build..."
+        anchor build --skip-lint
+        echo "📦 Build complete. Listing .so files:"
+        find target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
       run: |
