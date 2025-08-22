@@ -6,7 +6,7 @@ on:
     paths:
       - 'programs/usernftcreator/**'
       - 'Anchor.toml'
-      
+
 env:
   RUSTUP_TOOLCHAIN: 1.89.0
 
@@ -39,7 +39,9 @@ jobs:
 
     - name: Install Solana CLI
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+        curl -sSfL https://github.com/solana-labs/solana/releases/download/v1.18.11/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
+        tar -xjf solana.tar.bz2
+        ./solana-release/solana-install init v1.18.11
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
