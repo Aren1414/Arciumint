@@ -77,5 +77,13 @@ jobs:
     - name: Build Anchor program
       run: anchor build --skip-lint
 
+    - name: Check .so file exists
+      run: |
+        if [ ! -f target/deploy/arciumintnftgen.so ]; then
+          echo "❌ ERROR: .so file not found. Build may have failed."
+          exit 1
+        fi
+        echo "✅ .so file found."
+
     - name: Deploy Anchor program to devnet
       run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
