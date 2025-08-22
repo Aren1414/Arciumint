@@ -75,10 +75,10 @@ jobs:
         echo "Program ID from keypair file:"
         solana address -k target/deploy/usernftcreator-keypair.json
 
-    - name: Build Anchor program
+    - name: Build Anchor program with IDL
       run: |
-        echo "🔧 Running anchor build..."
-        anchor build --skip-lint
+        echo "🔧 Running anchor build with idl-build feature..."
+        cargo build-bpf --manifest-path programs/usernftcreator/Cargo.toml --features idl-build --release
         echo "📦 Build complete. Listing .so files:"
         find programs/usernftcreator/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
