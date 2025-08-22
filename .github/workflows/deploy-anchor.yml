@@ -59,9 +59,9 @@ jobs:
 
     - name: Restore program keypair
       run: |
-        mkdir -p target/deploy
-        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
-        solana address -k target/deploy/arciumintnftgen-keypair.json
+        mkdir -p programs/arciumint-nft-gen/target/deploy
+        echo '${{ secrets.PROGRAM_KEYPAIR }}' > programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
+        solana address -k programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL to wallet
       run: solana airdrop 2 -k wallet.json || echo "Airdrop failed, continuing anyway"
@@ -73,18 +73,18 @@ jobs:
         echo "Program ID in Anchor.toml:"
         grep "arciumintnftgen" Anchor.toml
         echo "Program ID from keypair file:"
-        solana address -k target/deploy/arciumintnftgen-keypair.json
+        solana address -k programs/arciumint-nft-gen/target/deploy/arciumintnftgen-keypair.json
 
     - name: Build Anchor program
       run: |
         echo "🔧 Running anchor build..."
         anchor build --skip-lint
         echo "📦 Build complete. Listing .so files:"
-        find . -name "*.so" || echo "⚠️ No .so files found."
+        find programs/arciumint-nft-gen/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
       run: |
-        SO_PATH=$(find target/deploy -name "arciumintnftgen.so")
+        SO_PATH=$(find programs/arciumint-nft-gen/target/deploy -name "arciumintnftgen.so")
         if [ -z "$SO_PATH" ]; then
           echo "❌ ERROR: .so file not found. Build may have failed."
           exit 1
