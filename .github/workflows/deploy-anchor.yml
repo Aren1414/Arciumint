@@ -80,11 +80,11 @@ jobs:
         echo "🔧 Running anchor build..."
         anchor build --skip-lint
         echo "📦 Build complete. Listing .so files:"
-        find target/deploy -name "*.so" || echo "⚠️ No .so files found."
+        find programs/arciumint-nft-gen/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
       run: |
-        SO_PATH=$(find target/deploy -name "arciumintnftgen.so")
+        SO_PATH=$(find programs/arciumint-nft-gen/target/deploy -name "arciumintnftgen.so")
         if [ -z "$SO_PATH" ]; then
           echo "❌ ERROR: .so file not found. Build may have failed."
           exit 1
