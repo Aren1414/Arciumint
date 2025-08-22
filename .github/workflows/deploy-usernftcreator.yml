@@ -6,7 +6,7 @@ on:
     paths:
       - 'programs/usernftcreator/**'
       - 'Anchor.toml'
-
+      
 env:
   RUSTUP_TOOLCHAIN: 1.89.0
 
