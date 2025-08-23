@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+
+pub mod metadata;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
@@ -9,10 +10,10 @@ pub mod arciumintnftgen {
     use super::*;
 
     pub fn mint_nft(
-        ctx: Context<MintNFT>, 
-        name: String, 
-        symbol: String, 
-        uri: String
+        ctx: Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
     ) -> Result<()> {
         let user_record = &mut ctx.accounts.user_record;
 
@@ -33,36 +34,13 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        let ix = create_metadata_accounts_v3(
-            ctx.accounts.token_metadata_program.key(),
+        metadata::create_metadata(
+            &ctx,
             ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.signer.key(),
-            ctx.accounts.mint_authority.key(),
             name,
             symbol,
             uri,
-            None,
-            1,
-            true,
-            false,
-            None,
-            None,
-            None,
-        );
-
-        anchor_lang::solana_program::program::invoke_signed(
-            &ix,
-            &[
-                ctx.accounts.metadata.to_account_info(),
-                ctx.accounts.mint.to_account_info(),
-                ctx.accounts.mint_authority.to_account_info(),
-                ctx.accounts.signer.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-                ctx.accounts.rent.to_account_info(),
-            ],
-            signer_seeds,
+            ctx.bumps.mint_authority,
         )?;
 
         user_record.has_minted = true;
@@ -98,12 +76,11 @@ pub struct MintNFT<'info> {
 
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
+    pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-
-    pub token_metadata_program: UncheckedAccount<'info>,
 }
 
 #[account]
