@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use anchor_spl::metadata::create_metadata_accounts_v3;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
@@ -119,4 +119,4 @@ impl UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-    }
+}
