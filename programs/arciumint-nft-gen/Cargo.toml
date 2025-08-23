@@ -5,7 +5,8 @@ edition = "2021"
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl  = { version = "0.31.1", features = ["metadata"] }
+anchor-spl  = { version = "0.31.1" }
+mpl-token-metadata = { git = "https://github.com/metaplex-foundation/metaplex-program-library.git", package = "mpl-token-metadata", rev = "f9c9a1b" }
 
 [features]
 default = []
