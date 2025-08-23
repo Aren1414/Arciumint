@@ -7,6 +7,7 @@ edition = "2021"
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl  = { version = "0.31.1" }
 mpl-token-metadata = "4.1.2"
+bincode = "1.3.3" 
 
 [features]
 default = []
@@ -17,6 +18,3 @@ idl-build = [
 
 [lib]
 crate-type = ["cdylib"]
-
-[patch.crates-io]
-bincode = "=1.3.3"
