@@ -1,10 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{
-    program::invoke_signed,
-    pubkey::Pubkey,
-};
+use anchor_lang::solana_program::{program::invoke_signed, pubkey::Pubkey};
 use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::state::Creator;
+use mpl_token_metadata::types::Creator;
 
 pub fn create_metadata<'info>(
     metadata_program: AccountInfo<'info>,
@@ -16,10 +13,14 @@ pub fn create_metadata<'info>(
     name: String,
     symbol: String,
     uri: String,
-    bump: u8,
+    _bump: u8,
+    
     system_program: AccountInfo<'info>,
-    rent: AccountInfo<'info>,
-    metadata: AccountInfo<'info>,
+    metadata_ai: AccountInfo<'info>,
+    mint_ai: AccountInfo<'info>,
+    mint_authority_ai: AccountInfo<'info>,
+    payer_ai: AccountInfo<'info>,
+    update_authority_ai: AccountInfo<'info>,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creators = vec![Creator {
@@ -28,6 +29,7 @@ pub fn create_metadata<'info>(
         share: 100,
     }];
 
+    
     let ix = create_metadata_accounts_v3(
         metadata_program.key(),
         metadata_account,
@@ -39,24 +41,24 @@ pub fn create_metadata<'info>(
         symbol,
         uri,
         Some(creators),
-        500,
-        true,
-        true,
-        None,
-        None,
-        None,
+        500,     // seller_fee_basis_points (5%)
+        true,    // update_authority_is_signer
+        true,    // is_mutable
+        None,    // collection
+        None,    // uses
+        None,    // collection_details
     );
 
-    invoke_signed(
-        &ix,
-        &[
-            metadata_program,
-            metadata,
-            system_program,
-            rent,
-        ],
-        signer_seeds,
-    )?;
+    let accounts = &[
+        metadata_ai,          // Metadata PDA
+        mint_ai,              // Mint
+        mint_authority_ai,    // Mint Authority
+        payer_ai,             // Payer
+        update_authority_ai,  // Update Authority
+        system_program,       // System Program
+    ];
+
+    invoke_signed(&ix, accounts, signer_seeds)?;
 
     Ok(())
-}
+             }
