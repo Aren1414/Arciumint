@@ -60,11 +60,8 @@ jobs:
 
     - name: Confirm Program ID consistency
       run: |
-        echo "Program ID in lib.rs:"
         grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs
-        echo "Program ID in Anchor.toml:"
         grep "arciumintnftgen" Anchor.toml
-        echo "Program ID from keypair file:"
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
     - name: Build Anchor program
@@ -76,10 +73,8 @@ jobs:
       run: |
         SO_PATH=$(find programs/arciumint-nft-gen/target/deploy -name "arciumintnftgen.so")
         if [ -z "$SO_PATH" ]; then
-          echo "❌ ERROR: .so file not found. Build may have failed."
           exit 1
         fi
-        echo "✅ .so file found at $SO_PATH"
 
     - name: Move .so file to root deploy folder
       run: |
