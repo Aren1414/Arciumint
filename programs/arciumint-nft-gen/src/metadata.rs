@@ -14,7 +14,6 @@ pub fn create_metadata<'info>(
     symbol: String,
     uri: String,
     _bump: u8,
-    
     system_program: AccountInfo<'info>,
     metadata_ai: AccountInfo<'info>,
     mint_ai: AccountInfo<'info>,
@@ -29,7 +28,6 @@ pub fn create_metadata<'info>(
         share: 100,
     }];
 
-    
     let ix = create_metadata_accounts_v3(
         metadata_program.key(),
         metadata_account,
@@ -41,24 +39,24 @@ pub fn create_metadata<'info>(
         symbol,
         uri,
         Some(creators),
-        500,     // seller_fee_basis_points (5%)
-        true,    // update_authority_is_signer
-        true,    // is_mutable
-        None,    // collection
-        None,    // uses
-        None,    // collection_details
+        500,   // seller_fee_basis_points (5%)
+        true,  // update_authority_is_signer
+        true,  // is_mutable
+        None,  // collection
+        None,  // uses
+        None,  // collection_details
     );
 
     let accounts = &[
-        metadata_ai,          // Metadata PDA
-        mint_ai,              // Mint
-        mint_authority_ai,    // Mint Authority
-        payer_ai,             // Payer
-        update_authority_ai,  // Update Authority
-        system_program,       // System Program
+        metadata_ai,
+        mint_ai,
+        mint_authority_ai,
+        payer_ai,
+        update_authority_ai,
+        system_program,
     ];
 
     invoke_signed(&ix, accounts, signer_seeds)?;
 
     Ok(())
-             }
+}
