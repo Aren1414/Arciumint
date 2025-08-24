@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
+use anchor_lang::solana_program::pubkey::Pubkey;
+use spl_token;
 pub mod metadata;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -59,7 +61,7 @@ pub struct MintNFT<'info> {
         seeds = [b"user_record", signer.key().as_ref()],
         bump
     )]
-    pub user_record: Account<'info, UserRecord>,
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     #[account(mut)]
     pub mint: Box<Account<'info, Mint>>,
