@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to, Pack};
+use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
 pub mod metadata;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -74,13 +74,13 @@ pub struct MintNFT<'info> {
         seeds = [b"mint_authority"],
         bump
     )]
-    pub mint_authority: UncheckedAccount<'info>,
+    pub mint_authority: AccountInfo<'info>, 
 
     #[account(mut)]
-    pub metadata: UncheckedAccount<'info>,
+    pub metadata: AccountInfo<'info>, 
 
     /// CHECK: Metaplex program id
-    pub token_metadata_program: UncheckedAccount<'info>,
+    pub token_metadata_program: AccountInfo<'info>, 
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -98,4 +98,4 @@ impl UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-}
+    }
