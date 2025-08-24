@@ -15,8 +15,10 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
+        
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
+        // Mint 1 token to user's ATA
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
@@ -28,6 +30,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
+        // Create metadata via CPI to Metaplex
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.metadata.key(),
@@ -39,13 +42,19 @@ pub mod arciumintnftgen {
             symbol,
             uri,
             ctx.bumps.mint_authority,
+            
             ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.rent.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.signer.to_account_info(), // payer
+            ctx.accounts.mint_authority.to_account_info(), // update_authority
             signer_seeds,
         )?;
 
         let user_record = &mut ctx.accounts.user_record;
+        
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
 
         Ok(())
@@ -67,10 +76,10 @@ pub struct MintNFT<'info> {
     pub user_record: Account<'info, UserRecord>,
 
     #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    pub mint: Box<Account<'info, Mint>>,
 
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(
         seeds = [b"mint_authority"],
@@ -80,18 +89,18 @@ pub struct MintNFT<'info> {
 
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Metaplex program id
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
