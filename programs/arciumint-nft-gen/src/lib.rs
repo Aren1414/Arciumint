@@ -18,6 +18,27 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
+        
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+        
+        let token_id = Pubkey::new_from_array(spl_token::id().to_bytes());
+        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != token_id {
+            return Err(ErrorCode::InvalidTokenProgram.into());
+        }
+
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
+
+        Ok(())
+    }
+
+    fn mint_token_to_user<'info>(
+        ctx: &Context<MintNFT>,
+        signer_seeds: &[&[&[u8]]],
+    ) -> Result<()> {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
@@ -27,8 +48,16 @@ pub mod arciumintnftgen {
             },
             signer_seeds,
         );
-        mint_to(cpi_ctx, 1)?;
+        mint_to(cpi_ctx, 1)
+    }
 
+    fn create_metadata_for_token<'info>(
+        ctx: &Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
+        signer_seeds: &[&[&[u8]]],
+    ) -> Result<()> {
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
@@ -39,20 +68,7 @@ pub mod arciumintnftgen {
             symbol,
             uri,
             signer_seeds,
-        )?;
-
-        
-        let token_id = Pubkey::new_from_array(spl_token::id().to_bytes());
-        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != token_id {
-            return Err(ErrorCode::InvalidTokenProgram.into());
-        }
-
-        
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
-        Ok(())
+        )
     }
 }
 
@@ -107,4 +123,4 @@ pub enum ErrorCode {
 
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-    }
+}
