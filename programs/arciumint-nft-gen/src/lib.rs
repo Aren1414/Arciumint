@@ -33,21 +33,13 @@ pub mod arciumintnftgen {
         // Create metadata via CPI to Metaplex
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.signer.key(),
-            ctx.accounts.mint_authority.key(),
-            name,
-            symbol,
-            uri,
-            ctx.bumps.mint_authority,
-            ctx.accounts.system_program.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.mint_authority.to_account_info(),
             ctx.accounts.signer.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
+            name,
+            symbol,
+            uri,
             signer_seeds,
         )?;
 
