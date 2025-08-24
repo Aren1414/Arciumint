@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
 
 pub mod metadata;
@@ -15,7 +16,6 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
         // Mint 1 token to user's ATA
@@ -42,18 +42,17 @@ pub mod arciumintnftgen {
             symbol,
             uri,
             ctx.bumps.mint_authority,
-            
             ctx.accounts.system_program.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.signer.to_account_info(), // payer
-            ctx.accounts.mint_authority.to_account_info(), // update_authority
+            ctx.accounts.signer.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
             signer_seeds,
         )?;
 
+        // Mark user as minted
         let user_record = &mut ctx.accounts.user_record;
-        
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
 
