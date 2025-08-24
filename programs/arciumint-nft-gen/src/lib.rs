@@ -41,6 +41,11 @@ pub mod arciumintnftgen {
             signer_seeds,
         )?;
 
+        let token_id = Pubkey::new_from_array(spl_token::id().to_bytes());
+        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != token_id {
+            return Err(ErrorCode::InvalidTokenProgram.into());
+        }
+
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -97,4 +102,7 @@ impl UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
+
+    #[msg("Invalid token program.")]
+    InvalidTokenProgram,
 }
