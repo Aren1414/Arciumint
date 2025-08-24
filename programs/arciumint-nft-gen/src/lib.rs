@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to, Pack};
-use solana_program::pubkey::Pubkey;
-
-pub mod metadata;
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::state::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
