@@ -20,12 +20,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config
 
-    - name: Set up Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
     - name: Install Rust
       run: |
         rustup self update
@@ -50,21 +44,19 @@ jobs:
         export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
-    - name: Restore wallet keypair (signer)
+    - name: Restore wallet keypair
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
-        solana address -k wallet.json
 
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
-        solana address -k target/deploy/arciumintnftgen-keypair.json
 
-    - name: Airdrop SOL to wallet
-      run: solana airdrop 2 -k wallet.json || echo "Airdrop failed, continuing anyway"
+    - name: Airdrop SOL
+      run: solana airdrop 2 -k wallet.json || echo "Airdrop failed"
 
     - name: Confirm Program ID consistency
       run: |
@@ -77,9 +69,7 @@ jobs:
 
     - name: Build Anchor program
       run: |
-        echo "🔧 Running anchor build..."
         anchor build --skip-lint
-        echo "📦 Build complete. Listing .so files:"
         find programs/arciumint-nft-gen/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
@@ -96,5 +86,5 @@ jobs:
         mkdir -p target/deploy
         cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so target/deploy/arciumintnftgen.so
 
-    - name: Deploy Anchor program to devnet
+    - name: Deploy Anchor program
       run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
