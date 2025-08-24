@@ -5,8 +5,11 @@ edition = "2021"
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", default-features = false, features = ["token"] }
-mpl-token-metadata = "1.11.0"
+anchor-spl  = { version = "0.31.1", default-features = false, features = ["token"] }
+
+mpl-token-metadata = { version = "4.1.2", default-features = false }
+
+solana-program = { version = "1.18.17", default-features = false }
 
 [features]
 default = []
@@ -17,3 +20,6 @@ idl-build = [
 
 [lib]
 crate-type = ["cdylib"]
+
+[patch.crates-io]
+solana-program = "=1.18.17"
