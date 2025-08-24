@@ -15,35 +15,47 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let user_record = &mut ctx.accounts.user_record;
-
-        if user_record.has_minted {
-            return err!(ErrorCode::AlreadyMinted);
-        }
+        let signer = ctx.accounts.signer.to_account_info();
+        let mint = ctx.accounts.mint.to_account_info();
+        let mint_authority = ctx.accounts.mint_authority.to_account_info();
+        let metadata_program = ctx.accounts.token_metadata_program.to_account_info();
+        let metadata_account = ctx.accounts.metadata.to_account_info();
+        let system_program = ctx.accounts.system_program.to_account_info();
+        let rent = ctx.accounts.rent.to_account_info();
 
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
-                mint: ctx.accounts.mint.to_account_info(),
+                mint: mint.clone(),
                 to: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.mint_authority.to_account_info(),
+                authority: mint_authority.clone(),
             },
             signer_seeds,
         );
         mint_to(cpi_ctx, 1)?;
 
         metadata::create_metadata(
-            &ctx,
+            metadata_program,
             ctx.accounts.metadata.key(),
+            mint,
+            mint_authority,
+            signer.clone(),
+            ctx.accounts.mint_authority.key(),
             name,
             symbol,
             uri,
             ctx.bumps.mint_authority,
+            system_program,
+            rent,
+            metadata_account,
+            signer_seeds,
         )?;
 
+        let user_record = &mut ctx.accounts.user_record;
         user_record.has_minted = true;
+
         Ok(())
     }
 }
