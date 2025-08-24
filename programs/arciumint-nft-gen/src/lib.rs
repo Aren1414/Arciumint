@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
+use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to, Pack};
 
 pub mod metadata;
 
@@ -29,19 +29,13 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Convert UncheckedAccounts to AccountInfo for metadata CPI
-        let metadata_ai = ctx.accounts.metadata.to_account_info();
-        let mint_ai = ctx.accounts.mint.to_account_info();
-        let mint_authority_ai = ctx.accounts.mint_authority.to_account_info();
-        let payer_ai = ctx.accounts.signer.to_account_info();
-
         // Create metadata via CPI to Metaplex
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
-            metadata_ai,
-            mint_ai,
-            mint_authority_ai,
-            payer_ai,
+            ctx.accounts.metadata.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.signer.to_account_info(),
             name,
             symbol,
             uri,
