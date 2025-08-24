@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to, Pack};
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::state::{Creator, DataV2};
+use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
+pub mod metadata;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
@@ -29,7 +28,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Create metadata via CPI to Metaplex
+        // Create metadata via CPI
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
@@ -71,10 +70,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    #[account(
-        seeds = [b"mint_authority"],
-        bump
-    )]
+    #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
@@ -91,6 +87,7 @@ pub struct MintNFT<'info> {
 pub struct UserRecord {
     pub has_minted: bool,
 }
+
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
