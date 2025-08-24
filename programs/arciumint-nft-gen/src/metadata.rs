@@ -1,10 +1,11 @@
 use anchor_lang::prelude::*;
-use solana_program::program::invoke_signed;
-use mpl_token_metadata::instructions::CreateMetadataAccountV3CpiBuilder;
+use anchor_lang::solana_program::{program::invoke_signed, pubkey::Pubkey};
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::state::{Creator, DataV2};
 
 pub fn create_metadata<'info>(
     token_metadata_program: AccountInfo<'info>,
-    metadata_account: AccountInfo<'info>,
+    metadata: AccountInfo<'info>,
     mint: AccountInfo<'info>,
     mint_authority: AccountInfo<'info>,
     payer: AccountInfo<'info>,
@@ -13,29 +14,44 @@ pub fn create_metadata<'info>(
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    let mut builder = CreateMetadataAccountV3CpiBuilder::new(&token_metadata_program);
+    let creators = vec![Creator {
+        address: *payer.key,
+        verified: true,
+        share: 100,
+    }];
 
-    builder
-        .metadata(&metadata_account)
-        .mint(&mint)
-        .mint_authority(&mint_authority)
-        .payer(&payer)
-        .update_authority(&mint_authority, true)
-        .name(name)
-        .symbol(symbol)
-        .uri(uri)
-        .is_mutable(true);
+    let data = DataV2 {
+        name,
+        symbol,
+        uri,
+        seller_fee_basis_points: 500,
+        creators: Some(creators),
+        collection: None,
+        uses: None,
+    };
 
-    let ix = builder.instruction();
+    let ix = create_metadata_accounts_v3(
+        *token_metadata_program.key,
+        *metadata.key,
+        *mint.key,
+        *mint_authority.key,
+        *payer.key,
+        *mint_authority.key, // update authority
+        data,
+        true,  // is mutable
+        true,  // update authority is signer
+        None,  // collection
+        None,  // uses
+    );
 
     invoke_signed(
         &ix,
         &[
-            metadata_account,
+            token_metadata_program,
+            metadata,
             mint,
             mint_authority,
             payer,
-            token_metadata_program,
         ],
         signer_seeds,
     )?;
