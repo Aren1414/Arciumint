@@ -18,11 +18,9 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        
         mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+        metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        
         let token_id = Pubkey::new_from_array(spl_token::id().to_bytes());
         if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != token_id {
             return Err(ErrorCode::InvalidTokenProgram.into());
@@ -35,6 +33,7 @@ pub mod arciumintnftgen {
         Ok(())
     }
 
+    #[inline(never)]
     fn mint_token_to_user<'info>(
         ctx: &Context<MintNFT>,
         signer_seeds: &[&[&[u8]]],
@@ -49,26 +48,6 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
         mint_to(cpi_ctx, 1)
-    }
-
-    fn create_metadata_for_token<'info>(
-        ctx: &Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-        signer_seeds: &[&[&[u8]]],
-    ) -> Result<()> {
-        metadata::create_metadata(
-            ctx.accounts.token_metadata_program.to_account_info(),
-            ctx.accounts.metadata.to_account_info(),
-            ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.signer.to_account_info(),
-            name,
-            symbol,
-            uri,
-            signer_seeds,
-        )
     }
 }
 
