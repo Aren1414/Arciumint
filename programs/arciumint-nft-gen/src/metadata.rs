@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{program::invoke_signed, pubkey::Pubkey, account_info::AccountInfo};
+use anchor_lang::solana_program::{program::invoke_signed, account_info::AccountInfo};
 use mpl_token_metadata::instruction::create_metadata_accounts_v3;
 use mpl_token_metadata::state::{Creator, DataV2};
 
@@ -14,9 +14,8 @@ pub fn create_metadata<'info>(
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    
-    let creators: Vec<Creator> = vec![Creator {
-        address: *payer.key,
+    let creators = vec![Creator {
+        address: payer.key.clone(),
         verified: true,
         share: 100,
     }];
@@ -32,12 +31,12 @@ pub fn create_metadata<'info>(
     };
 
     let ix = create_metadata_accounts_v3(
-        *token_metadata_program.key,
-        *metadata.key,
-        *mint.key,
-        *mint_authority.key,
-        *payer.key,
-        *mint_authority.key,
+        token_metadata_program.key.clone(),
+        metadata.key.clone(),
+        mint.key.clone(),
+        mint_authority.key.clone(),
+        payer.key.clone(),
+        mint_authority.key.clone(),
         data,
         true,
         true,
