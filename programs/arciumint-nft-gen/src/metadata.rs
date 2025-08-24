@@ -51,4 +51,4 @@ pub fn create_metadata<'info>(
     )?;
 
     Ok(())
-        }
+}
