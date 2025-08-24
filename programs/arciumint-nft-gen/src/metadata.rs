@@ -1,7 +1,12 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::types::{Creator, DataV2}; 
-use anchor_lang::solana_program::program::invoke_signed;
+use anchor_lang::solana_program::{
+    instruction::Instruction,
+    program::invoke_signed,
+    pubkey::Pubkey,
+};
+use mpl_token_metadata::types::Creator;
+use mpl_token_metadata::accounts::CreateMetadataAccountsV3;
+use mpl_token_metadata::instructions::create_metadata_accounts_v3;
 
 pub fn create_metadata<'info>(
     metadata_program: AccountInfo<'info>,
@@ -19,21 +24,24 @@ pub fn create_metadata<'info>(
     metadata: AccountInfo<'info>,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    let creators = vec![
-        Creator {
-            address: payer.key(),
-            verified: true,
-            share: 100,
-        },
-    ];
+    let creators = vec![Creator {
+        address: payer.key(), // Pubkey از anchor_lang::solana_program
+        verified: true,
+        share: 100,
+    }];
 
-    let metadata_instruction = create_metadata_accounts_v3(
-        metadata_program.key(),
-        metadata_account,
-        mint.key(),
-        mint_authority.key(),
-        payer.key(),
+    let accounts = CreateMetadataAccountsV3 {
+        metadata: metadata_account,
+        mint: *mint.key,
+        mint_authority: *mint_authority.key,
+        payer: *payer.key,
         update_authority,
+        system_program: *system_program.key,
+        rent: *rent.key,
+    };
+
+    let ix: Instruction = create_metadata_accounts_v3(
+        accounts,
         name,
         symbol,
         uri,
@@ -47,7 +55,7 @@ pub fn create_metadata<'info>(
     );
 
     invoke_signed(
-        &metadata_instruction,
+        &ix,
         &[
             metadata_program,
             metadata,
