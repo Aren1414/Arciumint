@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{program::invoke_signed, pubkey::Pubkey};
+use anchor_lang::solana_program::{program::invoke_signed, pubkey::Pubkey, account_info::AccountInfo};
 use mpl_token_metadata::instruction::create_metadata_accounts_v3;
 use mpl_token_metadata::state::{Creator, DataV2};
 
