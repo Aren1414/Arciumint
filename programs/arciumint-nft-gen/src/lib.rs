@@ -16,7 +16,6 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        // Mint 1 token to user's ATA
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
@@ -28,7 +27,6 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Create metadata via CPI to Metaplex
         metadata::create_metadata(
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
@@ -41,7 +39,6 @@ pub mod arciumintnftgen {
             signer_seeds,
         )?;
 
-        // Mark user as minted
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -74,13 +71,13 @@ pub struct MintNFT<'info> {
         seeds = [b"mint_authority"],
         bump
     )]
-    pub mint_authority: AccountInfo<'info>, 
+    pub mint_authority: AccountInfo<'info>,
 
     #[account(mut)]
-    pub metadata: AccountInfo<'info>, 
+    pub metadata: AccountInfo<'info>,
 
     /// CHECK: Metaplex program id
-    pub token_metadata_program: AccountInfo<'info>, 
+    pub token_metadata_program: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -98,4 +95,4 @@ impl UserRecord {
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-    }
+}
