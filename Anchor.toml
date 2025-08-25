@@ -7,7 +7,7 @@ cluster = "devnet"
 wallet = "wallet.json"
 
 [toolchain]
-anchor_version = "git"
+anchor_version = "master"
 solana_version = "2.1.0"
 
 [scripts]
