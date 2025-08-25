@@ -20,7 +20,7 @@ pub mod arciumintnftgen {
         mint_token_to_user(&ctx, signer_seeds)?;
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != TOKEN_PROGRAM_ID {
+        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != &TOKEN_PROGRAM_ID {
             return Err(ErrorCode::InvalidTokenProgram.into());
         }
 
