@@ -7,7 +7,7 @@ edition = "2021"
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", default-features = false, features = ["token"] }
 mpl-token-metadata = "1.11.0"
-spl-memo = { version = "1.0.0", features = ["v1"] }
+spl-memo = "1.0.0"
 
 [features]
 default = []
