@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anchor-lang = { git = "https://github.com/coral-xyz/anchor", branch = "master", features = ["init-if-needed"] }
-anchor-spl = { git = "https://github.com/coral-xyz/anchor", branch = "master", default-features = false, features = ["token"] }
-mpl-token-metadata = { git = "https://github.com/metaplex-foundation/mpl-token-metadata", branch = "master" }
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.1", default-features = false, features = ["token"] }
+mpl-token-metadata = "1.11.0"
 spl-memo = "1.0.0"
 
 [features]
