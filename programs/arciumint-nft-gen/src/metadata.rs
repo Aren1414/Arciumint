@@ -66,4 +66,4 @@ pub struct MetadataContext<'info> {
     pub mint: AccountInfo<'info>,
     pub mint_authority: AccountInfo<'info>,
     pub signer: AccountInfo<'info>,
-}
+        }
