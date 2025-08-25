@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
-use anchor_lang::solana_program::pubkey::Pubkey;
-use spl_token;
+use anchor_spl::token::ID as TOKEN_PROGRAM_ID;
 pub mod metadata;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -21,8 +20,7 @@ pub mod arciumintnftgen {
         mint_token_to_user(&ctx, signer_seeds)?;
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        let token_id = Pubkey::new_from_array(spl_token::id().to_bytes());
-        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != token_id {
+        if ctx.accounts.token_program.key() != id() && ctx.accounts.token_program.key() != TOKEN_PROGRAM_ID {
             return Err(ErrorCode::InvalidTokenProgram.into());
         }
 
