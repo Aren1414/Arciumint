@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", default-features = false, features = ["token"] }
+anchor-lang = { version = "0.30.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.30.0", default-features = false, features = ["token"] }
 mpl-token-metadata = "1.11.0"
 spl-memo = "1.0.0"
 
