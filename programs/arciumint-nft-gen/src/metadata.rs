@@ -11,21 +11,21 @@ pub fn create_metadata_for_token<'info>(
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    let creators = vec![Creator {
+    let creator = Creator {
         address: ctx.accounts().signer.key(),
         verified: true,
         share: 100,
-    }];
+    };
 
-    let data = DataV2 {
+    let data = Box::new(DataV2 {
         name,
         symbol,
         uri,
         seller_fee_basis_points: 500,
-        creators: Some(creators),
+        creators: Some(vec![creator]),
         collection: None,
         uses: None,
-    };
+    });
 
     let ix = create_metadata_accounts_v3(
         ctx.accounts().token_metadata_program.key(),
@@ -34,7 +34,7 @@ pub fn create_metadata_for_token<'info>(
         ctx.accounts().mint_authority.key(),
         ctx.accounts().signer.key(),
         ctx.accounts().mint_authority.key(),
-        data,
+        *data,
         true,
         true,
         None,
