@@ -11,18 +11,20 @@ pub fn create_metadata_for_token<'info>(
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    let creator = Creator {
+    
+    let creator = Box::new(Creator {
         address: ctx.accounts().signer.key(),
         verified: true,
         share: 100,
-    };
+    });
 
+    
     let data = Box::new(DataV2 {
         name,
         symbol,
         uri,
         seller_fee_basis_points: 500,
-        creators: Some(vec![creator]),
+        creators: Some(vec![*creator]),
         collection: None,
         uses: None,
     });
