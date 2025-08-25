@@ -12,7 +12,7 @@ pub fn create_metadata_for_token<'info>(
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creators = vec![Creator {
-        address: ctx.accounts().signer.key.clone(),
+        address: ctx.accounts().signer.key(),
         verified: true,
         share: 100,
     }];
@@ -28,12 +28,12 @@ pub fn create_metadata_for_token<'info>(
     };
 
     let ix = create_metadata_accounts_v3(
-        ctx.accounts().token_metadata_program.key.clone(),
-        ctx.accounts().metadata.key.clone(),
-        ctx.accounts().mint.key.clone(),
-        ctx.accounts().mint_authority.key.clone(),
-        ctx.accounts().signer.key.clone(),
-        ctx.accounts().mint_authority.key.clone(),
+        ctx.accounts().token_metadata_program.key(),
+        ctx.accounts().metadata.key(),
+        ctx.accounts().mint.key(),
+        ctx.accounts().mint_authority.key(),
+        ctx.accounts().signer.key(),
+        ctx.accounts().mint_authority.key(),
         data,
         true,
         true,
