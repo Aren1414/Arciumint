@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke_signed;
-use anchor_spl::metadata::{create_metadata_accounts_v3, mpl_token_metadata::types::{Creator, DataV2}};
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::state::{Creator, DataV2};
+
 use crate::MintNFT;
 
 pub fn create_metadata_for_token<'info>(
@@ -51,4 +53,4 @@ pub fn create_metadata_for_token<'info>(
     invoke_signed(&ix, account_infos, signer_seeds)?;
 
     Ok(())
-        }
+}
