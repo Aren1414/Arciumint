@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", features = ["token"] }
-mpl-token-metadata = { version = "4.1.2", features = ["no-entrypoint"] }
+mpl-token-metadata = "4.1.2"
 spl-memo = "4.0.0"
 
 [features]
