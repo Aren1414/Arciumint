@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo, mint_to};
+use anchor_spl::token::{Mint, TokenAccount, Token, MintTo, mint_to};
+use anchor_spl::token::ID as TOKEN_PROGRAM_ID;
 pub mod metadata;
+
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
 #[program]
@@ -13,15 +15,14 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
+        if ctx.accounts.token_program.key() != &TOKEN_PROGRAM_ID {
+            return Err(ErrorCode::InvalidTokenProgram.into());
+        }
+
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        require!(
-            ctx.accounts.token_program.key() == &token::ID,
-            ErrorCode::InvalidTokenProgram
-        );
 
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
@@ -77,10 +78,10 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub metadata: AccountInfo<'info>,
 
+    /// CHECK: Metaplex program id
     pub token_metadata_program: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
-
     pub system_program: Program<'info, System>,
 }
 
