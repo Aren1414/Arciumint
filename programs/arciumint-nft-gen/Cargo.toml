@@ -17,6 +17,3 @@ idl-build = [
 
 [lib]
 crate-type = ["cdylib"]
-
-[patch.crates-io]
-zeroize = "=1.7.0"
