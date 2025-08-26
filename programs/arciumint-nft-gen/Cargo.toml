@@ -3,11 +3,14 @@ name = "arciumintnftgen"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", default-features = false, features = ["token"] }
-mpl-token-metadata = { version = "1.11.0", default-features = false }
-spl-memo = { version = "1.0.0", default-features = false }
+anchor-spl = { version = "0.31.1", features = ["token"] }
+mpl-token-metadata = { version = "4.1.2", features = ["no-entrypoint"] }
+spl-memo = "4.0.0"
 
 [features]
 default = []
@@ -15,6 +18,3 @@ idl-build = [
   "anchor-lang/idl-build",
   "anchor-spl/idl-build"
 ]
-
-[lib]
-crate-type = ["cdylib"]
