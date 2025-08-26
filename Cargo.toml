@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "programs/arciumint-nft-gen",
+  "programs/usernftcreator",
+]
