@@ -64,6 +64,9 @@ jobs:
         grep "arciumintnftgen" Anchor.toml
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
+    - name: Cargo tree (dedupe check)
+      run: cargo tree -d || echo "no duplicates or cargo-tree not available"
+
     - name: Build Anchor program
       run: |
         anchor build --skip-lint
