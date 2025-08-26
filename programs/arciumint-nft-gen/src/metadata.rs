@@ -1,18 +1,17 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{program::invoke_signed, account_info::AccountInfo};
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::state::{Creator, DataV2};
+use anchor_lang::solana_program::program::invoke_signed;
+use anchor_spl::metadata::{create_metadata_accounts_v3, mpl_token_metadata::types::{Creator, DataV2}};
+use crate::MintNFT;
 
-#[inline(never)]
 pub fn create_metadata_for_token<'info>(
-    ctx: &Context<impl MetadataAccounts<'info>>,
+    ctx: &Context<MintNFT>,
     name: String,
     symbol: String,
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creator = Creator {
-        address: ctx.accounts().signer.key(),
+        address: ctx.accounts.signer.key(),
         verified: true,
         share: 100,
     };
@@ -28,12 +27,12 @@ pub fn create_metadata_for_token<'info>(
     };
 
     let ix = create_metadata_accounts_v3(
-        ctx.accounts().token_metadata_program.key(),
-        ctx.accounts().metadata.key(),
-        ctx.accounts().mint.key(),
-        ctx.accounts().mint_authority.key(),
-        ctx.accounts().signer.key(),
-        ctx.accounts().mint_authority.key(),
+        ctx.accounts.token_metadata_program.key(),
+        ctx.accounts.metadata.key(),
+        ctx.accounts.mint.key(),
+        ctx.accounts.mint_authority.key(),
+        ctx.accounts.signer.key(),
+        ctx.accounts.mint_authority.key(),
         data,
         true,
         true,
@@ -41,29 +40,15 @@ pub fn create_metadata_for_token<'info>(
         None,
     );
 
-    invoke_signed(
-        &ix,
-        &[
-            ctx.accounts().token_metadata_program.clone(),
-            ctx.accounts().metadata.clone(),
-            ctx.accounts().mint.clone(),
-            ctx.accounts().mint_authority.clone(),
-            ctx.accounts().signer.clone(),
-        ],
-        signer_seeds,
-    )?;
+    let account_infos = &[
+        ctx.accounts.token_metadata_program.clone(),
+        ctx.accounts.metadata.clone(),
+        ctx.accounts.mint.to_account_info(),
+        ctx.accounts.mint_authority.clone(),
+        ctx.accounts.signer.to_account_info(),
+    ];
+
+    invoke_signed(&ix, account_infos, signer_seeds)?;
 
     Ok(())
-}
-
-pub trait MetadataAccounts<'info> {
-    fn accounts(&self) -> MetadataContext<'info>;
-}
-
-pub struct MetadataContext<'info> {
-    pub token_metadata_program: AccountInfo<'info>,
-    pub metadata: AccountInfo<'info>,
-    pub mint: AccountInfo<'info>,
-    pub mint_authority: AccountInfo<'info>,
-    pub signer: AccountInfo<'info>,
-}
+        }
