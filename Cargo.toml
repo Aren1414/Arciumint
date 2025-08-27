@@ -4,8 +4,10 @@ members = [
   "programs/usernftcreator",
 ]
 
+resolver = "2"   
+
 [profile.release]
 overflow-checks = true
 
 [patch.crates-io]
-zeroize = "=1.7.0"
+zeroize = { version = "1.7.0", registry = "crates-io" }
