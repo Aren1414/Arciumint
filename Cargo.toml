@@ -1,10 +1,9 @@
 [workspace]
 members = [
-  "programs/arciumint-nft-gen",
-  "programs/usernftcreator",
+  "programs/arciumint-nft-gen"
 ]
 
-resolver = "2"   
+resolver = "2"
 
 [profile.release]
 overflow-checks = true
