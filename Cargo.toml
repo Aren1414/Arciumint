@@ -9,4 +9,4 @@ resolver = "2"
 overflow-checks = true
 
 [patch.crates-io]
-zeroize = { version = "1.7.0", registry = "crates-io" }
+zeroize = { version = "=1.7.0", registry = "crates-io" }
