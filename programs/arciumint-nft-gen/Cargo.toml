@@ -17,9 +17,3 @@ idl-build = [
 
 [lib]
 crate-type = ["cdylib"]
-
-[profile.release]
-overflow-checks = true
-
-[patch.crates-io]
-zeroize = { version = "=1.7.0", registry = "crates-io" }
