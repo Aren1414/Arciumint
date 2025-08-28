@@ -75,11 +75,12 @@ pub struct MintNFT<'info> {
     )]
     pub mint_authority: AccountInfo<'info>,
 
+    /// CHECK: PDA for metadata account
     #[account(mut)]
-    pub metadata: AccountInfo<'info>,
+    pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex program id
-    pub token_metadata_program: AccountInfo<'info>,
+    pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
