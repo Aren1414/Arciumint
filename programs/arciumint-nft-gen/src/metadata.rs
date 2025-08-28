@@ -12,7 +12,6 @@ pub fn create_metadata_for_token<'info>(
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    
     let creator = Creator {
         address: ctx.accounts.signer.key(),
         verified: true,
@@ -54,4 +53,4 @@ pub fn create_metadata_for_token<'info>(
     invoke_signed(&ix, account_infos, signer_seeds)?;
 
     Ok(())
-        }
+}
