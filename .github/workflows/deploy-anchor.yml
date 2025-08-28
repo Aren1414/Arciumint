@@ -32,7 +32,6 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
     - name: Install Anchor CLI
@@ -41,19 +40,18 @@ jobs:
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
     - name: Restore wallet keypair
       run: |
-        echo '${{ secrets.WALLET_KEY }}' > wallet.json
+        printf '%s' "${{ secrets.WALLET_KEY }}" > wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
 
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
-        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
+        printf '%s' "${{ secrets.PROGRAM_KEYPAIR }}" > target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL
       run: solana airdrop 2 -k wallet.json || echo "Airdrop failed"
