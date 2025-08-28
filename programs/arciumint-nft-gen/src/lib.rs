@@ -19,9 +19,13 @@ pub mod arciumintnftgen {
             ErrorCode::InvalidTokenProgram
         );
 
+        // signer seeds for PDA (mint_authority)
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
+        
         mint_token_to_user(&ctx, signer_seeds)?;
+
+        
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
         let user_record = &mut ctx.accounts.user_record;
@@ -38,7 +42,7 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            MintTo {
+            mint_to::accounts::MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.token_account.to_account_info(),
                 authority: ctx.accounts.mint_authority.to_account_info(),
@@ -73,7 +77,8 @@ pub struct MintNFT<'info> {
         seeds = [b"mint_authority"],
         bump
     )]
-    pub mint_authority: AccountInfo<'info>,
+    /// CHECK: PDA used as mint authority (signed via seeds)
+    pub mint_authority: UncheckedAccount<'info>,
 
     /// CHECK: PDA for metadata account
     #[account(mut)]
@@ -84,13 +89,13 @@ pub struct MintNFT<'info> {
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
