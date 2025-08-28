@@ -30,7 +30,7 @@ jobs:
 
     - name: Install Solana CLI
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+        sh -c "$(curl -sSfL https://release.solana.com/v1.18.2/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
@@ -64,18 +64,18 @@ jobs:
         grep "arciumintnftgen" Anchor.toml
         solana address -k target/deploy/arciumintnftgen-keypair.json
 
-    - name: Cargo tree (dedupe check)
-      run: cargo tree -d || echo "no duplicates or cargo-tree not available"
-
     - name: Build Anchor program
       run: |
+        cd programs/arciumint-nft-gen
         anchor build --skip-lint
-        find programs/arciumint-nft-gen/target/deploy -name "*.so" || echo "⚠️ No .so files found."
+        find target/deploy -name "*.so" || echo "⚠️ No .so files found."
+        cd ../../
 
     - name: Check .so file exists
       run: |
         SO_PATH=$(find programs/arciumint-nft-gen/target/deploy -name "arciumintnftgen.so")
         if [ -z "$SO_PATH" ]; then
+          echo "❌ .so file not found!"
           exit 1
         fi
 
@@ -85,4 +85,6 @@ jobs:
         cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so target/deploy/arciumintnftgen.so
 
     - name: Deploy Anchor program
-      run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
+      run: |
+        cd programs/arciumint-nft-gen
+        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
