@@ -90,6 +90,7 @@ pub struct MintNFT<'info> {
 pub struct UserRecord {
     pub has_minted: bool,
 }
+
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
