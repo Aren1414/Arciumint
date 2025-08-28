@@ -43,8 +43,8 @@ pub fn create_metadata_for_token<'info>(
     );
 
     let account_infos = &[
-        ctx.accounts.token_metadata_program.clone(),
-        ctx.accounts.metadata.clone(),
+        ctx.accounts.token_metadata_program.to_account_info(),
+        ctx.accounts.metadata.to_account_info(),
         ctx.accounts.mint.to_account_info(),
         ctx.accounts.mint_authority.clone(),
         ctx.accounts.signer.to_account_info(),
