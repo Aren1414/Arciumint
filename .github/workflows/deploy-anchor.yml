@@ -28,9 +28,9 @@ jobs:
         rustc --version
         cargo --version
 
-    - name: Install Solana CLI
+    - name: Install Solana CLI via Anza
       run: |
-        sh -c "$(curl -sSfL https://release.solana.com/v1.18.2/install)"
+        sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
