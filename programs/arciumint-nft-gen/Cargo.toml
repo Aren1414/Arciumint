@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", features = ["token", "metadata"] }
-mpl-token-metadata = { version = "1.10.2", default-features = false }  
+anchor-spl = "0.30.0"
+mpl-token-metadata = "1.10.2"
 
 [features]
 default = []
