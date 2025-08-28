@@ -1,7 +1,6 @@
 [workspace]
 members = [
-  "programs/arciumint-nft-gen",
-  "programs/usernftcreator"
+  "programs/arciumint-nft-gen"
 ]
 
 resolver = "2"
