@@ -2,6 +2,9 @@
 members = [
   "programs/arciumint-nft-gen"
 ]
+exclude = [
+  "programs/usernftcreator"
+]
 
 resolver = "2"
 
