@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program::invoke_signed;
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::state::{Creator, DataV2};
+use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
+use mpl_token_metadata::state::{Creator};
+use anchor_spl::metadata::mpl_token_metadata::types::DataV2;
 
 use crate::MintNFT;
 
@@ -28,29 +28,21 @@ pub fn create_metadata_for_token<'info>(
         uses: None,
     };
 
-    let ix = create_metadata_accounts_v3(
-        ctx.accounts.token_metadata_program.key(),
-        ctx.accounts.metadata.key(),
-        ctx.accounts.mint.key(),
-        ctx.accounts.mint_authority.key(),
-        ctx.accounts.signer.key(),
-        ctx.accounts.mint_authority.key(),
-        data,
-        true,
-        true,
-        None,
-        None,
-    );
+    let accounts = CreateMetadataAccountsV3 {
+        metadata: ctx.accounts.metadata.to_account_info(),
+        mint: ctx.accounts.mint.to_account_info(),
+        mint_authority: ctx.accounts.mint_authority.to_account_info(),
+        payer: ctx.accounts.signer.to_account_info(),
+        update_authority: ctx.accounts.signer.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+    };
 
-    let account_infos = &[
-        ctx.accounts.token_metadata_program.to_account_info(),
-        ctx.accounts.metadata.to_account_info(),
-        ctx.accounts.mint.to_account_info(),
-        ctx.accounts.mint_authority.clone(),
-        ctx.accounts.signer.to_account_info(),
-    ];
+    let program = ctx.accounts.token_metadata_program.to_account_info();
+    let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
 
-    invoke_signed(&ix, account_infos, signer_seeds)?;
+    
+    create_metadata_accounts_v3(cpi_ctx, data, true, true, None, None)?;
 
     Ok(())
 }
