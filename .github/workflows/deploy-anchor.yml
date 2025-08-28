@@ -32,7 +32,6 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
     - name: Install Anchor CLI
@@ -41,35 +40,32 @@ jobs:
         avm install 0.31.1
         avm use 0.31.1
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
     - name: Restore wallet keypair
       run: |
-        echo '${{ secrets.WALLET_KEY }}' > wallet.json
-        solana config set --keypair wallet.json
+        echo '${{ secrets.WALLET_KEY }}' > $GITHUB_WORKSPACE/wallet.json
+        solana config set --keypair $GITHUB_WORKSPACE/wallet.json
         solana config set --url https://api.devnet.solana.com
 
     - name: Restore program keypair
       run: |
-        mkdir -p target/deploy
-        echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
+        mkdir -p $GITHUB_WORKSPACE/target/deploy
+        echo '${{ secrets.PROGRAM_KEYPAIR }}' > $GITHUB_WORKSPACE/target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL
-      run: solana airdrop 2 -k wallet.json || echo "Airdrop failed"
+      run: solana airdrop 2 -k $GITHUB_WORKSPACE/wallet.json || echo "Airdrop failed"
 
     - name: Confirm Program ID consistency
       run: |
         grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs
         grep "arciumintnftgen" Anchor.toml
-        solana address -k target/deploy/arciumintnftgen-keypair.json
+        solana address -k $GITHUB_WORKSPACE/target/deploy/arciumintnftgen-keypair.json
 
     - name: Build Anchor program
       run: |
-        cd programs/arciumint-nft-gen
-        anchor build --skip-lint
-        find target/deploy -name "*.so" || echo "⚠️ No .so files found."
-        cd ../../
+        anchor build --skip-lint --workspace programs/arciumint-nft-gen
+        find programs/arciumint-nft-gen/target/deploy -name "*.so" || echo "⚠️ No .so files found."
 
     - name: Check .so file exists
       run: |
@@ -81,10 +77,9 @@ jobs:
 
     - name: Move .so file to root deploy folder
       run: |
-        mkdir -p target/deploy
-        cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so target/deploy/arciumintnftgen.so
+        mkdir -p $GITHUB_WORKSPACE/target/deploy
+        cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so $GITHUB_WORKSPACE/target/deploy/arciumintnftgen.so
 
     - name: Deploy Anchor program
       run: |
-        cd programs/arciumint-nft-gen
-        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+        anchor deploy --provider.cluster devnet --provider.wallet $GITHUB_WORKSPACE/wallet.json --programs programs/arciumint-nft-gen
