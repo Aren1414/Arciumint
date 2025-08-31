@@ -72,7 +72,7 @@ jobs:
     - name: Build Anchor program with IDL features
       run: |
         cd programs/arciumint-nft-gen
-        ANCHOR_LOG=true anchor build --features exclude-accounts,idl-build --skip-lint
+        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
     - name: Check .so file exists
       run: |
