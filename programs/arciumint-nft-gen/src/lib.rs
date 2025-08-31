@@ -22,13 +22,13 @@ pub mod arciumintnftgen {
 
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        // Mint 1 token to user's token account
+        // 1) mint 1 token to user's token account (CPI)
         mint_token_to_user(&ctx, signer_seeds)?;
 
-        // Create on-chain metadata
+        // 2) create metadata on-chain via Metaplex CPI
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        // Mark user as minted
+        // 3) mark user as minted
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -37,7 +37,8 @@ pub mod arciumintnftgen {
     }
 }
 
-/// helper fn kept outside #[program]
+// helper function outside #[program] so Anchor doesn't treat it as an instruction
+#[inline(never)]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -52,13 +53,14 @@ fn mint_token_to_user<'info>(
         signer_seeds,
     );
 
+    // mint exactly 1 token (NFT)
     mint_to(cpi_ctx, 1)?;
     Ok(())
 }
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    /// payer / caller
+    /// caller / payer
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -72,26 +74,26 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
-    /// NFT mint account (already created, decimals=0, supply=0)
+    /// Mint account (must exist and have decimals = 0)
     #[account(mut)]
     pub mint: Account<'info, Mint>,
 
-    /// token account for payer to receive minted NFT
+    /// User's token account (must exist and be associated to `mint`)
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
 
     /// PDA used as mint authority
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer
+    /// CHECK: PDA signer (no data read)
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// PDA for Metadata (Metaplex standard)
+    /// Metadata PDA (Metaplex metadata account for the mint)
     #[account(mut)]
-    /// CHECK: created via CPI
+    /// CHECK: to be created/initialized by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// Metaplex Metadata Program
-    /// CHECK: program id verified in CPI
+    /// Metaplex Token Metadata program (pass the program id)
+    /// CHECK: treated as program id in CPI
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
