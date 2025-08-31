@@ -6,6 +6,7 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
+#[cfg(not(feature = "exclude-accounts"))]
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -89,6 +90,7 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -106,6 +108,7 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
