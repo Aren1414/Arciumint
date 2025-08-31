@@ -31,6 +31,7 @@ pub mod arciumintnftgen {
     }
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -78,10 +79,12 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
+#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
@@ -156,4 +159,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-        }
+}
