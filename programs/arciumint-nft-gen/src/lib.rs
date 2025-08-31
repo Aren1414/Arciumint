@@ -33,6 +33,7 @@ pub mod arciumintnftgen {
     }
 }
 
+#[cfg(not(feature = "no-entrypoint"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -69,10 +70,12 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[cfg(not(feature = "no-entrypoint"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
+#[cfg(not(feature = "no-entrypoint"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
