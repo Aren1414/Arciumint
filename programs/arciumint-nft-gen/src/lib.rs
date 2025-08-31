@@ -22,12 +22,13 @@ pub mod arciumintnftgen {
         // signer seeds for PDA (mint_authority)
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        
+        // mint 1 token to user
         mint_token_to_user(&ctx, signer_seeds)?;
 
-        
+        // create metadata for NFT
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
+        // user_record check
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -42,7 +43,7 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            mint_to::accounts::MintTo {
+            MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.token_account.to_account_info(),
                 authority: ctx.accounts.mint_authority.to_account_info(),
@@ -84,7 +85,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex program id
+    /// CHECK: Metaplex Token Metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
