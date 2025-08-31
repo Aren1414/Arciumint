@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::token::{self, mint_to, MintTo};
 
+pub mod mint_accounts;
 pub mod metadata;
-pub mod accounts;
 
-use accounts::*; 
+use mint_accounts::*;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
