@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
-use crate::accounts::MintNFT; 
+use crate::mint_accounts::MintNFT;
 
 pub fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
