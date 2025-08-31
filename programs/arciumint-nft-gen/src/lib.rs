@@ -20,16 +20,15 @@ pub mod arciumintnftgen {
             ErrorCode::InvalidTokenProgram
         );
 
-        // signer seeds for PDA (mint_authority)
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        // mint 1 token to user (CPI)
+        // 1) mint 1 token to user's token account
         mint_token_to_user(&ctx, signer_seeds)?;
 
-        // create metadata for NFT (CPI)
+        // 2) create metadata on-chain via Metaplex CPI
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        // mark user as minted
+        // 3) mark user as minted
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -38,7 +37,7 @@ pub mod arciumintnftgen {
     }
 }
 
-// NOTE: helper kept outside #[program] so Anchor doesn't treat it as an instruction
+// helper function kept outside #[program] so Anchor doesn't treat it as instruction
 #[inline(never)]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
@@ -53,7 +52,8 @@ fn mint_token_to_user<'info>(
         },
         signer_seeds,
     );
-    // mint exactly 1 token (NFT)
+
+    // Mint exactly 1 token (NFT)
     mint_to(cpi_ctx, 1)?;
     Ok(())
 }
@@ -62,23 +62,22 @@ fn mint_token_to_user<'info>(
 pub struct MintNFT<'info> {
     /// payer / caller
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub payer: Signer<'info>,
 
-    /// record to prevent double mint
     #[account(
         init_if_needed,
-        payer = signer,
+        payer = payer,
         space = 8 + UserRecord::SIZE,
-        seeds = [b"user_record", signer.key().as_ref()],
+        seeds = [b"user_record", payer.key().as_ref()],
         bump
     )]
     pub user_record: Box<Account<'info, UserRecord>>,
 
-    /// Mint account (must exist)
+    /// Mint account (must exist and have decimals = 0)
     #[account(mut)]
     pub mint: Box<Account<'info, Mint>>,
 
-    /// User token account (must exist)
+    /// User's token account to receive the minted NFT
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
@@ -87,12 +86,11 @@ pub struct MintNFT<'info> {
     /// CHECK: PDA signer (no data read)
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// Metadata PDA (to be created by Metaplex CPI)
+    /// Metadata PDA (Metaplex metadata account for the mint)
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// Metaplex Token Metadata program (pass the program id)
-    /// We use Program<AccountInfo> above, but using UncheckedAccount is fine too.
+    /// Metaplex Token Metadata program (pass program id)
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
