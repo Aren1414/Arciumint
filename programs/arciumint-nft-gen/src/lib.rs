@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::token::{self, mint_to, MintTo};
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
-pub mod accounts;
-use accounts::*;
+pub mod mint_context;
+use mint_context::*;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
