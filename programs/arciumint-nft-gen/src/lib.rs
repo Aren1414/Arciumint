@@ -20,7 +20,7 @@ pub mod arciumintnftgen {
             ErrorCode::InvalidTokenProgram
         );
 
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -33,7 +33,6 @@ pub mod arciumintnftgen {
     }
 }
 
-#[cfg(not(feature = "idl-build"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -48,39 +47,47 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
-    #[account(mut)]
+    #[account(
+        init,
+        payer = payer,
+        mint::decimals = 0,
+        mint::authority = mint_authority
+    )]
     pub mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        init,
+        payer = payer,
+        associated_token::mint = mint,
+        associated_token::authority = payer
+    )]
     pub token_account: Account<'info, TokenAccount>,
 
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer (no data read)
+    /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    /// CHECK: to be created/initialized by Metaplex CPI
+    /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: treated as program id in CPI
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, anchor_spl::associated_token::AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(not(feature = "idl-build"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(not(feature = "idl-build"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[inline(never)]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -94,7 +101,6 @@ fn mint_token_to_user<'info>(
         },
         signer_seeds,
     );
-
     mint_to(cpi_ctx, 1)?;
     Ok(())
 }
@@ -150,7 +156,6 @@ fn create_metadata_for_token<'info>(
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
-
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
 }
