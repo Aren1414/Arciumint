@@ -22,13 +22,13 @@ pub mod arciumintnftgen {
 
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
 
-        // 1) mint 1 token to user's token account
+        // Mint 1 token to user's token account
         mint_token_to_user(&ctx, signer_seeds)?;
 
-        // 2) create metadata on-chain via Metaplex CPI
+        // Create on-chain metadata
         metadata::create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        // 3) mark user as minted
+        // Mark user as minted
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
@@ -37,8 +37,7 @@ pub mod arciumintnftgen {
     }
 }
 
-// helper function kept outside #[program] so Anchor doesn't treat it as instruction
-#[inline(never)]
+/// helper fn kept outside #[program]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -53,7 +52,6 @@ fn mint_token_to_user<'info>(
         signer_seeds,
     );
 
-    // Mint exactly 1 token (NFT)
     mint_to(cpi_ctx, 1)?;
     Ok(())
 }
@@ -64,6 +62,7 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    /// user-specific record (tracks if already minted)
     #[account(
         init_if_needed,
         payer = payer,
@@ -71,26 +70,28 @@ pub struct MintNFT<'info> {
         seeds = [b"user_record", payer.key().as_ref()],
         bump
     )]
-    pub user_record: Box<Account<'info, UserRecord>>,
+    pub user_record: Account<'info, UserRecord>,
 
-    /// Mint account (must exist and have decimals = 0)
+    /// NFT mint account (already created, decimals=0, supply=0)
     #[account(mut)]
-    pub mint: Box<Account<'info, Mint>>,
+    pub mint: Account<'info, Mint>,
 
-    /// User's token account to receive the minted NFT
+    /// token account for payer to receive minted NFT
     #[account(mut)]
-    pub token_account: Box<Account<'info, TokenAccount>>,
+    pub token_account: Account<'info, TokenAccount>,
 
     /// PDA used as mint authority
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer (no data read)
+    /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// Metadata PDA (Metaplex metadata account for the mint)
+    /// PDA for Metadata (Metaplex standard)
     #[account(mut)]
+    /// CHECK: created via CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// Metaplex Token Metadata program (pass program id)
+    /// Metaplex Metadata Program
+    /// CHECK: program id verified in CPI
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
