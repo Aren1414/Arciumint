@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
-use crate::MintNFT;
+use crate::accounts::MintNFT; 
 
 pub fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
@@ -21,7 +21,7 @@ pub fn create_metadata_for_token<'info>(
         name,
         symbol,
         uri,
-        seller_fee_basis_points: 500, // 5%
+        seller_fee_basis_points: 500,
         creators: Some(vec![creator]),
         collection: None,
         uses: None,
@@ -40,13 +40,12 @@ pub fn create_metadata_for_token<'info>(
     let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
 
-    // signature: (ctx, data, is_mutable, update_authority_is_signer, collection_details)
     create_metadata_accounts_v3(
         cpi_ctx,
         data,
-        true,                              // is_mutable
-        true,                              // update_authority_is_signer
-        Option::<CollectionDetails>::None, // no collection details
+        true,
+        true,
+        Option::<CollectionDetails>::None,
     )?;
 
     Ok(())
