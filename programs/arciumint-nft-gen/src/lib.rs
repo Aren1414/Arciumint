@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
@@ -15,12 +16,9 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        require!(
-            ctx.accounts.token_program.key() == token::ID,
-            ErrorCode::InvalidTokenProgram
-        );
-
-        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        let mint_authority_seed: &[u8] = b"mint_authority";
+        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
+        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -75,7 +73,7 @@ pub struct MintNFT<'info> {
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, anchor_spl::associated_token::AssociatedToken>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -158,4 +156,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-}
+        }
