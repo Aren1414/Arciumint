@@ -150,4 +150,4 @@ pub enum ErrorCode {
 
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-        }
+}
