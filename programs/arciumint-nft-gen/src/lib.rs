@@ -1,10 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, mint_to, MintTo};
+use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
-
-pub mod mint_context;
-use mint_context::*;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
@@ -34,6 +31,50 @@ pub mod arciumintnftgen {
 
         Ok(())
     }
+}
+
+#[derive(Accounts)]
+pub struct MintNFT<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + UserRecord::SIZE,
+        seeds = [b"user_record", payer.key().as_ref()],
+        bump
+    )]
+    pub user_record: Account<'info, UserRecord>,
+
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+
+    #[account(mut)]
+    pub token_account: Account<'info, TokenAccount>,
+
+    #[account(seeds = [b"mint_authority"], bump)]
+    /// CHECK: PDA signer (no data read)
+    pub mint_authority: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    /// CHECK: to be created/initialized by Metaplex CPI
+    pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: treated as program id in CPI
+    pub token_metadata_program: UncheckedAccount<'info>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[account]
+pub struct UserRecord {
+    pub has_minted: bool,
+}
+impl UserRecord {
+    pub const SIZE: usize = 1;
 }
 
 #[inline(never)]
@@ -109,4 +150,4 @@ pub enum ErrorCode {
 
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-}
+        }
