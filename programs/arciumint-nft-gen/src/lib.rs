@@ -16,21 +16,24 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
+        #[cfg(not(feature = "exclude-accounts"))] {
+            let mint_authority_seed: &[u8] = b"mint_authority";
+            let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
+            let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
 
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+            mint_token_to_user(&ctx, signer_seeds)?;
+            create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
+            let user_record = &mut ctx.accounts.user_record;
+            require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+            user_record.has_minted = true;
+        }
 
         Ok(())
     }
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -78,14 +81,17 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
+#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -103,6 +109,7 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
+#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
@@ -156,4 +163,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-    }
+}
