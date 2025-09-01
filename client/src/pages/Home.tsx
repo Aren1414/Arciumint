@@ -1,6 +1,7 @@
 import React from 'react';
 import './home.css';
 import { mintGenerativeNFT } from '../utils/mintGenerativeNFT';
+import GenerativeCanvas from '../components/GenerativeCanvas';
 
 const Home: React.FC = () => {
   const userAddress = window.solana?.publicKey?.toBase58();
@@ -29,13 +30,7 @@ const Home: React.FC = () => {
       </header>
 
       <section className="generative-preview">
-        <iframe
-          src="/generative.html"
-          title="Generative Canvas"
-          width="100%"
-          height="400"
-          style={{ borderRadius: '12px', border: 'none', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }}
-        />
+        <GenerativeCanvas />
         <button className="mint-button" onClick={handleGenerateMint}>
           Generate & Mint
         </button>
