@@ -1,0 +1,50 @@
+{
+  "address": "22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn",
+  "metadata": {
+    "name": "arciumintnftgen",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "mint_nft",
+      "discriminator": [
+        211,
+        57,
+        6,
+        167,
+        15,
+        219,
+        35,
+        251
+      ],
+      "accounts": [],
+      "args": [
+        {
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "name": "_symbol",
+          "type": "string"
+        },
+        {
+          "name": "_uri",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AlreadyMinted",
+      "msg": "This wallet has already minted an NFT."
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTokenProgram",
+      "msg": "Invalid token program."
+    }
+  ]
+}
