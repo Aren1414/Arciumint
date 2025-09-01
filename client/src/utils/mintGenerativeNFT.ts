@@ -18,6 +18,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     canvas.width = 1080;
     canvas.height = 1080;
 
+    
     const stream = canvas.captureStream(30); 
     const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
 
@@ -69,20 +70,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
       .signers([mintKeypair])
       .rpc();
 
-    
-    const existingNFTs = JSON.parse(localStorage.getItem('nfts') || '[]');
-    const newNFT = {
-      id: mintKeypair.publicKey.toBase58(),
-      name,
-      symbol,
-      uri,
-      mintCount: 1,
-      creator: userAddress,
-      imagePreview: uri,
-      mintedBy: [userAddress],
-      programId: programId.toBase58(), 
-    };
-    localStorage.setItem('nfts', JSON.stringify([...existingNFTs, newNFT]));
+  
 
     return { success: true, uri };
   } catch (err: any) {
