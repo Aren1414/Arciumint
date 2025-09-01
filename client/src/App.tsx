@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Upload from './pages/Upload';
+import CreateNFT from './pages/CreateNFT';
 import Profile from './pages/Profile';
 import Mint from './pages/Mint';
 import Navbar from './components/Navbar';
@@ -11,7 +11,7 @@ const App: React.FC = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/upload" element={<Upload />} />
+        <Route path="/create" element={<CreateNFT />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/mint/:id" element={<Mint />} />
       </Routes>
