@@ -77,9 +77,12 @@ jobs:
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
 
     - name: Commit and push IDL to repo
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
+        git remote set-url origin https://x-access-token:${GH_PAT}@github.com/Aren1414/Arciumint.git
         git add client/idl/arciumintnftgen.json
         git commit -m "Add IDL file for frontend build"
         git push origin main
