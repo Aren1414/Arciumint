@@ -1,4 +1,4 @@
-import { RescueCipher, getMXEPublicKeyWithRetry, x25519 } from '@arcium-hq/client'
+import { RescueCipher, getMXEPublicKey, x25519 } from '@arcium-hq/client'
 import { randomBytes } from 'crypto'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { AnchorProvider } from '@coral-xyz/anchor'
@@ -23,7 +23,7 @@ export default {
       const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn')
 
       
-      const mxePublicKey = await getMXEPublicKeyWithRetry(provider, programId)
+      const mxePublicKey = await getMXEPublicKey(provider, programId)
 
       
       const privateKey = x25519.utils.randomPrivateKey()
