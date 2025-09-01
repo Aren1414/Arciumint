@@ -10,24 +10,30 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
+    
+    #[cfg(feature = "exclude-accounts")]
+    pub fn mint_nft(_ctx: (), _name: String, _symbol: String, _uri: String) -> Result<()> {
+        Ok(())
+    }
+
+    
+    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        #[cfg(not(feature = "exclude-accounts"))] {
-            let mint_authority_seed: &[u8] = b"mint_authority";
-            let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-            let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
+        let mint_authority_seed: &[u8] = b"mint_authority";
+        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
+        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
 
-            mint_token_to_user(&ctx, signer_seeds)?;
-            create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-            let user_record = &mut ctx.accounts.user_record;
-            require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-            user_record.has_minted = true;
-        }
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
 
         Ok(())
     }
