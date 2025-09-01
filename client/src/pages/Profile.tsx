@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import './profile.css';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { Metaplex } from '@metaplex-foundation/js';
 
-type NFT = {
+type NFTDisplay = {
   id: string;
   name: string;
   imagePreview: string;
-  mintCount: number;
-  price: number;
+  mintCount?: number;
+  price?: number;
   creator: string;
 };
 
@@ -15,25 +17,48 @@ type ProfileProps = {
 };
 
 const Profile: React.FC<ProfileProps> = ({ userAddress }) => {
-  const [createdNFTs, setCreatedNFTs] = useState<NFT[]>([]);
-  const [collectedNFTs, setCollectedNFTs] = useState<NFT[]>([]);
+  const [createdNFTs, setCreatedNFTs] = useState<NFTDisplay[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = () => {
-      const allNFTs: NFT[] = JSON.parse(localStorage.getItem('nfts') || '[]');
-      const created = allNFTs.filter(nft => nft.creator === userAddress);
-      const collected: NFT[] = []; // Placeholder for future logic
+    const fetchNFTsFromBlockchain = async () => {
+      try {
+        const connection = new Connection('https://api.devnet.solana.com');
+        const metaplex = new Metaplex(connection);
+        const owner = new PublicKey(userAddress);
 
-      setCreatedNFTs(created);
-      setCollectedNFTs(collected);
-      setLoading(false);
+        const allNFTs = await metaplex.nfts().findAllByOwner({ owner });
+
+        const siteNFTs = allNFTs.filter(nft =>
+          nft.programId.toBase58() === '22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn'
+        );
+
+        const detailedNFTs: NFTDisplay[] = await Promise.all(
+          siteNFTs.map(async (nft) => {
+            const metadata = await fetch(nft.uri).then(res => res.json());
+            return {
+              id: nft.mint.toBase58(),
+              name: metadata.name || 'Untitled',
+              imagePreview: metadata.animation_url || metadata.image || '',
+              creator: userAddress,
+              price: metadata.price || 0,
+              mintCount: 1,
+            };
+          })
+        );
+
+        setCreatedNFTs(detailedNFTs);
+      } catch (err) {
+        console.error('Error fetching NFTs:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (userAddress) fetchData();
+    if (userAddress) fetchNFTsFromBlockchain();
   }, [userAddress]);
 
-  if (loading) return <div className="profile-container">Loading...</div>;
+  if (loading) return <div className="profile-container">Loading your NFTs...</div>;
 
   return (
     <div className="profile-container">
@@ -43,31 +68,21 @@ const Profile: React.FC<ProfileProps> = ({ userAddress }) => {
         <h3>Created NFTs</h3>
         <div className="nft-grid">
           {createdNFTs.length === 0 ? (
-            <p>No NFTs created.</p>
+            <p>No NFTs created on this site.</p>
           ) : (
             createdNFTs.map(nft => (
               <div key={nft.id} className="nft-card">
-                <img src={nft.imagePreview} alt={nft.name} />
+                <video
+                  src={nft.imagePreview}
+                  controls
+                  width="100%"
+                  style={{ borderRadius: '8px' }}
+                />
                 <p>{nft.name}</p>
                 <span>Minted: {nft.mintCount}</span>
-                <span>Price: {nft.price} SOL</span>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-
-      <section>
-        <h3>Collected NFTs</h3>
-        <div className="nft-grid">
-          {collectedNFTs.length === 0 ? (
-            <p>No NFTs collected.</p>
-          ) : (
-            collectedNFTs.map(nft => (
-              <div key={nft.id} className="nft-card">
-                <img src={nft.imagePreview} alt={nft.name} />
-                <p>{nft.name}</p>
-                <span>Creator: {nft.creator}</span>
+                {nft.price !== undefined && (
+                  <span>Price: {nft.price} SOL</span>
+                )}
               </div>
             ))
           )}
