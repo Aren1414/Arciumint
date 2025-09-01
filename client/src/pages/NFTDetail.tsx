@@ -2,9 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getNFTById } from '../services/nftService';
 
-const NFTDetail = () => {
-  const { id } = useParams();
-  const [nft, setNft] = useState(null);
+type NFT = {
+  id: string;
+  title: string;
+  imageUrl: string;
+  mintCount: number;
+  creatorUsername: string;
+};
+
+const NFTDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [nft, setNft] = useState<NFT | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
