@@ -16,17 +16,11 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
+        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        mint_token(&ctx.accounts, signer_seeds)?;
+        create_metadata(&ctx.accounts, name, symbol, uri, signer_seeds)?;
+        require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
+        ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
 
@@ -42,18 +36,11 @@ pub mod arciumintnftgen {
         require!(ciphertext.len() > 0, ErrorCode::InvalidMPCData);
         require!(public_key.len() == 64, ErrorCode::InvalidMPCData);
         require!(nonce.len() == 32, ErrorCode::InvalidMPCData);
-
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
-
-        mint_token_to_user_mpc(&ctx, signer_seeds)?;
-        create_metadata_for_token_mpc(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
+        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        mint_token(&ctx.accounts, signer_seeds)?;
+        create_metadata(&ctx.accounts, name, symbol, uri, signer_seeds)?;
+        require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
+        ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
 }
@@ -62,7 +49,6 @@ pub mod arciumintnftgen {
 pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
     #[account(
         init_if_needed,
         payer = payer,
@@ -71,7 +57,6 @@ pub struct MintNFT<'info> {
         bump
     )]
     pub user_record: Account<'info, UserRecord>,
-
     #[account(
         init,
         payer = payer,
@@ -79,7 +64,6 @@ pub struct MintNFT<'info> {
         mint::authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
-
     #[account(
         init,
         payer = payer,
@@ -87,18 +71,14 @@ pub struct MintNFT<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
-
     #[account(mut)]
     /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
-
     /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
-
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -109,7 +89,6 @@ pub struct MintNFT<'info> {
 pub struct MintNFTWithMPC<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
     #[account(
         init_if_needed,
         payer = payer,
@@ -118,7 +97,6 @@ pub struct MintNFTWithMPC<'info> {
         bump
     )]
     pub user_record: Account<'info, UserRecord>,
-
     #[account(
         init,
         payer = payer,
@@ -126,7 +104,6 @@ pub struct MintNFTWithMPC<'info> {
         mint::authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
-
     #[account(
         init,
         payer = payer,
@@ -134,18 +111,14 @@ pub struct MintNFTWithMPC<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
-
     #[account(mut)]
     /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
-
     /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
-
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -160,16 +133,16 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-fn mint_token_to_user<'info>(
-    ctx: &Context<MintNFT>,
+fn mint_token<'info>(
+    accounts: &impl MintAccounts<'info>,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
+        accounts.token_program().to_account_info(),
         MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
+            mint: accounts.mint().to_account_info(),
+            to: accounts.token_account().to_account_info(),
+            authority: accounts.mint_authority().to_account_info(),
         },
         signer_seeds,
     );
@@ -177,36 +150,18 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
-fn mint_token_to_user_mpc<'info>(
-    ctx: &Context<MintNFTWithMPC>,
-    signer_seeds: &[&[&[u8]]],
-) -> Result<()> {
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
-        },
-        signer_seeds,
-    );
-    mint_to(cpi_ctx, 1)?;
-    Ok(())
-}
-
-fn create_metadata_for_token<'info>(
-    ctx: &Context<MintNFT>,
+fn create_metadata<'info>(
+    accounts: &impl MintAccounts<'info>,
     name: String,
     symbol: String,
     uri: String,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creator = Creator {
-        address: ctx.accounts.payer.key(),
+        address: accounts.payer().key(),
         verified: false,
         share: 100,
     };
-
     let data = DataV2 {
         name,
         symbol,
@@ -216,76 +171,63 @@ fn create_metadata_for_token<'info>(
         collection: None,
         uses: None,
     };
-
-    let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mint_authority.to_account_info(),
-        payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.payer.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
-    };
-
-    let program = ctx.accounts.token_metadata_program.to_account_info();
-    let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
-
-    create_metadata_accounts_v3(
-        cpi_ctx,
-        data,
-        true,
-        true,
-        Option::<CollectionDetails>::None,
-    )?;
-
+    let cpi_ctx = CpiContext::new_with_signer(
+        accounts.token_metadata_program().to_account_info(),
+        CreateMetadataAccountsV3 {
+            metadata: accounts.metadata().to_account_info(),
+            mint: accounts.mint().to_account_info(),
+            mint_authority: accounts.mint_authority().to_account_info(),
+            payer: accounts.payer().to_account_info(),
+            update_authority: accounts.payer().to_account_info(),
+            system_program: accounts.system_program().to_account_info(),
+            rent: accounts.rent().to_account_info(),
+        },
+        signer_seeds,
+    );
+    create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
 }
 
-fn create_metadata_for_token_mpc<'info>(
-    ctx: &Context<MintNFTWithMPC>,
-    name: String,
-    symbol: String,
-    uri: String,
-    signer_seeds: &[&[&[u8]]],
-) -> Result<()> {
-    let creator = Creator {
-        address: ctx.accounts.payer.key(),
-        verified: false,
-        share: 100,
-    };
+pub trait MintAccounts<'info> {
+    fn payer(&self) -> &Signer<'info>;
+    fn user_record(&self) -> &Account<'info, UserRecord>;
+    fn mint(&self) -> &Account<'info, Mint>;
+    fn token_account(&self) -> &Account<'info, TokenAccount>;
+    fn mint_authority(&self) -> &UncheckedAccount<'info>;
+    fn metadata(&self) -> &UncheckedAccount<'info>;
+    fn token_metadata_program(&self) -> &UncheckedAccount<'info>;
+    fn token_program(&self) -> &Program<'info, Token>;
+    fn associated_token_program(&self) -> &Program<'info, AssociatedToken>;
+    fn system_program(&self) -> &Program<'info, System>;
+    fn rent(&self) -> &Sysvar<'info, Rent>;
+}
 
-    let data = DataV2 {
-        name,
-        symbol,
-        uri,
-        seller_fee_basis_points: 500,
-        creators: Some(vec![creator]),
-        collection: None,
-        uses: None,
-    };
+impl<'info> MintAccounts<'info> for MintNFT<'info> {
+    fn payer(&self) -> &Signer<'info> { &self.payer }
+    fn user_record(&self) -> &Account<'info, UserRecord> { &self.user_record }
+    fn mint(&self) -> &Account<'info, Mint> { &self.mint }
+    fn token_account(&self) -> &Account<'info, TokenAccount> { &self.token_account }
+    fn mint_authority(&self) -> &UncheckedAccount<'info> { &self.mint_authority }
+    fn metadata(&self) -> &UncheckedAccount<'info> { &self.metadata }
+    fn token_metadata_program(&self) -> &UncheckedAccount<'info> { &self.token_metadata_program }
+    fn token_program(&self) -> &Program<'info, Token> { &self.token_program }
+    fn associated_token_program(&self) -> &Program<'info, AssociatedToken> { &self.associated_token_program }
+    fn system_program(&self) -> &Program<'info, System> { &self.system_program }
+    fn rent(&self) -> &Sysvar<'info, Rent> { &self.rent }
+}
 
-    let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mint_authority.to_account_info(),
-        payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.payer.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
-    };
-
-    let program = ctx.accounts.token_metadata_program.to_account_info();
-    let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
-
-    create_metadata_accounts_v3(
-        cpi_ctx,
-        data,
-        true,
-        true,
-        Option::<CollectionDetails>::None,
-    )?;
-
-    Ok(())
+impl<'info> MintAccounts<'info> for MintNFTWithMPC<'info> {
+    fn payer(&self) -> &Signer<'info> { &self.payer }
+    fn user_record(&self) -> &Account<'info, UserRecord> { &self.user_record }
+    fn mint(&self) -> &Account<'info, Mint> { &self.mint }
+    fn token_account(&self) -> &Account<'info, TokenAccount> { &self.token_account }
+    fn mint_authority(&self) -> &UncheckedAccount<'info> { &self.mint_authority }
+    fn metadata(&self) -> &UncheckedAccount<'info> { &self.metadata }
+    fn token_metadata_program(&self) -> &UncheckedAccount<'info> { &self.token_metadata_program }
+    fn token_program(&self) -> &Program<'info, Token> { &self.token_program }
+    fn associated_token_program(&self) -> &Program<'info, AssociatedToken> { &self.associated_token_program }
+    fn system_program(&self) -> &Program<'info, System> { &self.system_program }
+    fn rent(&self) -> &Sysvar<'info, Rent> { &self.rent }
 }
 
 #[error_code]
