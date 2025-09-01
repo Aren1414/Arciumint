@@ -1,7 +1,7 @@
 import { ArciumClient } from '@arcium-hq/client';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { AnchorProvider, Program } from '@coral-xyz/anchor';
-import idl from '../idl/arciumintnftgen.json';
+import idl from '../../idl/arciumintnftgen.json'
 import { uploadToStorj } from './uploadToStorj';
 
 const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
