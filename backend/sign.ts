@@ -1,21 +1,25 @@
 import { RescueCipher, getMXEPublicKeyWithRetry, x25519 } from '@arcium-hq/client'
 import { randomBytes } from 'crypto'
 import { Connection, PublicKey } from '@solana/web3.js'
+import { AnchorProvider } from '@coral-xyz/anchor'
 
 export default {
   async fetch(request: Request): Promise<Response> {
     try {
       const { message } = await request.json()
 
-      
       if (typeof message !== 'string' || !/^\d+$/.test(message)) {
         throw new Error('Invalid message format: must be a numeric string')
       }
 
       
-      const provider = new Connection('https://api.devnet.solana.com')
-
-      
+      const connection = new Connection('https://api.devnet.solana.com')
+      const dummyWallet = {
+        publicKey: PublicKey.default,
+        signTransaction: async (tx: any) => tx,
+        signAllTransactions: async (txs: any[]) => txs
+      }
+      const provider = new AnchorProvider(connection, dummyWallet, {})
       const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn')
 
       
@@ -33,13 +37,10 @@ export default {
       const value = BigInt(message)
       const ciphertext = cipher.encrypt([value], nonce)
 
-      
-      const encodedPublicKey = Buffer.from(publicKey).toString('hex')
-
       return new Response(JSON.stringify({
         ciphertext,
-        publicKey: encodedPublicKey,
-        nonce: Buffer.from(nonce).toString('hex') 
+        publicKey: Buffer.from(publicKey).toString('hex'),
+        nonce: Buffer.from(nonce).toString('hex')
       }), {
         headers: { 'Content-Type': 'application/json' },
         status: 200
