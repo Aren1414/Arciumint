@@ -1,2 +1,19 @@
-.env
+# dependencies
+node_modules/
+
+# build
+dist/
+build/
+
+# anchor artifacts
+.anchor/
+target/
+anchor/
+
+# logs and binaries
+*.log
+*.zip
+*.wasm
+
+# environment
 .env
