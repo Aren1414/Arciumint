@@ -1,27 +1,39 @@
-import React, { useEffect, useState } from 'react'
-import './profile.css'
+import React, { useEffect, useState } from 'react';
+import './profile.css';
 
-const Profile = ({ userAddress }) => {
-  const [createdNFTs, setCreatedNFTs] = useState([])
-  const [collectedNFTs, setCollectedNFTs] = useState([])
-  const [loading, setLoading] = useState(true)
+type NFT = {
+  id: string;
+  name: string;
+  imagePreview: string;
+  mintCount: number;
+  price: number;
+  creator: string;
+};
+
+type ProfileProps = {
+  userAddress: string;
+};
+
+const Profile: React.FC<ProfileProps> = ({ userAddress }) => {
+  const [createdNFTs, setCreatedNFTs] = useState<NFT[]>([]);
+  const [collectedNFTs, setCollectedNFTs] = useState<NFT[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = () => {
-      const allNFTs = JSON.parse(localStorage.getItem('nfts')) || []
+      const allNFTs: NFT[] = JSON.parse(localStorage.getItem('nfts') || '[]');
+      const created = allNFTs.filter(nft => nft.creator === userAddress);
+      const collected: NFT[] = []; // Placeholder for future logic
 
-      const created = allNFTs.filter(nft => nft.creator === userAddress)
-      const collected = []
+      setCreatedNFTs(created);
+      setCollectedNFTs(collected);
+      setLoading(false);
+    };
 
-      setCreatedNFTs(created)
-      setCollectedNFTs(collected)
-      setLoading(false)
-    }
+    if (userAddress) fetchData();
+  }, [userAddress]);
 
-    if (userAddress) fetchData()
-  }, [userAddress])
-
-  if (loading) return <div className="profile-container">Loading...</div>
+  if (loading) return <div className="profile-container">Loading...</div>;
 
   return (
     <div className="profile-container">
@@ -62,7 +74,7 @@ const Profile = ({ userAddress }) => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;
