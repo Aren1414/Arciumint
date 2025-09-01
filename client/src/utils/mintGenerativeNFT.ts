@@ -18,7 +18,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     canvas.width = 1080;
     canvas.height = 1080;
 
-    const stream = canvas.captureStream(30); // 30 FPS
+    const stream = canvas.captureStream(30); 
     const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
 
     const chunks: BlobPart[] = [];
@@ -80,6 +80,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
       creator: userAddress,
       imagePreview: uri,
       mintedBy: [userAddress],
+      programId: programId.toBase58(), 
     };
     localStorage.setItem('nfts', JSON.stringify([...existingNFTs, newNFT]));
 
