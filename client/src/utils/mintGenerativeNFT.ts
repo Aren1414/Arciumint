@@ -1,4 +1,3 @@
-import { ArciumClient } from '@arcium-hq/client';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { AnchorProvider, Program } from '@coral-xyz/anchor';
 import idl from '../../idl/arciumintnftgen.json'
@@ -11,14 +10,12 @@ type MintResult = { success: true; uri: string } | { success: false; error: stri
 
 export async function mintGenerativeNFT(canvasId: string, userAddress: string): Promise<MintResult> {
   try {
-    
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) throw new Error('Canvas not found');
 
     canvas.width = 1080;
     canvas.height = 1080;
 
-    
     const stream = canvas.captureStream(30); 
     const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
 
@@ -36,32 +33,35 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     const videoBlob = new Blob(chunks, { type: 'video/webm' });
     const file = new File([videoBlob], 'nft.mp4', { type: 'video/mp4' });
 
-    
     const uri = await uploadToStorj(file);
     if (!uri || !uri.startsWith('https://')) throw new Error('Failed to upload video to Storj');
 
     
-    const arcium = new ArciumClient();
-    await arcium.init();
+    const res = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userAddress })
+    })
 
-    let mpcWallet = await arcium.getWallet();
-    if (!mpcWallet) {
-      mpcWallet = await arcium.createWallet();
+    const { ciphertext, publicKey, nonce } = await res.json()
+
+    const dummyWallet = {
+      publicKey: new PublicKey(userAddress),
+      signTransaction: async (tx: any) => tx,
+      signAllTransactions: async (txs: any[]) => txs
     }
 
-    
-    const provider = new AnchorProvider(connection, mpcWallet, {
+    const provider = new AnchorProvider(connection, dummyWallet, {
       preflightCommitment: 'processed',
     });
     const program = new Program(idl as any, programId, provider);
 
-    
     const mintKeypair = Keypair.generate();
     const name = 'MPC World';
     const symbol = 'MPC';
 
     await program.methods
-      .mintNft(name, symbol, uri)
+      .mintNftWithMpc(name, symbol, uri, ciphertext, publicKey, nonce)
       .accounts({
         mint: mintKeypair.publicKey,
         user: new PublicKey(userAddress),
@@ -69,8 +69,6 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
       })
       .signers([mintKeypair])
       .rpc();
-
-  
 
     return { success: true, uri };
   } catch (err: any) {
