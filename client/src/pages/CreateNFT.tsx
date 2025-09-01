@@ -3,14 +3,14 @@ import './createNFT.css';
 
 const CreateNFT: React.FC = () => {
   return (
-    <div className="upload-container">
+    <div className="create-container">
       <h2>Create Your NFT</h2>
       <p style={{ textAlign: 'center', fontSize: '1.2rem', color: '#888', marginBottom: '2rem' }}>
         🚧 This feature is under development. <br />
         <strong>Coming Soon...</strong>
       </p>
 
-      <form className="upload-form" style={{ opacity: 0.5, pointerEvents: 'none' }}>
+      <form className="create-form" style={{ opacity: 0.5, pointerEvents: 'none' }}>
         <label>Upload Image (PNG, JPG, JPEG, WEBP - Max 5MB)</label>
         <input type="file" disabled />
 
