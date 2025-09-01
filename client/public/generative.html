@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Generative + MPC Globe + Comet</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html,body{ margin:0; padding:0; height:100%; background:black; overflow:hidden; }
+    canvas { display:block; width:100vw; height:100vh; }
+    @media (min-width: 900px) { canvas { width:100vw; height:100vh; } }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <script>
+let globeRadius = 300;
+let earthTexture, coreTexture;
+let nodes = [], connections = [];
+let coreRotY = 0;
+let globeRotX, globeRotY;
+let comets = [], starStreaks = [];
+let bgGraphics;
+let perspectiveLines = [];
+
+function preload(){
+  earthTexture = loadImage("https://cdn.jsdelivr.net/gh/Aren1414/map_assets/Simplified_World_Map.svg.png");
+}
+
+function setup(){
+  let cnv = createCanvas(windowWidth, windowHeight, WEBGL);
+  angleMode(RADIANS); textureMode(NORMAL);
+
+  globeRotX = random(0.007, 0.01);
+  globeRotY = random(0.009, 0.02);
+
+  coreTexture = createGraphics(256,256);
+  coreTexture.background(255,204,0);
+  coreTexture.noStroke();
+  for (let i=0;i<1000;i++){
+    coreTexture.fill(255, random(180,230), random(10,40), 60);
+    coreTexture.ellipse(random(256), random(256), random(2,6));
+  }
+  coreTexture.fill(65,44,151);
+  coreTexture.textAlign(CENTER, CENTER);
+  coreTexture.textSize(50);
+  coreTexture.text("MPC",128,128);
+
+  const nodeCount = int(random(40,60));
+  for (let i=0;i<nodeCount;i++){
+    let theta = random(TWO_PI);
+    let phi = random(PI);
+    let x = globeRadius * sin(phi) * cos(theta);
+    let y = globeRadius * sin(phi) * sin(theta);
+    let z = globeRadius * cos(phi);
+    nodes.push(createVector(x,y,z));
+  }
+  for (let i=0;i<nodes.length;i++){
+    for (let j=i+1;j<nodes.length;j++){
+      if (p5.Vector.dist(nodes[i], nodes[j]) < 180) connections.push([i,j]);
+    }
+  }
+
+  for (let i=0;i<200;i++) starStreaks.push(new StarStreak());
+  let nCom = int(random(2,4));
+  for (let i=0;i<nCom;i++) comets.push(new Comet());
+
+  bgGraphics = createGraphics(windowWidth, windowHeight);
+  generateGalaxyBackground(bgGraphics);
+  generatePerspectiveLines();
+}
+
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
+  bgGraphics = createGraphics(windowWidth, windowHeight);
+  generateGalaxyBackground(bgGraphics);
+  generatePerspectiveLines();
+}
+
+function draw(){
+  background(0);
+
+  push();
+  translate(-width/2, -height/2, 0);
+  image(bgGraphics, 0, 0);
+  pop();
+
+  // خطوط پرسپکتیو
+  push();
+  translate(0,0,-500);
+  for(let line of perspectiveLines){
+    line.update();
+    line.show();
+  }
+  pop();
+
+  const gl = drawingContext;
+  gl.disable(gl.DEPTH_TEST);
+  for (let s of starStreaks){ s.update(); s.show(); }
+  gl.enable(gl.DEPTH_TEST);
+
+  push();
+  rotateY(coreRotY);
+  texture(coreTexture); noStroke();
+  sphere(globeRadius * 0.22, 64, 64);
+  coreRotY += 0.06;
+
+  rotateX(frameCount * globeRotX);
+  rotateY(frameCount * globeRotY);
+
+  push();
+  texture(earthTexture); noStroke();
+  sphere(globeRadius, 56, 56);
+  pop();
+
+  stroke(200,220,255,160);
+  strokeWeight(1);
+  noFill();
+  for (let [i,j] of connections){
+    let a = nodes[i], b = nodes[j];
+    let control = p5.Vector.add(a,b).div(2).normalize().mult(globeRadius * 1.02);
+    beginShape();
+    vertex(a.x, a.y, a.z);
+    vertex(control.x, control.y, control.z);
+    vertex(b.x, b.y, b.z);
+    endShape();
+  }
+
+  for (let n of nodes){
+    push();
+    translate(n.x, n.y, n.z);
+    rotateY(frameCount * 0.01);
+    noStroke();
+    fill(255); sphere(2.6,6,6);
+    fill(100,180,255,80); sphere(5.6,6,6);
+    fill(100,180,255,40); sphere(8.2,6,6);
+    pop();
+  }
+  pop();
+
+  const gl2 = drawingContext;
+  gl2.disable(gl2.DEPTH_TEST);
+  for (let c of comets){ c.update(); c.show(); }
+  gl2.enable(gl2.DEPTH_TEST);
+}
+
+function generateGalaxyBackground(g){
+  const c1 = color(random(10,50), random(0,30), random(80,140));
+  const c2 = color(random(50,100), random(10,50), random(120,200));
+  const c3 = color(random(120,180), random(20,100), random(160,255));
+  g.noFill();
+  for(let y=0;y<g.height;y++){
+    let t=y/g.height;
+    let col = t<0.5 ? lerpColor(c1,c2,t*2) : lerpColor(c2,c3,(t-0.5)*2);
+    g.stroke(col);
+    g.line(0,y,g.width,y);
+  }
+}
+
+class PerspectiveLine {
+  constructor(){
+    this.reset();
+  }
+  reset(){
+    this.x = random(-width/2, width/2);
+    this.y = random(-height/2, height/2);
+    this.z = random(-200, -1000);
+    this.length = random(10, 100); 
+    this.speed = random(4,20);
+    this.weight = random(0.5,5);
+    this.color = color(random(150,255), random(150,255), 255, random(50,200));
+  }
+  update(){
+    this.z += this.speed;
+    if(this.z > 100) this.reset();
+  }
+  show(){
+    push();
+    stroke(this.color);
+    strokeWeight(this.weight);
+    const f = 900;
+    const scale = f/(f - this.z);
+    line(this.x*scale, this.y*scale, 0, this.x*scale, this.y*scale, -this.length*scale);
+    pop();
+  }
+}
+
+function generatePerspectiveLines(){
+  perspectiveLines = [];
+  const count = int(random(50,120));
+  for(let i=0;i<count;i++) perspectiveLines.push(new PerspectiveLine());
+}
+
+class StarStreak{
+  constructor(){ this.reset(true); }
+  reset(initial=false){ this.z=random(-1400,-400); this.angle=random(TWO_PI); this.radius=random(80,max(width,height)*0.9); this.len=random(6,22); this.thickness=random(0.6,2.0); this.speed=random(6,20); if(!initial) this.z=-1200; }
+  update(){ this.z+=this.speed; if(this.z>80)this.reset(false); }
+  show(){ const f=900,s=f/(f-this.z); let sx=this.radius*cos(this.angle)*s,sy=this.radius*sin(this.angle)*s; push(); translate(sx,sy); stroke(200,200,255,constrain(210-map(this.z,-1400,80,0,220),0,210)); strokeWeight(max(0.9,this.thickness*s)); line(0,0,-cos(this.angle)*this.len*s,-sin(this.angle)*this.len*s); pop(); }
+}
+
+class Particle{
+  constructor(pos,vel,size){ this.pos=pos.copy(); this.vel=vel.copy(); this.size=size; this.lifespan=255; this.alphaMul=1; }
+  update(){ this.pos.add(this.vel); this.lifespan-=8; }
+  show(){ push(); noStroke(); fill(255,160,60,this.lifespan*this.alphaMul); ellipse(this.pos.x,this.pos.y,this.size); pop(); }
+  isDead(){ return this.lifespan<=0; }
+}
+
+class Comet{
+  constructor(){ this.reset(); }
+  reset(){ 
+    const edge=random(['left','right','top','bottom']),m=160;
+    if(edge==='left') this.pos=createVector(-width/2-m,random(-height/2,height/2));
+    else if(edge==='right') this.pos=createVector(width/2+m,random(-height/2,height/2));
+    else if(edge==='top') this.pos=createVector(random(-width/2,width/2),-height/2-m);
+    else this.pos=createVector(random(-width/2,width/2),height/2+m);
+    const target=createVector(random(-20,20),random(-20,20));
+    const dir=p5.Vector.sub(target,this.pos).normalize();
+    this.speed=random(9,16); this.vel=dir.mult(this.speed); this.size=random(20,30); this.particles=[]; this.alpha=255;
+  }
+  update(){
+    this.pos.add(this.vel);
+    for(let i=0;i<2;i++){
+      let pvel=this.vel.copy().mult(random(-0.06,-0.25)); pvel.add(p5.Vector.random2D().mult(random(0,0.18)));
+      const p=new Particle(this.pos.copy(),pvel,random(2,4));
+      const d=this.pos.mag(); if(d<globeRadius*0.78) this.alpha=max(0,this.alpha-16); else this.alpha=min(255,this.alpha+6);
+      p.alphaMul=this.alpha/255; this.particles.push(p);
+    }
+    for(let i=this.particles.length-1;i>=0;i--){ this.particles[i].update(); if(this.particles[i].isDead()) this.particles.splice(i,1);}
+    const d=this.pos.mag(); if(d<globeRadius*0.78){ this.vel.mult(0.88); if(this.alpha<=0) this.reset(); }
+    if(this.pos.x<-width*1.5||this.pos.x>width*1.5||this.pos.y<-height*1.5||this.pos.y>height*1.5) this.reset();
+  }
+  show(){ push(); for(let p of this.particles)p.show(); pop(); }
+}
+  </script>
+</body>
+  </html>
