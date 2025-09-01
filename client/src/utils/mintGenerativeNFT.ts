@@ -1,6 +1,19 @@
-import { Connection, PublicKey, Keypair } from '@solana/web3.js';
-import { AnchorProvider, Program } from '@coral-xyz/anchor';
-import idl from '../../idl/arciumintnftgen.json'
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  SystemProgram,
+} from '@solana/web3.js';
+import {
+  AnchorProvider,
+  Program,
+} from '@coral-xyz/anchor';
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token';
+import idl from '../../idl/arciumintnftgen.json';
 import { uploadToStorj } from './uploadToStorj';
 
 const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
@@ -16,19 +29,16 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     canvas.width = 1080;
     canvas.height = 1080;
 
-    const stream = canvas.captureStream(30); 
+    const stream = canvas.captureStream(30);
     const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
 
     const chunks: BlobPart[] = [];
     recorder.ondataavailable = (e) => chunks.push(e.data);
 
     recorder.start();
-    await new Promise((resolve) => setTimeout(resolve, 4000)); 
+    await new Promise((resolve) => setTimeout(resolve, 4000));
     recorder.stop();
-
-    await new Promise((resolve) => {
-      recorder.onstop = resolve;
-    });
+    await new Promise((resolve) => { recorder.onstop = resolve });
 
     const videoBlob = new Blob(chunks, { type: 'video/webm' });
     const file = new File([videoBlob], 'nft.mp4', { type: 'video/mp4' });
@@ -36,20 +46,20 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     const uri = await uploadToStorj(file);
     if (!uri || !uri.startsWith('https://')) throw new Error('Failed to upload video to Storj');
 
-    
     const res = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: userAddress })
-    })
+    });
 
-    const { ciphertext, publicKey, nonce } = await res.json()
+    const { ciphertext, publicKey, nonce } = await res.json();
 
+    const payer = new PublicKey(userAddress);
     const dummyWallet = {
-      publicKey: new PublicKey(userAddress),
+      publicKey: payer,
       signTransaction: async (tx: any) => tx,
       signAllTransactions: async (txs: any[]) => txs
-    }
+    };
 
     const provider = new AnchorProvider(connection, dummyWallet, {
       preflightCommitment: 'processed',
@@ -60,12 +70,46 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     const name = 'MPC World';
     const symbol = 'MPC';
 
+    const [userRecord] = await PublicKey.findProgramAddressSync(
+      [Buffer.from('user_record'), payer.toBuffer()],
+      programId
+    );
+
+    const [mintAuthority] = await PublicKey.findProgramAddressSync(
+      [Buffer.from('mint_authority')],
+      programId
+    );
+
+    const tokenAccount = await getAssociatedTokenAddress(
+      mintKeypair.publicKey,
+      payer
+    );
+
+    const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
+    const [metadata] = await PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METADATA_PROGRAM_ID.toBuffer(),
+        mintKeypair.publicKey.toBuffer()
+      ],
+      METADATA_PROGRAM_ID
+    );
+
     await program.methods
       .mintNftWithMpc(name, symbol, uri, ciphertext, publicKey, nonce)
       .accounts({
+        payer,
+        userRecord,
         mint: mintKeypair.publicKey,
-        user: new PublicKey(userAddress),
-        systemProgram: PublicKey.default,
+        tokenAccount,
+        mintAuthority,
+        metadata,
+        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: PublicKey.default, // optional: can use SYSVAR_RENT_PUBKEY if needed
       })
       .signers([mintKeypair])
       .rpc();
