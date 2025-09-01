@@ -71,6 +71,11 @@ jobs:
       run: |
         ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
+    - name: Copy IDL to client
+      run: |
+        mkdir -p client/idl
+        cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
+
     - name: Check .so file exists
       run: |
         if [ ! -f target/deploy/arciumintnftgen.so ]; then
