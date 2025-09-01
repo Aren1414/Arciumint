@@ -73,8 +73,7 @@ jobs:
 
     - name: Check .so file exists
       run: |
-        SO_PATH=$(find target/deploy -name "arciumintnftgen.so")
-        if [ -z "$SO_PATH" ]; then
+        if [ ! -f target/deploy/arciumintnftgen.so ]; then
           echo "❌ .so file not found!"
           exit 1
         fi
