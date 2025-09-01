@@ -65,29 +65,20 @@ jobs:
         solana address -k target/deploy/arciumintnftgen-keypair.json || true
 
     - name: Clean Anchor build
-      run: |
-        cd programs/arciumint-nft-gen
-        anchor clean
+      run: anchor clean
 
     - name: Build Anchor program with IDL features
       run: |
-        cd programs/arciumint-nft-gen
         ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
     - name: Check .so file exists
       run: |
-        SO_PATH=$(find programs/arciumint-nft-gen/target/deploy -name "arciumintnftgen.so")
+        SO_PATH=$(find target/deploy -name "arciumintnftgen.so")
         if [ -z "$SO_PATH" ]; then
           echo "❌ .so file not found!"
           exit 1
         fi
 
-    - name: Move .so file to root deploy folder
-      run: |
-        mkdir -p target/deploy
-        cp programs/arciumint-nft-gen/target/deploy/arciumintnftgen.so target/deploy/arciumintnftgen.so
-
     - name: Deploy Anchor program
       run: |
-        cd programs/arciumint-nft-gen
-        anchor deploy --provider.cluster devnet --provider.wallet ../../wallet.json
+        anchor deploy --provider.cluster devnet --provider.wallet wallet.json
