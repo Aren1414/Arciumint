@@ -10,10 +10,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@arcium-hq/client": "^0.2.0",
     "@coral-xyz/anchor": "^0.31.1",
     "@metaplex-foundation/js": "^0.20.1",
     "@solana/web3.js": "^1.98.4",
     "ipfs-http-client": "^60.0.1",
+    "p5": "^2.0.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.0"
