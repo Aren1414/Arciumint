@@ -1,38 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-const Mint = () => {
-  const { id } = useParams();
-  const [nft, setNft] = useState(null);
+type NFT = {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  mintCount: number;
+  mintedBy?: string[];
+};
+
+const Mint: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [nft, setNft] = useState<NFT | null>(null);
   const [minted, setMinted] = useState(false);
-  const userAddress = localStorage.getItem('userAddress');
+  const userAddress = localStorage.getItem('userAddress') || '';
 
   useEffect(() => {
-    const storedNFTs = JSON.parse(localStorage.getItem('nfts')) || [];
+    const storedNFTs: NFT[] = JSON.parse(localStorage.getItem('nfts') || '[]');
     const selectedNFT = storedNFTs.find(item => item.id === id);
-    setNft(selectedNFT);
+    setNft(selectedNFT || null);
   }, [id]);
 
   const handleMint = () => {
     if (!nft || !userAddress) return;
 
-    const updatedNFTs = JSON.parse(localStorage.getItem('nfts')).map(item => {
+    const updatedNFTs = JSON.parse(localStorage.getItem('nfts') || '[]').map((item: NFT) => {
       if (item.id === id && !(item.mintedBy || []).includes(userAddress)) {
         return {
           ...item,
           mintCount: item.mintCount + 1,
-          mintedBy: [...(item.mintedBy || []), userAddress]
+          mintedBy: [...(item.mintedBy || []), userAddress],
         };
       }
       return item;
     });
 
     localStorage.setItem('nfts', JSON.stringify(updatedNFTs));
-    setNft(prev => ({
-      ...prev,
-      mintCount: prev.mintCount + 1,
-      mintedBy: [...(prev.mintedBy || []), userAddress]
-    }));
+    setNft(prev =>
+      prev
+        ? {
+            ...prev,
+            mintCount: prev.mintCount + 1,
+            mintedBy: [...(prev.mintedBy || []), userAddress],
+          }
+        : null
+    );
     setMinted(true);
   };
 
@@ -71,7 +84,7 @@ const Mint = () => {
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
-            marginTop: '1rem'
+            marginTop: '1rem',
           }}
         >
           Mint this NFT
