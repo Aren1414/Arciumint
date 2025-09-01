@@ -1,23 +1,29 @@
-import React, { useEffect, useState } from 'react'
-import './home.css'
+import React, { useEffect, useState } from 'react';
+import './home.css';
 
-const Home = () => {
-  const [topNFTs, setTopNFTs] = useState([])
+type NFT = {
+  id: string;
+  name: string;
+  imagePreview: string;
+  mintCount: number;
+};
+
+const Home: React.FC = () => {
+  const [topNFTs, setTopNFTs] = useState<NFT[]>([]);
 
   useEffect(() => {
-    const allNFTs = JSON.parse(localStorage.getItem('nfts')) || []
+    const allNFTs: NFT[] = JSON.parse(localStorage.getItem('nfts') || '[]');
     const sorted = allNFTs
       .filter(nft => nft.mintCount && nft.imagePreview)
       .sort((a, b) => b.mintCount - a.mintCount)
-      .slice(0, 20)
+      .slice(0, 20);
 
-    setTopNFTs(sorted)
-  }, [])
+    setTopNFTs(sorted);
+  }, []);
 
   const handleGenerateMint = () => {
-    // آماده‌سازی برای اتصال به کد جنریتیو و Arcium
-    alert('Generative art will be minted here.')
-  }
+    alert('Generative art will be minted here.');
+  };
 
   return (
     <div className="home-container">
@@ -28,7 +34,7 @@ const Home = () => {
 
       <section className="generative-preview">
         <div className="preview-box">
-          <canvas id="generativeCanvas" width="300" height="300"></canvas>
+          <canvas id="generativeCanvas" width={300} height={300}></canvas>
         </div>
         <button className="mint-button" onClick={handleGenerateMint}>
           Generate & Mint
@@ -41,7 +47,7 @@ const Home = () => {
           {topNFTs.length === 0 ? (
             <p>No NFTs available.</p>
           ) : (
-            topNFTs.map((nft, i) => (
+            topNFTs.map(nft => (
               <div key={nft.id} className="nft-card">
                 <img src={nft.imagePreview} alt={nft.name} />
                 <p>{nft.name}</p>
@@ -52,7 +58,7 @@ const Home = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
