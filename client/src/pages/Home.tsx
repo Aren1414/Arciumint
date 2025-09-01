@@ -1,60 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import './home.css';
-
-type NFT = {
-  id: string;
-  name: string;
-  imagePreview: string;
-  mintCount: number;
-};
+import { mintGenerativeNFT } from '../utils/mintGenerativeNFT';
 
 const Home: React.FC = () => {
-  const [topNFTs, setTopNFTs] = useState<NFT[]>([]);
+  const userAddress = window.solana?.publicKey?.toBase58();
 
-  useEffect(() => {
-    const allNFTs: NFT[] = JSON.parse(localStorage.getItem('nfts') || '[]');
-    const sorted = allNFTs
-      .filter(nft => nft.mintCount && nft.imagePreview)
-      .sort((a, b) => b.mintCount - a.mintCount)
-      .slice(0, 20);
+  const handleGenerateMint = async () => {
+    if (!userAddress) {
+      alert('Please connect your wallet first.');
+      return;
+    }
 
-    setTopNFTs(sorted);
-  }, []);
-
-  const handleGenerateMint = () => {
-    alert('Generative art will be minted here.');
+    const result = await mintGenerativeNFT('generativeCanvas', userAddress);
+    if (result.success) {
+      alert('✅ NFT minted successfully!');
+    } else {
+      alert(`❌ Mint failed: ${result.error}`);
+    }
   };
 
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1>Welcome to Arciumint</h1>
-        <p>Create, mint, and share generative NFTs securely.</p>
+        <h1>MPC World</h1>
+        <p>
+          MPC World is a generative NFT experience built on Solana, where each piece is uniquely crafted and securely minted using multi-party computation. No templates, no repetition—just pure algorithmic creativity.
+        </p>
       </header>
 
       <section className="generative-preview">
-        <div className="preview-box">
-          <canvas id="generativeCanvas" width={300} height={300}></canvas>
-        </div>
+        <iframe
+          src="/generative.html"
+          title="Generative Canvas"
+          width="100%"
+          height="400"
+          style={{ borderRadius: '12px', border: 'none', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }}
+        />
         <button className="mint-button" onClick={handleGenerateMint}>
           Generate & Mint
         </button>
       </section>
 
       <section className="top-nfts">
-        <h2>Top 20 NFTs</h2>
-        <div className="nft-grid">
-          {topNFTs.length === 0 ? (
-            <p>No NFTs available.</p>
-          ) : (
-            topNFTs.map(nft => (
-              <div key={nft.id} className="nft-card">
-                <img src={nft.imagePreview} alt={nft.name} />
-                <p>{nft.name}</p>
-                <span>Minted: {nft.mintCount}</span>
-              </div>
-            ))
-          )}
+        <h2>🔥 Trending NFTs</h2>
+        <div className="coming-soon">
+          <p>Coming Soon...</p>
         </div>
       </section>
     </div>
