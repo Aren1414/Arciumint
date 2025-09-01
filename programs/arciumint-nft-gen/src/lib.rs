@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
@@ -10,7 +10,6 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
-    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
@@ -32,7 +31,6 @@ pub mod arciumintnftgen {
     }
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -80,17 +78,14 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -108,7 +103,6 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
@@ -162,4 +156,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-            }
+    }
