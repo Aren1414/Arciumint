@@ -12,8 +12,13 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
 #[cfg(feature = "exclude-accounts")]
+use anchor_lang::prelude::Context;
+
+#[cfg(feature = "exclude-accounts")]
 #[program]
 pub mod arciumintnftgen {
+    use super::*;
+
     pub fn mint_nft(_ctx: Context<()>, _name: String, _symbol: String, _uri: String) -> Result<()> {
         Ok(())
     }
@@ -175,4 +180,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid token program.")]
     InvalidTokenProgram,
-    }
+}
