@@ -9,7 +9,7 @@ const GenerativeCanvas: React.FC = () => {
 
     const sketch = (p: p5) => {
       let globeRadius = 300;
-      let earthTexture: p5.Image;
+      let earthTexture: p5.Image | null = null;
       let coreTexture: p5.Graphics;
       let nodes: p5.Vector[] = [];
       let connections: [number, number][] = [];
@@ -21,22 +21,17 @@ const GenerativeCanvas: React.FC = () => {
       let bgGraphics: p5.Graphics;
       let perspectiveLines: PerspectiveLine[] = [];
 
-      // -------------------------
-      // 📌 Load assets
-      // -------------------------
       p.preload = () => {
-        
-        earthTexture = p.loadImage("/Map.png");
+        earthTexture = p.loadImage("/Map.png", () => {}, () => {
+          earthTexture = null;
+        });
       };
 
       p.setup = () => {
         p.createCanvas(window.innerWidth, window.innerHeight, p.WEBGL);
-
-        // Background
         bgGraphics = p.createGraphics(p.width, p.height);
         generateGalaxyBackground(bgGraphics);
 
-        // Core texture
         coreTexture = p.createGraphics(256, 256);
         coreTexture.noStroke();
         for (let i = 0; i < 4000; i++) {
@@ -44,7 +39,6 @@ const GenerativeCanvas: React.FC = () => {
           coreTexture.ellipse(p.random(256), p.random(256), 1.5);
         }
 
-        // Graph nodes
         for (let i = 0; i < 40; i++) {
           let v = p5.Vector.random3D().mult(globeRadius * 1.01);
           nodes.push(v);
@@ -55,15 +49,11 @@ const GenerativeCanvas: React.FC = () => {
           }
         }
 
-        // Effects
         for (let i = 0; i < 6; i++) comets.push(new Comet());
         for (let i = 0; i < 80; i++) starStreaks.push(new StarStreak());
         generatePerspectiveLines();
       };
 
-      // -------------------------
-      // Classes
-      // -------------------------
       class PerspectiveLine {
         x: number;
         y: number;
@@ -247,9 +237,6 @@ const GenerativeCanvas: React.FC = () => {
         }
       }
 
-      // -------------------------
-      // Helpers
-      // -------------------------
       function generateGalaxyBackground(g: p5.Graphics) {
         const c1 = p.color(p.random(10, 50), p.random(0, 30), p.random(80, 140));
         const c2 = p.color(p.random(50, 100), p.random(10, 50), p.random(120, 200));
@@ -271,9 +258,6 @@ const GenerativeCanvas: React.FC = () => {
         }
       }
 
-      // -------------------------
-      // Draw loop
-      // -------------------------
       p.draw = () => {
         p.background(0);
 
@@ -308,11 +292,13 @@ const GenerativeCanvas: React.FC = () => {
         p.rotateX(p.frameCount * globeRotX);
         p.rotateY(p.frameCount * globeRotY);
 
-        p.push();
-        p.texture(earthTexture);
-        p.noStroke();
-        p.sphere(globeRadius, 56, 56);
-        p.pop();
+        if (earthTexture) {
+          p.push();
+          p.texture(earthTexture);
+          p.noStroke();
+          p.sphere(globeRadius, 56, 56);
+          p.pop();
+        }
 
         p.stroke(200, 220, 255, 160);
         p.strokeWeight(1);
@@ -342,13 +328,12 @@ const GenerativeCanvas: React.FC = () => {
         }
         p.pop();
 
-        const gl2 = p.drawingContext as WebGLRenderingContext;
-        gl2.disable(gl2.DEPTH_TEST);
+        gl.disable(gl.DEPTH_TEST);
         for (let c of comets) {
           c.update();
           c.show();
         }
-        gl2.enable(gl2.DEPTH_TEST);
+        gl.enable(gl.DEPTH_TEST);
       };
     };
 
