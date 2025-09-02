@@ -8,31 +8,13 @@ const GenerativeCanvas: React.FC = () => {
     let sketchInstance: p5;
 
     const sketch = (p: p5) => {
-      let img: p5.Image | null = null;
-
-      p.preload = () => {
-        img = p.loadImage("/Map.png", () => {
-          console.log("✅ Map.png loaded");
-        }, () => {
-          console.error("❌ Failed to load Map.png");
-          img = null;
-        });
-      };
-
       p.setup = () => {
         p.createCanvas(window.innerWidth, window.innerHeight);
-        p.noLoop();
-      };
-
-      p.draw = () => {
-        p.background(30);
-        if (img) {
-          p.image(img, 0, 0, p.width, p.height);
-        } else {
-          p.fill(255, 0, 0);
-          p.textSize(32);
-          p.text("Image not loaded", 50, 50);
-        }
+        p.background(20);
+        p.fill(255, 100, 100);
+        p.noStroke();
+        p.ellipse(p.width / 2, p.height / 2, 100, 100);
+        console.log("✅ Canvas rendered");
       };
     };
 
