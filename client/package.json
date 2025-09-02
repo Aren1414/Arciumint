@@ -18,14 +18,11 @@
     "ipfs-http-client": "^60.0.1",
     "p5": "^2.0.5",
     "process": "^0.11.10",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-router-dom": "^7.8.0"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@rollup/plugin-inject": "^5.0.5",
     "@types/node": "^20.6.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
