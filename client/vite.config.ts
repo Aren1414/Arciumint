@@ -4,9 +4,12 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import inject from "@rollup/plugin-inject";
 
-// Polyfills for browser
+
 export default defineConfig({
   base: "/", 
+  define: {
+    global: "globalThis", 
+  },
   plugins: [react()],
   resolve: {
     alias: {
@@ -19,9 +22,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     esbuildOptions: {
-      define: {
-        global: "globalThis",
-      },
       plugins: [
         NodeGlobalsPolyfillPlugin({
           buffer: true,
