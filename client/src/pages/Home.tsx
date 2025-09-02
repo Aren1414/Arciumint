@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './home.css';
 import { mintGenerativeNFT } from '../utils/mintGenerativeNFT';
 import GenerativeCanvas from '../components/GenerativeCanvas';
+import ConnectWallet from '../components/ConnectWallet';
 
 const Home: React.FC = () => {
+  const [userAddress, setUserAddress] = useState('');
+
   const handleGenerateMint = async () => {
-    
-    if (typeof window === 'undefined' || !window.solana || !window.solana.publicKey) {
-      alert('❌ Wallet not detected. Please open this site inside the Phantom app and connect your wallet.');
+    if (!userAddress) {
+      alert('❌ Wallet not connected. Please connect your wallet first.');
       return;
     }
-
-    const userAddress = window.solana.publicKey.toBase58();
 
     const result = await mintGenerativeNFT('generativeCanvas', userAddress);
     if (result.success) {
@@ -30,9 +30,17 @@ const Home: React.FC = () => {
         </p>
       </header>
 
+      <section className="wallet-connect">
+        <ConnectWallet onConnect={setUserAddress} />
+      </section>
+
       <section className="generative-preview">
         <GenerativeCanvas />
-        <button className="mint-button" onClick={handleGenerateMint}>
+        <button
+          className="mint-button"
+          onClick={handleGenerateMint}
+          disabled={!userAddress}
+        >
           Generate & Mint
         </button>
       </section>
