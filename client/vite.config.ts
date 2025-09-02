@@ -34,6 +34,10 @@ export default defineConfig({
       os: "os-browserify/browser",
       url: "url",
       zlib: "browserify-zlib",
+      vm: "vm-browserify", 
     },
+  },
+  define: {
+    global: "globalThis", 
   },
 });
