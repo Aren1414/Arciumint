@@ -4,9 +4,9 @@ import { mintGenerativeNFT } from '../utils/mintGenerativeNFT';
 import GenerativeCanvas from '../components/GenerativeCanvas';
 
 const Home: React.FC = () => {
-  const userAddress = window.solana?.publicKey?.toBase58();
-
   const handleGenerateMint = async () => {
+    const userAddress = window.solana?.publicKey?.toBase58();
+
     if (!userAddress) {
       alert('Please connect your wallet first.');
       return;
