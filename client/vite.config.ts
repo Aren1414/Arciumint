@@ -6,6 +6,7 @@ import inject from "@rollup/plugin-inject";
 
 // Polyfills for browser
 export default defineConfig({
+  base: "/", 
   plugins: [react()],
   resolve: {
     alias: {
@@ -34,7 +35,6 @@ export default defineConfig({
     rollupOptions: {
       plugins: [
         inject({
-          
           Buffer: ["buffer", "Buffer"],
           process: "process",
         }),
