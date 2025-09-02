@@ -3,12 +3,10 @@ import Home from './pages/Home';
 import CreateNFT from './pages/CreateNFT';
 import Profile from './pages/Profile';
 import Mint from './pages/Mint';
-import Navbar from './components/Navbar';
 
 const App: React.FC = () => {
   return (
     <Router>
-      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateNFT />} />
