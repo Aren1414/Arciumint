@@ -11,6 +11,25 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['stream-browserify', 'util', 'buffer'],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+        process: 'process.browser',
+      },
+      inject: [
+        'node_modules/@esbuild-plugins/node-globals-polyfill/process.js',
+        'node_modules/@esbuild-plugins/node-globals-polyfill/buffer.js',
+      ],
+    },
+    include: [
+      'buffer',
+      'stream-browserify',
+      'util',
+      '@solana/web3.js',
+      'ipfs-http-client',
+    ],
+  },
+  define: {
+    'process.env': {},
   },
 });
