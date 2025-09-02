@@ -13,6 +13,7 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@metaplex-foundation/js": "^0.20.1",
     "@solana/web3.js": "^1.98.4",
+    "crypto-browserify": "^3.12.1",
     "ipfs-http-client": "^60.0.1",
     "p5": "^2.0.5",
     "react": "^19.1.1",
