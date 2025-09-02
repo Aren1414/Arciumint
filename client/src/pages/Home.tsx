@@ -5,12 +5,13 @@ import GenerativeCanvas from '../components/GenerativeCanvas';
 
 const Home: React.FC = () => {
   const handleGenerateMint = async () => {
-    const userAddress = window.solana?.publicKey?.toBase58();
-
-    if (!userAddress) {
-      alert('Please connect your wallet first.');
+    
+    if (typeof window === 'undefined' || !window.solana || !window.solana.publicKey) {
+      alert('❌ Wallet not detected. Please open this site inside the Phantom app and connect your wallet.');
       return;
     }
+
+    const userAddress = window.solana.publicKey.toBase58();
 
     const result = await mintGenerativeNFT('generativeCanvas', userAddress);
     if (result.success) {
