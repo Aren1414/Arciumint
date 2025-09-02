@@ -4,6 +4,7 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import inject from "@rollup/plugin-inject";
 
+// Polyfills for browser
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -11,20 +12,19 @@ export default defineConfig({
       stream: "stream-browserify",
       util: "util",
       buffer: "buffer",
-      events: "events/",
       crypto: "crypto-browserify",
+      events: "events",
     },
   },
   optimizeDeps: {
     esbuildOptions: {
       define: {
         global: "globalThis",
-        process: JSON.stringify({ env: {} }),
       },
       plugins: [
         NodeGlobalsPolyfillPlugin({
-          process: true,
           buffer: true,
+          process: true,
         }),
         NodeModulesPolyfillPlugin(),
       ],
@@ -34,6 +34,7 @@ export default defineConfig({
     rollupOptions: {
       plugins: [
         inject({
+          
           Buffer: ["buffer", "Buffer"],
           process: "process",
         }),
