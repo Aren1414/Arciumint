@@ -20,12 +20,16 @@
     "react-router-dom": "^7.8.0"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@types/node": "^20.6.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^4.0.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
+    "buffer": "^6.0.3",
+    "stream-browserify": "^3.0.0",
     "typescript": "^5.3.3",
+    "util": "^0.12.5",
     "vite": "^7.1.1"
   }
 }
