@@ -9,7 +9,7 @@ import Profile from './pages/Profile';
 
 console.log('✅ main.tsx loaded');
 
-
+const App: React.FC = () => {
   console.log('✅ App component initialized');
 
   return (
