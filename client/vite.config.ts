@@ -1,38 +1,43 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import inject from "@rollup/plugin-inject";
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      stream: 'stream-browserify',
-      util: 'util',
-      buffer: 'buffer',
-      crypto: 'crypto-browserify', 
+      stream: "stream-browserify",
+      util: "util",
+      buffer: "buffer",
+      events: "events/",
+      crypto: "crypto-browserify",
     },
   },
   optimizeDeps: {
     esbuildOptions: {
       define: {
-        global: 'globalThis',
-        process: 'process.browser',
+        global: "globalThis",
+        process: JSON.stringify({ env: {} }),
       },
-      inject: [
-        'node_modules/@esbuild-plugins/node-globals-polyfill/process.js',
-        'node_modules/@esbuild-plugins/node-globals-polyfill/buffer.js',
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+          buffer: true,
+        }),
+        NodeModulesPolyfillPlugin(),
       ],
     },
-    include: [
-      'buffer',
-      'stream-browserify',
-      'util',
-      'crypto-browserify', 
-      '@solana/web3.js',
-      'ipfs-http-client',
-      '@metaplex-foundation/js',
-    ],
   },
-  define: {
-    'process.env': {},
+  build: {
+    rollupOptions: {
+      plugins: [
+        inject({
+          Buffer: ["buffer", "Buffer"],
+          process: "process",
+        }),
+      ],
+    },
   },
 });
