@@ -8,6 +8,7 @@ export default defineConfig({
       stream: 'stream-browserify',
       util: 'util',
       buffer: 'buffer',
+      crypto: 'crypto-browserify', 
     },
   },
   optimizeDeps: {
@@ -25,8 +26,10 @@ export default defineConfig({
       'buffer',
       'stream-browserify',
       'util',
+      'crypto-browserify', 
       '@solana/web3.js',
       'ipfs-http-client',
+      '@metaplex-foundation/js',
     ],
   },
   define: {
