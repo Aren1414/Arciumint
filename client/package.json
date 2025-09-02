@@ -26,7 +26,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.8.0",
     "stream-http": "^3.2.0",
-    "url": "^0.11.4"
+    "url": "^0.11.4",
+    "vm-browserify": "^1.0.1"  
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
