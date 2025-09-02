@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import p5 from 'p5';
+import React, { useRef, useEffect } from "react";
+import p5 from "p5";
 
 const GenerativeCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -14,12 +14,56 @@ const GenerativeCanvas: React.FC = () => {
       let nodes: p5.Vector[] = [];
       let connections: [number, number][] = [];
       let coreRotY = 0;
-      let globeRotX: number, globeRotY: number;
-      let comets: any[] = [];
-      let starStreaks: any[] = [];
+      let globeRotX = 0.003;
+      let globeRotY = 0.002;
+      let comets: Comet[] = [];
+      let starStreaks: StarStreak[] = [];
       let bgGraphics: p5.Graphics;
-      let perspectiveLines: any[] = [];
+      let perspectiveLines: PerspectiveLine[] = [];
 
+      // -------------------------
+      // 📌 Load assets
+      // -------------------------
+      p.preload = () => {
+        
+        earthTexture = p.loadImage("/Map.png");
+      };
+
+      p.setup = () => {
+        p.createCanvas(window.innerWidth, window.innerHeight, p.WEBGL);
+
+        // Background
+        bgGraphics = p.createGraphics(p.width, p.height);
+        generateGalaxyBackground(bgGraphics);
+
+        // Core texture
+        coreTexture = p.createGraphics(256, 256);
+        coreTexture.noStroke();
+        for (let i = 0; i < 4000; i++) {
+          coreTexture.fill(p.random(200, 255), p.random(100, 200), p.random(50, 150), 80);
+          coreTexture.ellipse(p.random(256), p.random(256), 1.5);
+        }
+
+        // Graph nodes
+        for (let i = 0; i < 40; i++) {
+          let v = p5.Vector.random3D().mult(globeRadius * 1.01);
+          nodes.push(v);
+        }
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            if (p.random() < 0.12) connections.push([i, j]);
+          }
+        }
+
+        // Effects
+        for (let i = 0; i < 6; i++) comets.push(new Comet());
+        for (let i = 0; i < 80; i++) starStreaks.push(new StarStreak());
+        generatePerspectiveLines();
+      };
+
+      // -------------------------
+      // Classes
+      // -------------------------
       class PerspectiveLine {
         x: number;
         y: number;
@@ -139,17 +183,18 @@ const GenerativeCanvas: React.FC = () => {
         size: number;
         particles: Particle[];
         alpha: number;
+        speed: number;
 
         constructor() {
           this.reset();
         }
 
         reset() {
-          const edge = p.random(['left', 'right', 'top', 'bottom']);
+          const edge = p.random(["left", "right", "top", "bottom"]);
           const m = 160;
-          if (edge === 'left') this.pos = p.createVector(-p.width / 2 - m, p.random(-p.height / 2, p.height / 2));
-          else if (edge === 'right') this.pos = p.createVector(p.width / 2 + m, p.random(-p.height / 2, p.height / 2));
-          else if (edge === 'top') this.pos = p.createVector(p.random(-p.width / 2, p.width / 2), -p.height / 2 - m);
+          if (edge === "left") this.pos = p.createVector(-p.width / 2 - m, p.random(-p.height / 2, p.height / 2));
+          else if (edge === "right") this.pos = p.createVector(p.width / 2 + m, p.random(-p.height / 2, p.height / 2));
+          else if (edge === "top") this.pos = p.createVector(p.random(-p.width / 2, p.width / 2), -p.height / 2 - m);
           else this.pos = p.createVector(p.random(-p.width / 2, p.width / 2), p.height / 2 + m);
 
           const target = p.createVector(p.random(-20, 20), p.random(-20, 20));
@@ -202,6 +247,9 @@ const GenerativeCanvas: React.FC = () => {
         }
       }
 
+      // -------------------------
+      // Helpers
+      // -------------------------
       function generateGalaxyBackground(g: p5.Graphics) {
         const c1 = p.color(p.random(10, 50), p.random(0, 30), p.random(80, 140));
         const c2 = p.color(p.random(50, 100), p.random(10, 50), p.random(120, 200));
@@ -223,6 +271,9 @@ const GenerativeCanvas: React.FC = () => {
         }
       }
 
+      // -------------------------
+      // Draw loop
+      // -------------------------
       p.draw = () => {
         p.background(0);
 
@@ -252,7 +303,7 @@ const GenerativeCanvas: React.FC = () => {
         p.texture(coreTexture);
         p.noStroke();
         p.sphere(globeRadius * 0.22, 64, 64);
-        coreRotY += 0.06;
+        coreRotY += 0.006;
 
         p.rotateX(p.frameCount * globeRotX);
         p.rotateY(p.frameCount * globeRotY);
@@ -308,7 +359,7 @@ const GenerativeCanvas: React.FC = () => {
     };
   }, []);
 
-  return <div ref={canvasRef} style={{ width: '100%', height: '100vh' }} />;
+  return <div ref={canvasRef} style={{ width: "100%", height: "100vh" }} />;
 };
 
 export default GenerativeCanvas;
