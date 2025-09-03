@@ -17,7 +17,6 @@ import {
 } from '@solana/spl-token';
 import idl from '../../idl/arciumintnftgen.json';
 import { uploadToStorj } from './uploadToStorj';
-import { Buffer } from 'buffer'; 
 
 const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
 const connection = new Connection('https://api.devnet.solana.com');
@@ -78,13 +77,15 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
     const name = 'MPC World';
     const symbol = 'MPC';
 
+    const encoder = new TextEncoder();
+
     const [userRecord] = PublicKey.findProgramAddressSync(
-      [Buffer.from('user_record'), payer.toBuffer()],
+      [encoder.encode('user_record'), payer.toBuffer()],
       programId
     );
 
     const [mintAuthority] = PublicKey.findProgramAddressSync(
-      [Buffer.from('mint_authority')],
+      [encoder.encode('mint_authority')],
       programId
     );
 
@@ -97,7 +98,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
 
     const [metadata] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from('metadata'),
+        encoder.encode('metadata'),
         METADATA_PROGRAM_ID.toBuffer(),
         mintKeypair.publicKey.toBuffer()
       ],
@@ -117,7 +118,7 @@ export async function mintGenerativeNFT(canvasId: string, userAddress: string): 
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY, 
+        rent: SYSVAR_RENT_PUBKEY,
       })
       .signers([mintKeypair])
       .rpc();
