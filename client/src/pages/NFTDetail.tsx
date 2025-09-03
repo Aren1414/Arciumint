@@ -17,10 +17,15 @@ const NFTDetail: React.FC = () => {
 
   useEffect(() => {
     async function fetchNFT() {
-      const data = await getNFTById(id);
-      setNft(data);
+      try {
+        console.log('🔍 Fetching NFT with ID:', id);
+        const data = await getNFTById(id);
+        setNft(data);
+      } catch (err) {
+        console.error('❌ Failed to fetch NFT:', err);
+      }
     }
-    fetchNFT();
+    if (id) fetchNFT();
   }, [id]);
 
   const handleCopyLink = () => {
