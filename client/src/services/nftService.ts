@@ -28,15 +28,22 @@ export const handleUpload = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch('https://api.storj.dev/upload', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${import.meta.env.VITE_STORJ_API_KEY}`,
-    },
-    body: formData,
-  });
+  try {
+    console.log('📤 Uploading file to Storj...');
+    const response = await fetch('https://api.storj.dev/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_STORJ_API_KEY}`,
+      },
+      body: formData,
+    });
 
-  if (!response.ok) throw new Error('Upload failed');
-  const data = await response.json();
-  return data.url;
+    if (!response.ok) throw new Error('Upload failed');
+    const data = await response.json();
+    console.log('✅ Upload successful:', data.url);
+    return data.url;
+  } catch (err) {
+    console.error('❌ Upload error:', err);
+    throw err;
+  }
 };
