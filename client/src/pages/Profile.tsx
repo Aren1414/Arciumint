@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './profile.css';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Metaplex } from '@metaplex-foundation/js';
 
 type NFTDisplay = {
   id: string;
@@ -24,30 +23,41 @@ const Profile: React.FC<ProfileProps> = ({ userAddress }) => {
     const fetchNFTsFromBlockchain = async () => {
       try {
         const connection = new Connection('https://api.devnet.solana.com');
-        const metaplex = new Metaplex(connection);
         const owner = new PublicKey(userAddress);
 
-        const allNFTs = await metaplex.nfts().findAllByOwner({ owner });
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(owner, {
+          programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+        });
 
-        const siteNFTs = allNFTs.filter(nft =>
-          nft.programId.toBase58() === '22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn'
-        );
+        const nftMints = tokenAccounts.value
+          .filter(({ account }) => {
+            const amount = account.data.parsed.info.tokenAmount;
+            return amount.amount === '1' && amount.decimals === 0;
+          })
+          .map(({ account }) => account.data.parsed.info.mint);
 
         const detailedNFTs: NFTDisplay[] = await Promise.all(
-          siteNFTs.map(async (nft) => {
-            const metadata = await fetch(nft.uri).then(res => res.json());
-            return {
-              id: nft.mint.toBase58(),
-              name: metadata.name || 'Untitled',
-              imagePreview: metadata.animation_url || metadata.image || '',
-              creator: userAddress,
-              price: metadata.price || 0,
-              mintCount: 1,
-            };
+          nftMints.map(async (mintAddress) => {
+            try {
+              const metadataUri = await resolveMetadataUri(mintAddress);
+              const metadata = await fetch(metadataUri).then(res => res.json());
+
+              return {
+                id: mintAddress,
+                name: metadata.name || 'Untitled',
+                imagePreview: metadata.animation_url || metadata.image || '',
+                creator: userAddress,
+                price: metadata.price || 0,
+                mintCount: 1,
+              };
+            } catch (err) {
+              console.warn(`❌ Failed to fetch metadata for ${mintAddress}:`, err);
+              return null;
+            }
           })
         );
 
-        setCreatedNFTs(detailedNFTs);
+        setCreatedNFTs(detailedNFTs.filter(Boolean) as NFTDisplay[]);
       } catch (err) {
         console.error('Error fetching NFTs:', err);
       } finally {
@@ -93,3 +103,19 @@ const Profile: React.FC<ProfileProps> = ({ userAddress }) => {
 };
 
 export default Profile;
+
+
+async function resolveMetadataUri(mintAddress: string): Promise<string> {
+  const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+  const [metadataPDA] = PublicKey.findProgramAddressSync(
+    [
+      new TextEncoder().encode('metadata'),
+      METADATA_PROGRAM_ID.toBuffer(),
+      new PublicKey(mintAddress).toBuffer()
+    ],
+    METADATA_PROGRAM_ID
+  );
+
+  
+  return `https://arweave.net/${metadataPDA.toBase58()}`;
+}
