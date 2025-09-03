@@ -13,10 +13,12 @@ const Home: React.FC = () => {
       return;
     }
 
+    console.log('🔄 Starting mint process for:', userAddress);
     const result = await mintGenerativeNFT('generativeCanvas', userAddress);
     if (result.success) {
       alert('✅ NFT minted successfully!');
     } else {
+      console.error('❌ Mint failed:', result.error);
       alert(`❌ Mint failed: ${result.error}`);
     }
   };
