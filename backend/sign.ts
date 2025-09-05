@@ -9,7 +9,8 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-function randomNonce(length = 16) {
+
+async function generateNonce(length: number = 16): Promise<Uint8Array> {
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
   return array;
@@ -30,31 +31,32 @@ export default {
       const { message } = body;
 
       if (typeof message !== 'string' || !/^\d+$/.test(message)) {
-        return new Response(JSON.stringify({ error: 'Invalid message format' }), { headers: corsHeaders, status: 400 });
+        return new Response(JSON.stringify({ error: 'Invalid message format: must be a numeric string' }), { headers: corsHeaders, status: 400 });
       }
 
-      const value = BigInt(message);
-      const connection = new Connection(getArciumEnv().rpcUrl);
+      let value: bigint;
+      try {
+        value = BigInt(message);
+      } catch {
+        return new Response(JSON.stringify({ error: 'Failed to convert message to BigInt' }), { headers: corsHeaders, status: 400 });
+      }
 
+      const connection = new Connection(getArciumEnv().rpcUrl);
       const dummyWallet = {
         publicKey: PublicKey.default,
         signTransaction: async (tx: any) => tx,
         signAllTransactions: async (txs: any[]) => txs,
       };
-
       const provider = new AnchorProvider(connection, dummyWallet, {});
       const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
 
-      
       const mxePublicKey = await getMXEPublicKey(provider, programId);
-      if (!mxePublicKey) {
-        throw new Error('MXE public key not set');
-      }
+      if (!mxePublicKey) throw new Error('MXE public key not set');
 
       const privateKey = x25519.utils.randomPrivateKey();
       const publicKey = x25519.getPublicKey(privateKey);
 
-      const nonce = randomNonce();
+      const nonce = await generateNonce();
       const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
       const cipher = new RescueCipher(sharedSecret);
 
@@ -63,8 +65,9 @@ export default {
       return new Response(JSON.stringify({
         ciphertext,
         publicKey: Buffer.from(publicKey).toString('hex'),
-        nonce: Buffer.from(nonce).toString('hex'),
+        nonce: Buffer.from(nonce).toString('hex')
       }), { headers: corsHeaders, status: 200 });
+
     } catch (err: any) {
       console.error('Worker error:', err.message || err);
       return new Response(JSON.stringify({ error: err.message || 'Unexpected error' }), { headers: corsHeaders, status: 500 });
