@@ -26,14 +26,20 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
   try {
     const uri = "https://arweave.net/KTpZdjb68t3d-TIIvyBR05_cHzmfFjvqcVHUDk6uKDA";
 
-    const res = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
+    const response = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: userAddress })
     });
 
-    const { ciphertext, publicKey, nonce } = await res.json();
-    if (!ciphertext || !publicKey || !nonce) throw new Error('❌ Invalid response from signing backend');
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+    }
+
+    const { ciphertext, publicKey, nonce } = await response.json();
+    if (!ciphertext || !publicKey || !nonce) {
+      throw new Error('❌ Invalid response from signing backend');
+    }
 
     const payer = new PublicKey(userAddress);
     const dummyWallet = {
@@ -100,7 +106,8 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
     return { success: true, uri };
   } catch (err: any) {
     const logs = err.logs?.join('\n') || '';
-    console.error('Mint error:', logs || err.message);
-    return { success: false, error: logs || err.message };
+    const message = err.message || 'Unknown error';
+    console.error('Mint error:', logs || message);
+    return { success: false, error: logs || message };
   }
 }
