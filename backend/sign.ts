@@ -1,4 +1,4 @@
-import { RescueCipher, getMXEPublicKeyWithRetry, x25519, getArciumEnv } from '@arcium-hq/client';
+import { RescueCipher, getMXEPublicKey, x25519, getArciumEnv } from '@arcium-hq/client';
 import { randomBytes } from 'crypto';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { AnchorProvider } from '@coral-xyz/anchor';
@@ -40,8 +40,11 @@ export default {
       const provider = new AnchorProvider(connection, dummyWallet, {});
       const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
 
-      
-      const mxePublicKey = await getMXEPublicKeyWithRetry(provider, programId);
+      // Fetch the MXE public key
+      const mxePublicKey = await getMXEPublicKey(provider, programId);
+      if (!mxePublicKey) {
+        throw new Error('MXE public key not set');
+      }
 
       const privateKey = x25519.utils.randomPrivateKey();
       const publicKey = x25519.getPublicKey(privateKey);
