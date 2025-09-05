@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@arcium-hq/client": "^0.2.0"
+    "@arcium-hq/client": "^0.2.0",
+    "@coral-xyz/anchor": "^0.27.0",
+    "@solana/web3.js": "^1.81.0",
+    "crypto": "^1.0.1"
   }
 }
