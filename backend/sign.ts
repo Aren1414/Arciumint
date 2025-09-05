@@ -1,88 +1,108 @@
-import { RescueCipher, getMXEPublicKey, x25519, getArciumEnv } from '@arcium-hq/client';
-import { Connection, PublicKey } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from '@solana/web3.js';
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token';
+import idl from '../../idl/arciumintnftgen.json';
+import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
+import { randomBytes } from 'crypto';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json',
-};
+const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
+const connection = new Connection('https://api.devnet.solana.com');
 
-function toHex(buffer: Uint8Array): string {
-  return [...buffer].map(b => b.toString(16).padStart(2, '0')).join('');
-}
+type MintResult = { success: true; uri: string } | { success: false; error: string };
 
-export default {
-  async fetch(request: Request): Promise<Response> {
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders });
+export async function mintGenerativeNFT(): Promise<MintResult> {
+  try {
+    if (!window.solana || !window.solana.isPhantom) {
+      throw new Error('❌ Phantom wallet not found');
     }
 
-    if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-        headers: corsHeaders,
-        status: 405
-      });
+    await window.solana.connect();
+    const payer = window.solana.publicKey;
+
+    const encoder = new TextEncoder();
+    const addressBytes = encoder.encode(payer.toBase58());
+    const numericMessage = [...addressBytes].reduce((acc, byte) => acc * 256n + BigInt(byte), 0n).toString();
+
+    const response = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: numericMessage }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
     }
 
-    try {
-      const body = await request.json();
-      const { message } = body;
-
-      if (typeof message !== 'string' || !/^\d+$/.test(message)) {
-        return new Response(JSON.stringify({ error: 'Invalid message format: must be a numeric string' }), {
-          headers: corsHeaders,
-          status: 400
-        });
-      }
-
-      const value = BigInt(message);
-
-      const connection = new Connection(getArciumEnv().rpcUrl);
-      const dummyWallet = {
-        publicKey: PublicKey.default,
-        signTransaction: async (tx: any) => tx,
-        signAllTransactions: async (txs: any[]) => txs
-      };
-
-      
-      const provider = {
-        connection,
-        wallet: dummyWallet
-      };
-
-      const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
-      const mxePublicKey = await getMXEPublicKey(provider, programId);
-
-      if (!mxePublicKey) {
-        throw new Error('MXE public key not set');
-      }
-
-      const privateKey = x25519.utils.randomPrivateKey();
-      const publicKey = x25519.getPublicKey(privateKey);
-
-      const nonce = crypto.getRandomValues(new Uint8Array(16));
-      const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
-      const cipher = new RescueCipher(sharedSecret);
-
-      const ciphertext = cipher.encrypt([value], nonce);
-
-      return new Response(JSON.stringify({
-        ciphertext,
-        publicKey: toHex(publicKey),
-        nonce: toHex(nonce)
-      }), {
-        headers: corsHeaders,
-        status: 200
-      });
-
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Unexpected error';
-      console.error('Worker error:', errorMessage);
-      return new Response(JSON.stringify({ error: errorMessage }), {
-        headers: corsHeaders,
-        status: 500
-      });
+    const { ciphertext, publicKey, nonce } = await response.json();
+    if (!ciphertext || !publicKey || !nonce) {
+      throw new Error('❌ Invalid response from signing backend');
     }
+
+    const provider = new AnchorProvider(connection, window.solana, { preflightCommitment: 'processed' });
+    const program = new Program(idl as any, programId, provider);
+
+    const mintKeypair = Keypair.generate();
+    const name = 'MPC World';
+    const symbol = 'MPC';
+    const uri = 'https://arweave.net/KTpZdjb68t3d-TIIvyBR05_cHzmfFjvqcVHUDk6uKDA';
+
+    const encoder2 = new TextEncoder();
+
+    const [userRecord] = PublicKey.findProgramAddressSync(
+      [encoder2.encode('user_record'), payer.toBuffer()],
+      programId
+    );
+
+    const [mintAuthority] = PublicKey.findProgramAddressSync(
+      [encoder2.encode('mint_authority')],
+      programId
+    );
+
+    const tokenAccount = await getAssociatedTokenAddress(mintKeypair.publicKey, payer);
+
+    const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
+    const [metadata] = PublicKey.findProgramAddressSync(
+      [encoder2.encode('metadata'), METADATA_PROGRAM_ID.toBuffer(), mintKeypair.publicKey.toBuffer()],
+      METADATA_PROGRAM_ID
+    );
+
+    
+    const computationOffset = new BN(randomBytes(8), 'le');
+
+    await program.methods
+      .mintNftWithMpc(name, symbol, uri, ciphertext, publicKey, nonce, computationOffset)
+      .accounts({
+        payer,
+        userRecord,
+        mint: mintKeypair.publicKey,
+        tokenAccount,
+        mintAuthority,
+        metadata,
+        tokenMetadataProgram: METADATA_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([mintKeypair])
+      .rpc();
+
+    
+    await program.methods.awaitComputationFinalization(computationOffset).rpc();
+
+    return { success: true, uri };
+  } catch (err: any) {
+    console.error('Mint error:', err.message || err);
+    return { success: false, error: err.message || 'Unknown error' };
   }
-};
+}
