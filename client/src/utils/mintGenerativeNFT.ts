@@ -26,8 +26,13 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
   try {
     const uri = "https://arweave.net/KTpZdjb68t3d-TIIvyBR05_cHzmfFjvqcVHUDk6uKDA";
 
-    // ✅ Convert wallet address to numeric string for backend compatibility
-    const numericMessage = BigInt('0x' + userAddress.slice(0, 16)).toString();
+    // ✅ Safe conversion of wallet address to numeric string
+    const encoder = new TextEncoder();
+    const addressBytes = encoder.encode(userAddress);
+    const numericMessage = addressBytes.reduce(
+      (acc, byte) => acc * 256n + BigInt(byte),
+      0n
+    ).toString();
 
     const response = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
       method: 'POST',
@@ -60,15 +65,15 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
     const name = 'MPC World';
     const symbol = 'MPC';
 
-    const encoder = new TextEncoder();
+    const encoder2 = new TextEncoder();
 
     const [userRecord] = PublicKey.findProgramAddressSync(
-      [encoder.encode('user_record'), payer.toBuffer()],
+      [encoder2.encode('user_record'), payer.toBuffer()],
       programId
     );
 
     const [mintAuthority] = PublicKey.findProgramAddressSync(
-      [encoder.encode('mint_authority')],
+      [encoder2.encode('mint_authority')],
       programId
     );
 
@@ -81,7 +86,7 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
 
     const [metadata] = PublicKey.findProgramAddressSync(
       [
-        encoder.encode('metadata'),
+        encoder2.encode('metadata'),
         METADATA_PROGRAM_ID.toBuffer(),
         mintKeypair.publicKey.toBuffer()
       ],
@@ -113,4 +118,4 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
     console.error('Mint error:', logs || message);
     return { success: false, error: logs || message };
   }
-}
+      }
