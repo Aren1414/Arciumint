@@ -9,12 +9,6 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-async function generateNonce(length: number = 16): Promise<Uint8Array> {
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return array;
-}
-
 function toHex(buffer: Uint8Array): string {
   return [...buffer].map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -25,14 +19,14 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    try {
-      if (request.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-          headers: corsHeaders,
-          status: 405
-        });
-      }
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+        headers: corsHeaders,
+        status: 405
+      });
+    }
 
+    try {
       const body = await request.json();
       const { message } = body;
 
@@ -43,15 +37,7 @@ export default {
         });
       }
 
-      let value: bigint;
-      try {
-        value = BigInt(message);
-      } catch {
-        return new Response(JSON.stringify({ error: 'Failed to convert message to BigInt' }), {
-          headers: corsHeaders,
-          status: 400
-        });
-      }
+      const value = BigInt(message);
 
       const connection = new Connection(getArciumEnv().rpcUrl);
       const dummyWallet = {
@@ -70,7 +56,7 @@ export default {
       const privateKey = x25519.utils.randomPrivateKey();
       const publicKey = x25519.getPublicKey(privateKey);
 
-      const nonce = await generateNonce();
+      const nonce = crypto.getRandomValues(new Uint8Array(16));
       const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
       const cipher = new RescueCipher(sharedSecret);
 
