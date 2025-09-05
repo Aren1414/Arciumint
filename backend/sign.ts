@@ -9,11 +9,14 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-
 async function generateNonce(length: number = 16): Promise<Uint8Array> {
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
   return array;
+}
+
+function toHex(buffer: Uint8Array): string {
+  return [...buffer].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export default {
@@ -75,8 +78,8 @@ export default {
 
       return new Response(JSON.stringify({
         ciphertext,
-        publicKey: Buffer.from(publicKey).toString('hex'),
-        nonce: Buffer.from(nonce).toString('hex')
+        publicKey: toHex(publicKey),
+        nonce: toHex(nonce)
       }), {
         headers: corsHeaders,
         status: 200
