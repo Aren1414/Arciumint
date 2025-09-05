@@ -18,9 +18,9 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
+        let mint_authority_seed = b"mint_authority";
+        let bump_seed = &[ctx.bumps.mint_authority];
+        let signer_seeds = &[&[mint_authority_seed, bump_seed]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -39,11 +39,11 @@ pub mod arciumintnftgen {
         uri: String,
         encrypted_value: Enc<Shared, u64>,
     ) -> Result<()> {
-        let value = encrypted_value.to_arcis();
+        let _value = encrypted_value.to_arcis();
 
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
+        let mint_authority_seed = b"mint_authority";
+        let bump_seed = &[ctx.bumps.mint_authority];
+        let signer_seeds = &[&[mint_authority_seed, bump_seed]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -52,6 +52,11 @@ pub mod arciumintnftgen {
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
 
+        Ok(())
+    }
+
+    pub fn init_mint_nft_with_mpc_comp_def(ctx: Context<InitCompDef>) -> Result<()> {
+        init_comp_def(ctx.accounts, true, 0, None, None)?;
         Ok(())
     }
 }
@@ -101,6 +106,19 @@ pub struct MintNFT<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+}
+
+#[init_computation_definition_accounts("mint_nft_with_mpc", payer)]
+#[derive(Accounts)]
+pub struct InitCompDef<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(mut, address = derive_mxe_pda!())]
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
+    #[account(mut)]
+    pub comp_def_account: UncheckedAccount<'info>,
+    pub arcium_program: Program<'info, Arcium>,
+    pub system_program: Program<'info, System>,
 }
 
 #[account]
@@ -183,4 +201,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-    }
+}
