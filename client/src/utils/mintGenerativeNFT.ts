@@ -26,10 +26,13 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
   try {
     const uri = "https://arweave.net/KTpZdjb68t3d-TIIvyBR05_cHzmfFjvqcVHUDk6uKDA";
 
+    // ✅ Convert wallet address to numeric string for backend compatibility
+    const numericMessage = BigInt('0x' + userAddress.slice(0, 16)).toString();
+
     const response = await fetch('https://arcium-sign-backend.aren-silver12.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userAddress })
+      body: JSON.stringify({ message: numericMessage })
     });
 
     if (!response.ok) {
