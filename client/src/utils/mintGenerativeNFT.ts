@@ -13,10 +13,9 @@ import {
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import idl from '../../idl/arciumintnftgen.json';
-import { getArciumEnv } from '@arcium-hq/client';
 
 const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
-const connection = new Connection(getArciumEnv().rpcUrl);
+const connection = new Connection('https://api.devnet.solana.com');
 
 type MintResult = { success: true; uri: string } | { success: false; error: string };
 
