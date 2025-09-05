@@ -1,5 +1,4 @@
 import { RescueCipher, getMXEPublicKey, x25519, getArciumEnv } from '@arcium-hq/client';
-import { randomBytes } from 'crypto';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { AnchorProvider } from '@coral-xyz/anchor';
 
@@ -9,6 +8,12 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json',
 };
+
+function randomNonce(length = 16) {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return array;
+}
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -40,7 +45,7 @@ export default {
       const provider = new AnchorProvider(connection, dummyWallet, {});
       const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
 
-      // Fetch the MXE public key
+      
       const mxePublicKey = await getMXEPublicKey(provider, programId);
       if (!mxePublicKey) {
         throw new Error('MXE public key not set');
@@ -49,7 +54,7 @@ export default {
       const privateKey = x25519.utils.randomPrivateKey();
       const publicKey = x25519.getPublicKey(privateKey);
 
-      const nonce = randomBytes(16);
+      const nonce = randomNonce();
       const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
       const cipher = new RescueCipher(sharedSecret);
 
