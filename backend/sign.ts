@@ -1,6 +1,5 @@
 import { RescueCipher, getMXEPublicKey, x25519, getArciumEnv } from '@arcium-hq/client';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { AnchorProvider } from '@coral-xyz/anchor';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,10 +44,16 @@ export default {
         signTransaction: async (tx: any) => tx,
         signAllTransactions: async (txs: any[]) => txs
       };
-      const provider = new AnchorProvider(connection, dummyWallet, {});
-      const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
 
+      
+      const provider = {
+        connection,
+        wallet: dummyWallet
+      };
+
+      const programId = new PublicKey('22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn');
       const mxePublicKey = await getMXEPublicKey(provider, programId);
+
       if (!mxePublicKey) {
         throw new Error('MXE public key not set');
       }
