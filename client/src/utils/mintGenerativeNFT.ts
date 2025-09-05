@@ -49,7 +49,14 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
       throw new Error('❌ Invalid response from signing backend');
     }
 
-    const payer = new PublicKey(userAddress);
+    // ✅ Validate wallet address before using it
+    let payer: PublicKey;
+    try {
+      payer = new PublicKey(userAddress);
+    } catch {
+      throw new Error('❌ Invalid wallet address');
+    }
+
     const dummyWallet = {
       publicKey: payer,
       signTransaction: async (tx: Transaction) => tx,
@@ -118,4 +125,4 @@ export async function mintGenerativeNFT(userAddress: string): Promise<MintResult
     console.error('Mint error:', logs || message);
     return { success: false, error: logs || message };
   }
-      }
+}
