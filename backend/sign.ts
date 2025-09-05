@@ -12,7 +12,6 @@ const corsHeaders = {
 
 export default {
   async fetch(request: Request): Promise<Response> {
-    // ✅ Handle preflight CORS request
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -28,10 +27,21 @@ export default {
         });
       }
 
-      const { message } = await request.json();
+      const body = await request.json();
+      const { message } = body;
 
       if (typeof message !== 'string' || !/^\d+$/.test(message)) {
         return new Response(JSON.stringify({ error: 'Invalid message format: must be a numeric string' }), {
+          headers: corsHeaders,
+          status: 400
+        });
+      }
+
+      let value: bigint;
+      try {
+        value = BigInt(message);
+      } catch {
+        return new Response(JSON.stringify({ error: 'Failed to convert message to BigInt' }), {
           headers: corsHeaders,
           status: 400
         });
@@ -55,7 +65,6 @@ export default {
       const sharedSecret = x25519.getSharedSecret(privateKey, mxePublicKey);
       const cipher = new RescueCipher(sharedSecret);
 
-      const value = BigInt(message);
       const ciphertext = cipher.encrypt([value], nonce);
 
       return new Response(JSON.stringify({
@@ -67,9 +76,9 @@ export default {
         status: 200
       });
     } catch (err: any) {
-      return new Response(JSON.stringify({
-        error: err.message || 'Unexpected error'
-      }), {
+      const errorMessage = err?.message || 'Unexpected error';
+      console.error('Worker error:', errorMessage);
+      return new Response(JSON.stringify({ error: errorMessage }), {
         headers: corsHeaders,
         status: 500
       });
