@@ -6,6 +6,7 @@ import ConnectWallet from '../components/ConnectWallet';
 
 const Home: React.FC = () => {
   const [userAddress, setUserAddress] = useState('');
+  const [isMinting, setIsMinting] = useState(false);
 
   const handleGenerateMint = async () => {
     if (!userAddress) {
@@ -13,14 +14,20 @@ const Home: React.FC = () => {
       return;
     }
 
+    setIsMinting(true);
     console.log('🔄 Starting mint process for:', userAddress);
-    const result = await mintGenerativeNFT('generativeCanvas', userAddress);
+
+    const result = await mintGenerativeNFT(userAddress);
+
     if (result.success) {
       alert('✅ NFT minted successfully!');
+      console.log('Minted URI:', result.uri);
     } else {
       console.error('❌ Mint failed:', result.error);
       alert(`❌ Mint failed: ${result.error}`);
     }
+
+    setIsMinting(false);
   };
 
   return (
@@ -41,9 +48,9 @@ const Home: React.FC = () => {
         <button
           className="mint-button"
           onClick={handleGenerateMint}
-          disabled={!userAddress}
+          disabled={!userAddress || isMinting}
         >
-          Generate & Mint
+          {isMinting ? 'Minting...' : 'Mint NFT'}
         </button>
       </section>
 
