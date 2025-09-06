@@ -77,7 +77,7 @@ jobs:
 
     - name: Build Anchor program with IDL features
       run: |
-        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build --skip-tests
+        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
     - name: Check IDL file exists
       run: |
