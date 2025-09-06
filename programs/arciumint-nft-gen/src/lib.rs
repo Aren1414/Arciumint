@@ -6,52 +6,12 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-
-    pub fn mint_nft(
-        ctx: Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-    ) -> Result<()> {
-        let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds = &[signer_seeds];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
-        Ok(())
-    }
-
-    pub fn mint_nft_with_mpc(
-        ctx: Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-        encrypted_bytes: Vec<u8>,
-    ) -> Result<()> {
-        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
-
-        let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds = &[signer_seeds];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
-        Ok(())
-    }
+#[account]
+pub struct UserRecord {
+    pub has_minted: bool,
+}
+impl UserRecord {
+    pub const SIZE: usize = 1;
 }
 
 #[derive(Accounts)]
@@ -101,12 +61,14 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[account]
-pub struct UserRecord {
-    pub has_minted: bool,
-}
-impl UserRecord {
-    pub const SIZE: usize = 1;
+#[error_code]
+pub enum ErrorCode {
+    #[msg("This wallet has already minted an NFT.")]
+    AlreadyMinted,
+    #[msg("Invalid token program.")]
+    InvalidTokenProgram,
+    #[msg("Invalid MPC input data.")]
+    InvalidMPCData,
 }
 
 fn mint_token_to_user<'info>(
@@ -173,12 +135,50 @@ fn create_metadata_for_token<'info>(
     Ok(())
 }
 
-#[error_code]
-pub enum ErrorCode {
-    #[msg("This wallet has already minted an NFT.")]
-    AlreadyMinted,
-    #[msg("Invalid token program.")]
-    InvalidTokenProgram,
-    #[msg("Invalid MPC input data.")]
-    InvalidMPCData,
+#[program]
+pub mod arciumintnftgen {
+    use super::*;
+
+    pub fn mint_nft(
+        ctx: Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        let bump = ctx.bumps.mint_authority;
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let signer_seeds = &[signer_seeds];
+
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
+
+        Ok(())
+    }
+
+    pub fn mint_nft_with_mpc(
+        ctx: Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
+        encrypted_bytes: Vec<u8>,
+    ) -> Result<()> {
+        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
+
+        let bump = ctx.bumps.mint_authority;
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let signer_seeds = &[signer_seeds];
+
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
+
+        Ok(())
+    }
 }
