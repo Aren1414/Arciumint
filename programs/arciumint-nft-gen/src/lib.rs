@@ -146,8 +146,8 @@ pub mod arciumintnftgen {
         uri: String,
     ) -> Result<()> {
         let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds = &[signer_seeds];
+        let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let signer_seeds = &[seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -169,8 +169,8 @@ pub mod arciumintnftgen {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds = &[signer_seeds];
+        let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let signer_seeds = &[seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
