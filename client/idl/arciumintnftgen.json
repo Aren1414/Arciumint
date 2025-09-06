@@ -61,35 +61,10 @@
           "type": "string"
         },
         {
-          "name": "_ciphertext",
-          "type": "string"
-        },
-        {
-          "name": "_public_key",
-          "type": "string"
-        },
-        {
-          "name": "_nonce",
-          "type": "string"
+          "name": "_encrypted_bytes",
+          "type": "bytes"
         }
       ]
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "AlreadyMinted",
-      "msg": "This wallet has already minted an NFT."
-    },
-    {
-      "code": 6001,
-      "name": "InvalidTokenProgram",
-      "msg": "Invalid token program."
-    },
-    {
-      "code": 6002,
-      "name": "InvalidMPCData",
-      "msg": "Invalid MPC input data."
     }
   ]
 }
