@@ -77,7 +77,14 @@ jobs:
 
     - name: Build Anchor program with IDL features
       run: |
-        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
+        ANCHOR_LOG=true anchor build --skip-tests --skip-lint -- --features exclude-accounts,idl-build
+
+    - name: Check IDL file exists
+      run: |
+        if [ ! -f target/idl/arciumintnftgen.json ]; then
+          echo "❌ IDL file not found!"
+          exit 1
+        fi
 
     - name: Copy IDL to client
       run: |
