@@ -16,9 +16,8 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let mint_authority_seed = b"mint_authority";
-        let bump_seed = &[ctx.bumps.mint_authority];
-        let signer_seeds = &[&[mint_authority_seed, bump_seed]];
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[ctx.bumps.mint_authority]];
+        let signer_seeds = &[signer_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -39,9 +38,8 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
-        let mint_authority_seed = b"mint_authority";
-        let bump_seed = &[ctx.bumps.mint_authority];
-        let signer_seeds = &[&[mint_authority_seed, bump_seed]];
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[ctx.bumps.mint_authority]];
+        let signer_seeds = &[signer_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -181,4 +179,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+    }
