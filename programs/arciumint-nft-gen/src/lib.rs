@@ -1,40 +1,15 @@
 use anchor_lang::prelude::*;
-
-#[cfg(not(feature = "exclude-accounts"))]
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
-#[cfg(not(feature = "exclude-accounts"))]
 use anchor_spl::associated_token::AssociatedToken;
-#[cfg(not(feature = "exclude-accounts"))]
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
-#[cfg(not(feature = "exclude-accounts"))]
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[cfg(feature = "exclude-accounts")]
-#[derive(Accounts)]
-pub struct DummyAccounts {}
-
-#[cfg(feature = "exclude-accounts")]
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-
-    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
     #[account(
         init_if_needed,
         payer = payer,
@@ -43,7 +18,6 @@ pub struct MintNFT<'info> {
         bump
     )]
     pub user_record: Account<'info, UserRecord>,
-
     #[account(
         init,
         payer = payer,
@@ -51,7 +25,6 @@ pub struct MintNFT<'info> {
         mint::authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
-
     #[account(
         init,
         payer = payer,
@@ -59,57 +32,49 @@ pub struct MintNFT<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
-
     #[account(mut)]
     /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
-
     /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
-
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[program]
 pub mod arciumintnftgen {
     use super::*;
 
+    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
-
+        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
-
         Ok(())
     }
 
+    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFT>,
         name: String,
@@ -118,16 +83,22 @@ pub mod arciumintnftgen {
         encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
-
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
-
+        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
+        Ok(())
+    }
 
+    #[cfg(feature = "exclude-accounts")]
+    pub fn mint_nft(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String) -> Result<()> {
+        Ok(())
+    }
+
+    #[cfg(feature = "exclude-accounts")]
+    pub fn mint_nft_with_mpc(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
         Ok(())
     }
 }
@@ -163,7 +134,6 @@ fn create_metadata_for_token<'info>(
         verified: false,
         share: 100,
     };
-
     let data = DataV2 {
         name,
         symbol,
@@ -173,7 +143,6 @@ fn create_metadata_for_token<'info>(
         collection: None,
         uses: None,
     };
-
     let accounts = CreateMetadataAccountsV3 {
         metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
@@ -183,10 +152,8 @@ fn create_metadata_for_token<'info>(
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-
     let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
-
     create_metadata_accounts_v3(
         cpi_ctx,
         data,
@@ -194,11 +161,9 @@ fn create_metadata_for_token<'info>(
         true,
         Option::<CollectionDetails>::None,
     )?;
-
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
@@ -207,4 +172,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+            }
