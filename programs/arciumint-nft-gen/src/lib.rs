@@ -11,25 +11,6 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[cfg(feature = "exclude-accounts")]
-#[derive(Accounts)]
-pub struct DummyAccounts {}
-
-#[cfg(feature = "exclude-accounts")]
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-
-    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -70,21 +51,19 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[program]
 pub mod arciumintnftgen {
     use super::*;
 
+    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
@@ -100,6 +79,7 @@ pub mod arciumintnftgen {
         Ok(())
     }
 
+    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFT>,
         name: String,
@@ -114,6 +94,16 @@ pub mod arciumintnftgen {
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
+        Ok(())
+    }
+
+    #[cfg(feature = "exclude-accounts")]
+    pub fn mint_nft(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String) -> Result<()> {
+        Ok(())
+    }
+
+    #[cfg(feature = "exclude-accounts")]
+    pub fn mint_nft_with_mpc(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
         Ok(())
     }
 }
@@ -179,7 +169,6 @@ fn create_metadata_for_token<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
@@ -188,4 +177,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+       }
