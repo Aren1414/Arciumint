@@ -12,6 +12,7 @@ mpl-token-metadata = { version = "5.1.1", default-features = false }
 default = []
 exclude-accounts = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+test-bpf = []
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
