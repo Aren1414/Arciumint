@@ -1,6 +1,4 @@
 use anchor_lang::prelude::*;
-use arcium::prelude::*;
-
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
@@ -8,7 +6,7 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[arcium_program]
+#[program]
 pub mod arciumintnftgen {
     use super::*;
 
@@ -37,9 +35,9 @@ pub mod arciumintnftgen {
         name: String,
         symbol: String,
         uri: String,
-        encrypted_value: Enc<Shared, u64>,
+        encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
-        let _value = encrypted_value.to_arcis();
+        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
         let mint_authority_seed = b"mint_authority";
         let bump_seed = &[ctx.bumps.mint_authority];
@@ -52,11 +50,6 @@ pub mod arciumintnftgen {
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
         user_record.has_minted = true;
 
-        Ok(())
-    }
-
-    pub fn init_mint_nft_with_mpc_comp_def(ctx: Context<InitCompDef>) -> Result<()> {
-        init_comp_def(ctx.accounts, true, 0, None, None)?;
         Ok(())
     }
 }
@@ -106,19 +99,6 @@ pub struct MintNFT<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-#[init_computation_definition_accounts("mint_nft_with_mpc", payer)]
-#[derive(Accounts)]
-pub struct InitCompDef<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: Box<Account<'info, MXEAccount>>,
-    #[account(mut)]
-    pub comp_def_account: UncheckedAccount<'info>,
-    pub arcium_program: Program<'info, Arcium>,
-    pub system_program: Program<'info, System>,
 }
 
 #[account]
