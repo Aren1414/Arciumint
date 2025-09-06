@@ -14,6 +14,16 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
+#[error_code]
+pub enum ErrorCode {
+    #[msg("This wallet has already minted an NFT.")]
+    AlreadyMinted,
+    #[msg("Invalid token program.")]
+    InvalidTokenProgram,
+    #[msg("Invalid MPC input data.")]
+    InvalidMPCData,
+}
+
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -59,16 +69,6 @@ pub struct MintNFT<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-#[error_code]
-pub enum ErrorCode {
-    #[msg("This wallet has already minted an NFT.")]
-    AlreadyMinted,
-    #[msg("Invalid token program.")]
-    InvalidTokenProgram,
-    #[msg("Invalid MPC input data.")]
-    InvalidMPCData,
 }
 
 fn mint_token_to_user<'info>(
