@@ -18,7 +18,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libudev-dev pkg-config
+        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev
 
     - name: Install Rust
       run: |
@@ -43,6 +43,14 @@ jobs:
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
         export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
+
+    - name: Install Arcium CLI
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
+        arcup install
+
+    - name: Add cargo bin to PATH
+      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Restore wallet keypair
       run: |
