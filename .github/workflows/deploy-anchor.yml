@@ -98,9 +98,17 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git remote set-url origin https://x-access-token:${GH_PAT}@github.com/Aren1414/Arciumint.git
-        git add client/idl/arciumintnftgen.json
-        git commit -m "Add IDL file for frontend build"
-        git push origin main
+
+        # Force add IDL file
+        git add -f client/idl/arciumintnftgen.json
+
+        # Only commit if changes exist
+        if git diff --cached --quiet; then
+          echo "✅ No changes to commit"
+        else
+          git commit -m "Add IDL file for frontend build"
+          git push origin main
+        fi
 
     - name: Check .so file exists
       run: |
