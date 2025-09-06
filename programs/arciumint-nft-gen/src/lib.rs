@@ -11,74 +11,6 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[cfg(feature = "exclude-accounts")]
-#[derive(Accounts)]
-pub struct DummyAccounts {}
-
-#[cfg(feature = "exclude-accounts")]
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-
-    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[cfg(not(feature = "exclude-accounts"))]
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-
-    pub fn mint_nft(
-        ctx: Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-    ) -> Result<()> {
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
-        Ok(())
-    }
-
-    pub fn mint_nft_with_mpc(
-        ctx: Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-        encrypted_bytes: Vec<u8>,
-    ) -> Result<()> {
-        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
-
-        let mint_authority_seed: &[u8] = b"mint_authority";
-        let bump_seed: &[u8] = &[ctx.bumps.mint_authority];
-        let signer_seeds: &[&[&[u8]]] = &[&[mint_authority_seed, bump_seed]];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-
-        Ok(())
-    }
-}
-
-#[cfg(not(feature = "exclude-accounts"))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -126,14 +58,75 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(not(feature = "exclude-accounts"))]
 impl UserRecord {
     pub const SIZE: usize = 1;
+}
+
+#[cfg(feature = "exclude-accounts")]
+#[derive(Accounts)]
+pub struct DummyAccounts {}
+
+#[cfg(feature = "exclude-accounts")]
+#[program]
+pub mod arciumintnftgen {
+    use super::*;
+
+    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(not(feature = "exclude-accounts"))]
+#[program]
+pub mod arciumintnftgen {
+    use super::*;
+
+    pub fn mint_nft(
+        ctx: Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
+
+        Ok(())
+    }
+
+    pub fn mint_nft_with_mpc(
+        ctx: Context<MintNFT>,
+        name: String,
+        symbol: String,
+        uri: String,
+        encrypted_bytes: Vec<u8>,
+    ) -> Result<()> {
+        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
+
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+
+        mint_token_to_user(&ctx, signer_seeds)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+        let user_record = &mut ctx.accounts.user_record;
+        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        user_record.has_minted = true;
+
+        Ok(())
+    }
 }
 
 #[cfg(not(feature = "exclude-accounts"))]
