@@ -73,6 +73,10 @@ pub mod arciumintnftgen {
             require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
             user_record.has_minted = true;
         }
+        #[cfg(feature = "exclude-accounts")]
+        {
+            let _ = (ctx, name, symbol, uri); // suppress unused warnings
+        }
         Ok(())
     }
 
@@ -92,6 +96,10 @@ pub mod arciumintnftgen {
             let user_record = &mut ctx.accounts.user_record;
             require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
             user_record.has_minted = true;
+        }
+        #[cfg(feature = "exclude-accounts")]
+        {
+            let _ = (ctx, name, symbol, uri, encrypted_bytes); // suppress unused warnings
         }
         Ok(())
     }
@@ -164,4 +172,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+        }
