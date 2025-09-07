@@ -103,7 +103,6 @@ pub mod arciumintnftgen {
     }
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -121,7 +120,6 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
@@ -172,4 +170,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-    }
+        }
