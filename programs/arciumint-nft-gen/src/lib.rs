@@ -79,8 +79,9 @@ pub mod arciumintnftgen {
             ErrorCode::InvalidTokenProgram
         );
 
+        // Build PDA signer seeds
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -109,7 +110,7 @@ pub mod arciumintnftgen {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -136,6 +137,7 @@ fn mint_token_to_user<'info>(
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
     token::mint_to(cpi_ctx, 1)?;
+
     Ok(())
 }
 
@@ -194,4 +196,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+    }
