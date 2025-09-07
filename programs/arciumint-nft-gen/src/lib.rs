@@ -46,15 +46,12 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: PDA authority for mint
     #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex metadata account (created/checked by CPI)
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Token Metadata program (verified in instruction)
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -79,9 +76,8 @@ pub mod arciumintnftgen {
             ErrorCode::InvalidTokenProgram
         );
 
-        // Build PDA signer seeds
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -110,7 +106,7 @@ pub mod arciumintnftgen {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -137,7 +133,6 @@ fn mint_token_to_user<'info>(
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
     token::mint_to(cpi_ctx, 1)?;
-
     Ok(())
 }
 
@@ -196,4 +191,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-    }
+        }
