@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
-use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
+use mpl_token_metadata::types::{Creator, DataV2};
 use mpl_token_metadata::instruction::create_metadata_accounts_v3;
 use mpl_token_metadata::ID as TOKEN_METADATA_ID;
 
@@ -11,7 +11,6 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub struct UserRecord {
     pub has_minted: bool,
 }
-
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
@@ -34,7 +33,7 @@ pub struct MintNFT<'info> {
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mint_authority,
+        mint::authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
 
@@ -42,19 +41,19 @@ pub struct MintNFT<'info> {
         init,
         payer = payer,
         associated_token::mint = mint,
-        associated_token::authority = payer,
+        associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: PDA authority for minting
+    /// CHECK: PDA authority for mint
     #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// CHECK: metadata PDA account
+    /// CHECK: PDA metadata account created by Metaplex
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: token metadata program (Metaplex)
+    /// CHECK: Metaplex token metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -122,7 +121,7 @@ pub mod arciumintnftgen {
 
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT<'info>>,
-    signer: &[&[&[u8]]],
+    signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let cpi_accounts = MintTo {
         mint: ctx.accounts.mint.to_account_info(),
@@ -132,7 +131,7 @@ fn mint_token_to_user<'info>(
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         cpi_accounts,
-        signer,
+        signer_seeds,
     );
     token::mint_to(cpi_ctx, 1)?;
     Ok(())
@@ -143,7 +142,7 @@ fn create_metadata_for_token<'info>(
     name: String,
     symbol: String,
     uri: String,
-    signer: &[&[&[u8]]],
+    signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creator = Creator {
         address: ctx.accounts.payer.key(),
@@ -186,7 +185,7 @@ fn create_metadata_for_token<'info>(
             ctx.accounts.system_program.to_account_info(),
             ctx.accounts.rent.to_account_info(),
         ],
-        signer,
+        signer_seeds,
     )?;
 
     Ok(())
