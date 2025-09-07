@@ -58,23 +58,24 @@ impl UserRecord {
 pub mod arciumintnftgen {
     use super::*;
 
-    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
+        #[cfg(not(feature = "exclude-accounts"))]
+        {
+            let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+            mint_token_to_user(&ctx, signer_seeds)?;
+            create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+            let user_record = &mut ctx.accounts.user_record;
+            require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+            user_record.has_minted = true;
+        }
         Ok(())
     }
 
-    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFT>,
         name: String,
@@ -82,23 +83,16 @@ pub mod arciumintnftgen {
         uri: String,
         encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
-        require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
-        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-        user_record.has_minted = true;
-        Ok(())
-    }
-
-    #[cfg(feature = "exclude-accounts")]
-    pub fn mint_nft(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    #[cfg(feature = "exclude-accounts")]
-    pub fn mint_nft_with_mpc(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
+        #[cfg(not(feature = "exclude-accounts"))]
+        {
+            require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
+            let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+            mint_token_to_user(&ctx, signer_seeds)?;
+            create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+            let user_record = &mut ctx.accounts.user_record;
+            require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+            user_record.has_minted = true;
+        }
         Ok(())
     }
 }
@@ -170,4 +164,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+}
