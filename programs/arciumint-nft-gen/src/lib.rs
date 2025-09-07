@@ -1,65 +1,10 @@
-use anchor_lang::prelude::*; use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount}; use anchor_spl::associated_token::AssociatedToken; use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3}; use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
+use anchor_lang::prelude::*; use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount}; use anchor_spl::associated_token::AssociatedToken; use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3}; use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails}; use mpl_token_metadata::ID as TOKEN_METADATA_ID;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[program] pub mod arciumintnftgen { use super::*;
+#[account] pub struct UserRecord { pub has_minted: bool, }
 
-pub fn mint_nft(
-    ctx: Context<MintNFT>,
-    name: String,
-    symbol: String,
-    uri: String,
-) -> Result<()> {
-    require_keys_eq!(
-        ctx.accounts.token_metadata_program.key(),
-        mpl_token_metadata::ID,
-        ErrorCode::InvalidTokenProgram
-    );
-
-    let bump = ctx.bumps.mint_authority;
-    let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-    let signer: &[&[&[u8]]] = &[seeds];
-
-    mint_token_to_user(&ctx, signer)?;
-    create_metadata_for_token(&ctx, name, symbol, uri, signer)?;
-
-    let user_record = &mut ctx.accounts.user_record;
-    require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-    user_record.has_minted = true;
-
-    Ok(())
-}
-
-pub fn mint_nft_with_mpc(
-    ctx: Context<MintNFT>,
-    name: String,
-    symbol: String,
-    uri: String,
-    encrypted_bytes: Vec<u8>,
-) -> Result<()> {
-    require_keys_eq!(
-        ctx.accounts.token_metadata_program.key(),
-        mpl_token_metadata::ID,
-        ErrorCode::InvalidTokenProgram
-    );
-
-    require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
-
-    let bump = ctx.bumps.mint_authority;
-    let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-    let signer: &[&[&[u8]]] = &[seeds];
-
-    mint_token_to_user(&ctx, signer)?;
-    create_metadata_for_token(&ctx, name, symbol, uri, signer)?;
-
-    let user_record = &mut ctx.accounts.user_record;
-    require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
-    user_record.has_minted = true;
-
-    Ok(())
-}
-
-}
+impl UserRecord { pub const SIZE: usize = 1; }
 
 #[derive(Accounts)] pub struct MintNFT<'info> { #[account(mut)] pub payer: Signer<'info>,
 
@@ -92,11 +37,11 @@ pub token_account: Account<'info, TokenAccount>,
 #[account(seeds = [b"mint_authority"], bump)]
 pub mint_authority: UncheckedAccount<'info>,
 
-/// CHECK: Created by Metaplex CPI
+/// CHECK: Metaplex metadata account (created/checked by CPI)
 #[account(mut)]
 pub metadata: UncheckedAccount<'info>,
 
-/// CHECK: Verified against mpl_token_metadata::ID
+/// CHECK: Token Metadata program (verified in instruction)
 pub token_metadata_program: UncheckedAccount<'info>,
 
 pub token_program: Program<'info, Token>,
@@ -106,9 +51,65 @@ pub rent: Sysvar<'info, Rent>,
 
 }
 
-#[account] pub struct UserRecord { pub has_minted: bool, }
+#[program] pub mod arciumintnftgen { use super::*;
 
-impl UserRecord { pub const SIZE: usize = 1; }
+pub fn mint_nft(
+    ctx: Context<MintNFT>,
+    name: String,
+    symbol: String,
+    uri: String,
+) -> Result<()> {
+    require_keys_eq!(
+        ctx.accounts.token_metadata_program.key(),
+        TOKEN_METADATA_ID,
+        ErrorCode::InvalidTokenProgram
+    );
+
+    // Build PDA signer seeds
+    let bump = ctx.bumps.mint_authority;
+    let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+    let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+
+    mint_token_to_user(&ctx, signer_seeds)?;
+    create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+    let user_record = &mut ctx.accounts.user_record;
+    require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+    user_record.has_minted = true;
+
+    Ok(())
+}
+
+pub fn mint_nft_with_mpc(
+    ctx: Context<MintNFT>,
+    name: String,
+    symbol: String,
+    uri: String,
+    encrypted_bytes: Vec<u8>,
+) -> Result<()> {
+    require_keys_eq!(
+        ctx.accounts.token_metadata_program.key(),
+        TOKEN_METADATA_ID,
+        ErrorCode::InvalidTokenProgram
+    );
+
+    require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
+
+    let bump = ctx.bumps.mint_authority;
+    let authority_seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+    let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+
+    mint_token_to_user(&ctx, signer_seeds)?;
+    create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
+    let user_record = &mut ctx.accounts.user_record;
+    require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+    user_record.has_minted = true;
+
+    Ok(())
+}
+
+}
 
 fn mint_token_to_user<'info>(ctx: &Context<MintNFT<'info>>, signer: &[&[&[u8]]]) -> Result<()> { let cpi_accounts = MintTo { mint: ctx.accounts.mint.to_account_info(), to: ctx.accounts.token_account.to_account_info(), authority: ctx.accounts.mint_authority.to_account_info(), };
 
