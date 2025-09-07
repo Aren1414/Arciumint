@@ -92,6 +92,7 @@ pub mod arciumintnftgen {
         Ok(())
     }
 
+    // Dummy versions for IDL build
     #[cfg(feature = "exclude-accounts")]
     pub fn mint_nft(_ctx: Context<MintNFT>, _name: String, _symbol: String, _uri: String) -> Result<()> {
         Ok(())
