@@ -164,7 +164,6 @@ fn create_metadata_for_token<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
@@ -173,4 +172,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+        }
