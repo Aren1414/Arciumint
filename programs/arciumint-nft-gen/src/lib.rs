@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
 use mpl_token_metadata::ID as TOKEN_METADATA_ID;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -46,12 +46,15 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
+    /// CHECK: PDA authority for minting
     #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
+    /// CHECK: metadata PDA account
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: token metadata program (Metaplex)
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -77,8 +80,7 @@ pub mod arciumintnftgen {
         );
 
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -102,12 +104,10 @@ pub mod arciumintnftgen {
             TOKEN_METADATA_ID,
             ErrorCode::InvalidTokenProgram
         );
-
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -129,9 +129,11 @@ fn mint_token_to_user<'info>(
         to: ctx.accounts.token_account.to_account_info(),
         authority: ctx.accounts.mint_authority.to_account_info(),
     };
-
-    let cpi_program = ctx.accounts.token_program.to_account_info();
-    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+    let cpi_ctx = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        cpi_accounts,
+        signer,
+    );
     token::mint_to(cpi_ctx, 1)?;
     Ok(())
 }
@@ -159,25 +161,32 @@ fn create_metadata_for_token<'info>(
         uses: None,
     };
 
-    let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mint_authority.to_account_info(),
-        payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.payer.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
-    };
-
-    let program = ctx.accounts.token_metadata_program.to_account_info();
-    let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer);
-
-    create_metadata_accounts_v3(
-        cpi_ctx,
+    let ix = create_metadata_accounts_v3(
+        ctx.accounts.token_metadata_program.key(),
+        ctx.accounts.metadata.key(),
+        ctx.accounts.mint.key(),
+        ctx.accounts.mint_authority.key(),
+        ctx.accounts.payer.key(),
+        ctx.accounts.payer.key(),
         data,
         true,
         true,
-        Option::<CollectionDetails>::None,
+        None,
+        None,
+        None,
+    );
+
+    anchor_lang::solana_program::program::invoke_signed(
+        &ix,
+        &[
+            ctx.accounts.metadata.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.rent.to_account_info(),
+        ],
+        signer,
     )?;
 
     Ok(())
@@ -191,4 +200,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+}
