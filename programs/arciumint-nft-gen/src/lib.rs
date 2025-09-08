@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
-use mpl_token_metadata::types::{Creator, DataV2};
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 use mpl_token_metadata::ID as TOKEN_METADATA_ID;
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -33,7 +32,7 @@ pub struct MintNFT<'info> {
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mint_authority
+        mint::authority = mint_authority,
     )]
     pub mint: Account<'info, Mint>,
 
@@ -41,19 +40,19 @@ pub struct MintNFT<'info> {
         init,
         payer = payer,
         associated_token::mint = mint,
-        associated_token::authority = payer
+        associated_token::authority = payer,
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// CHECK: PDA authority for mint
+    /// CHECK: PDA authority for minting
     #[account(seeds = [b"mint_authority"], bump)]
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// CHECK: PDA metadata account created by Metaplex
+    /// CHECK: Metaplex metadata account
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex token metadata program
+    /// CHECK: Token Metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -79,7 +78,7 @@ pub mod arciumintnftgen {
         );
 
         let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        let signer_seeds = &[&[b"mint_authority", &[bump]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -106,7 +105,7 @@ pub mod arciumintnftgen {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        let signer_seeds = &[&[b"mint_authority", &[bump]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -149,7 +148,6 @@ fn create_metadata_for_token<'info>(
         verified: false,
         share: 100,
     };
-
     let data = DataV2 {
         name,
         symbol,
@@ -160,7 +158,7 @@ fn create_metadata_for_token<'info>(
         uses: None,
     };
 
-    let ix = create_metadata_accounts_v3(
+    let ix = mpl_token_metadata::instruction::create_metadata_accounts_v3(
         ctx.accounts.token_metadata_program.key(),
         ctx.accounts.metadata.key(),
         ctx.accounts.mint.key(),
@@ -184,10 +182,10 @@ fn create_metadata_for_token<'info>(
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
             ctx.accounts.rent.to_account_info(),
+            ctx.accounts.token_metadata_program.to_account_info(),
         ],
         signer_seeds,
     )?;
-
     Ok(())
 }
 
