@@ -71,10 +71,10 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        if ctx.accounts.user_record.has_minted {
+            return err!(ErrorCode::AlreadyMinted);
+        }
 
-        // signer_seeds = &[ &[ seed1, seed2, ... ] ]
         let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[seeds];
@@ -82,7 +82,7 @@ pub mod arciumintnftgen {
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        user_record.has_minted = true;
+        ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
 
@@ -95,8 +95,9 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
 
-        let user_record = &mut ctx.accounts.user_record;
-        require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
+        if ctx.accounts.user_record.has_minted {
+            return err!(ErrorCode::AlreadyMinted);
+        }
 
         let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
@@ -105,7 +106,7 @@ pub mod arciumintnftgen {
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
 
-        user_record.has_minted = true;
+        ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
 }
@@ -177,4 +178,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+        }
