@@ -27,6 +27,8 @@ jobs:
         rustup default ${{ env.RUSTUP_TOOLCHAIN }}
         rustc --version
         cargo --version
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.cargo/bin:$PATH"
 
     - name: Install Solana CLI via Anza
       run: |
@@ -49,9 +51,6 @@ jobs:
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
         arcup install
 
-    - name: Add cargo bin to PATH
-      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
     - name: Restore wallet keypair
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
@@ -64,20 +63,14 @@ jobs:
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
 
     - name: Airdrop SOL
-      run: solana airdrop 1 -k wallet.json || echo "Airdrop failed"
-
-    - name: Confirm Program ID consistency
-      run: |
-        grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
-        grep "arciumintnftgen" Anchor.toml || true
-        solana address -k target/deploy/arciumintnftgen-keypair.json || true
+      run: solana airdrop 2 -k wallet.json || echo "Airdrop failed"
 
     - name: Clean Anchor build
       run: anchor clean
 
-    - name: Build Anchor program with IDL features
+    - name: Build Anchor program
       run: |
-        ANCHOR_LOG=true anchor build --skip-lint -- --features idl-build
+        ANCHOR_LOG=true anchor build --skip-lint --features exclude-accounts,idl-build
 
     - name: Check IDL file exists
       run: |
@@ -116,5 +109,4 @@ jobs:
         fi
 
     - name: Deploy Anchor program
-      run: |
-        anchor deploy --provider.cluster devnet --provider.wallet wallet.json
+      run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
