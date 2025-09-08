@@ -1,10 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use mpl_token_metadata::types::{CollectionDetails, Creator, DataV2};
+use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
+
+#[account]
+pub struct UserRecord {
+    pub has_minted: bool,
+}
+impl UserRecord {
+    pub const SIZE: usize = 1;
+}
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
@@ -15,7 +23,9 @@ pub struct MintNFT<'info> {
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mint_authority
+        mint::authority = mint_authority,
+        mint::freeze_authority = mint_authority,
+        space = 82
     )]
     pub mint: Account<'info, Mint>,
 
@@ -37,28 +47,20 @@ pub struct MintNFT<'info> {
     pub user_record: Account<'info, UserRecord>,
 
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer for mint authority
+    /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    /// CHECK: PDA created by Metaplex CPI
+    /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex program id
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-#[account]
-pub struct UserRecord {
-    pub has_minted: bool,
-}
-impl UserRecord {
-    pub const SIZE: usize = 1;
 }
 
 #[program]
@@ -178,4 +180,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+    }
