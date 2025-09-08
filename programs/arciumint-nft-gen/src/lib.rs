@@ -87,7 +87,7 @@ pub mod arciumintnftgen {
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        let bump = *ctx.bumps.get("mint_authority").unwrap();
+        let bump = ctx.bumps.mint_authority;
         let signer_seeds = &[&[b"mint_authority", &[bump]][..]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -110,7 +110,7 @@ pub mod arciumintnftgen {
         let user_record = &mut ctx.accounts.user_record;
         require!(!user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        let bump = *ctx.bumps.get("mint_authority").unwrap();
+        let bump = ctx.bumps.mint_authority;
         let signer_seeds = &[&[b"mint_authority", &[bump]][..]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
