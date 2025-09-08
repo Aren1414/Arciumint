@@ -108,5 +108,13 @@ jobs:
           exit 1
         fi
 
+    
+    - name: Refresh blockhash
+      run: |
+        solana config set --url https://api.devnet.solana.com
+        solana block-height
+        solana balance
+
     - name: Deploy Anchor program
-      run: anchor deploy --provider.cluster devnet --provider.wallet wallet.json
+      run: |
+        anchor deploy --provider.cluster devnet --provider.wallet wallet.json
