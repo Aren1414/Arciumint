@@ -8,6 +8,7 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
+// ----------------- STATE -----------------
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
@@ -16,6 +17,7 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
+// ----------------- CONTEXT -----------------
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     /// Payer / signer
@@ -70,6 +72,7 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+// ----------------- PROGRAM -----------------
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -87,63 +90,59 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mint_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
-        // Mint 1 NFT
-        {
-            let cpi_accounts = MintTo {
-                mint: ctx.accounts.mint.to_account_info(),
-                to: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.mint_authority.to_account_info(),
-            };
-            let cpi_ctx = CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                cpi_accounts,
-                signer_seeds,
-            );
-            mint_to(cpi_ctx, 1)?;
-        }
+        // ---- Mint NFT ----
+        let cpi_accounts = MintTo {
+            mint: ctx.accounts.mint.to_account_info(),
+            to: ctx.accounts.token_account.to_account_info(),
+            authority: ctx.accounts.mint_authority.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
+        mint_to(cpi_ctx, 1)?;
 
-        // Create metadata
-        {
-            let creator = Creator {
-                address: ctx.accounts.payer.key(),
-                verified: false,
-                share: 100,
-            };
+        // ---- Metadata ----
+        let creator = Creator {
+            address: ctx.accounts.payer.key(),
+            verified: false,
+            share: 100,
+        };
 
-            let data = DataV2 {
-                name,
-                symbol,
-                uri,
-                seller_fee_basis_points: 500,
-                creators: Some(vec![creator]),
-                collection: None,
-                uses: None,
-            };
+        let data = DataV2 {
+            name,
+            symbol,
+            uri,
+            seller_fee_basis_points: 500,
+            creators: Some(vec![creator]),
+            collection: None,
+            uses: None,
+        };
 
-            let accounts = CreateMetadataAccountsV3 {
-                metadata: ctx.accounts.metadata.to_account_info(),
-                mint: ctx.accounts.mint.to_account_info(),
-                mint_authority: ctx.accounts.mint_authority.to_account_info(),
-                payer: ctx.accounts.payer.to_account_info(),
-                update_authority: ctx.accounts.payer.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                rent: ctx.accounts.rent.to_account_info(),
-            };
+        let accounts = CreateMetadataAccountsV3 {
+            metadata: ctx.accounts.metadata.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            mint_authority: ctx.accounts.mint_authority.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            update_authority: ctx.accounts.payer.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
+        };
 
-            let cpi_ctx = CpiContext::new_with_signer(
-                ctx.accounts.token_metadata_program.to_account_info(),
-                accounts,
-                signer_seeds,
-            );
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            accounts,
+            signer_seeds,
+        );
 
-            create_metadata_accounts_v3(
-                cpi_ctx,
-                data,
-                true,  // is_mutable
-                true,  // update_authority_is_signer
-                Option::<CollectionDetails>::None,
-            )?;
-        }
+        create_metadata_accounts_v3(
+            cpi_ctx,
+            data,
+            true,
+            true,
+            Option::<CollectionDetails>::None,
+        )?;
 
         ctx.accounts.user_record.has_minted = true;
         Ok(())
@@ -161,10 +160,11 @@ pub mod arciumintnftgen {
     }
 }
 
+// ----------------- ERRORS -----------------
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+    }
