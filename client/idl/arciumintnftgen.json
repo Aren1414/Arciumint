@@ -33,38 +33,6 @@
           "type": "string"
         }
       ]
-    },
-    {
-      "name": "mint_nft_with_mpc",
-      "discriminator": [
-        68,
-        109,
-        196,
-        232,
-        104,
-        159,
-        25,
-        85
-      ],
-      "accounts": [],
-      "args": [
-        {
-          "name": "_name",
-          "type": "string"
-        },
-        {
-          "name": "_symbol",
-          "type": "string"
-        },
-        {
-          "name": "_uri",
-          "type": "string"
-        },
-        {
-          "name": "_encrypted_bytes",
-          "type": "bytes"
-        }
-      ]
     }
   ]
 }
