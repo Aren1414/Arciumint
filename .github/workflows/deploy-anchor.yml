@@ -10,9 +10,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Optional top-level env PATH (helps, but we still set PATHs in steps)
     env:
-      CARGO_HOME: ${{ runner.home }}/.cargo
+      CARGO_HOME: ${{ env.HOME }}/.cargo  
 
     steps:
     - name: Checkout code
@@ -30,14 +29,12 @@ jobs:
         rustup default ${{ env.RUSTUP_TOOLCHAIN }}
         rustc --version
         cargo --version
-        # ensure cargo bin is available for following steps in the current shell
         export PATH="$HOME/.cargo/bin:$PATH"
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Install Solana CLI (Anza) and make it available immediately
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
-        # export for current shell and for subsequent steps
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         solana --version
@@ -47,14 +44,12 @@ jobs:
         cargo install --git https://github.com/coral-xyz/anchor avm --locked --force || true
         avm install 0.31.1 || true
         avm use 0.31.1 || true
-        # export for current shell and subsequent steps
         export PATH="$HOME/.avm/bin:$PATH"
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
         anchor --version
 
     - name: (Optional) Install Arcium CLI if needed
       run: |
-        # only run if you actually use Arcium in the workflow
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
         arcup install || true
 
@@ -80,7 +75,6 @@ jobs:
 
     - name: Confirm Program ID consistency (debug)
       run: |
-        # show declare_id in source and Anchor.toml program mapping
         grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
         grep "arciumintnftgen" Anchor.toml || true
         solana address -k target/deploy/arciumintnftgen-keypair.json || true
@@ -89,7 +83,6 @@ jobs:
       run: anchor clean || true
 
     - name: Build Anchor program (generate IDL)
-      # IMPORTANT: pass features to cargo with `-- --features ...`
       run: |
         ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
@@ -132,10 +125,8 @@ jobs:
         echo "block-height:" $(solana block-height)
         echo "slot:" $(solana slot)
         echo "balance:" $(solana balance)
-        # small pause to ensure node has time to process (helps avoid stale blockhash)
         sleep 5
 
     - name: Deploy Anchor program
       run: |
-        # use explicit provider flags
         anchor deploy --provider.cluster devnet --provider.wallet wallet.json
