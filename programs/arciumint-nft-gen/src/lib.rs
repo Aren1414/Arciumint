@@ -3,12 +3,11 @@ use anchor_spl::{
     token::{mint_to, Mint, MintTo, Token, TokenAccount},
     associated_token::AssociatedToken,
 };
-use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
-use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
+use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-// ----------------- PROGRAM -----------------
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -22,6 +21,7 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mint_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
+        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -34,6 +34,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
+        // Metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
@@ -50,23 +51,34 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let accounts = CreateMetadataAccountsV3 {
-            metadata: ctx.accounts.metadata.to_account_info(),
-            mint: ctx.accounts.mint.to_account_info(),
-            mint_authority: ctx.accounts.mint_authority.to_account_info(),
-            payer: ctx.accounts.payer.to_account_info(),
-            update_authority: ctx.accounts.payer.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_metadata_program.to_account_info(),
-            accounts,
-            signer_seeds,
+        let ix = create_metadata_accounts_v3(
+            ctx.accounts.token_metadata_program.key(),
+            ctx.accounts.metadata.key(),
+            ctx.accounts.mint.key(),
+            ctx.accounts.mint_authority.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.payer.key(),
+            data,
+            true,
+            true,
+            None,
+            None,
+            None,
         );
 
-        create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
+        anchor_lang::solana_program::program::invoke_signed(
+            &ix,
+            &[
+                ctx.accounts.metadata.to_account_info(),
+                ctx.accounts.mint.to_account_info(),
+                ctx.accounts.mint_authority.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                ctx.accounts.rent.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
         Ok(())
     }
 
@@ -79,6 +91,7 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mpc_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
+        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -91,6 +104,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
+        // Metadata
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -107,23 +121,34 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let accounts = CreateMetadataAccountsV3 {
-            metadata: ctx.accounts.metadata.to_account_info(),
-            mint: ctx.accounts.mint.to_account_info(),
-            mint_authority: ctx.accounts.mpc_authority.to_account_info(),
-            payer: ctx.accounts.payer.to_account_info(),
-            update_authority: ctx.accounts.mpc_authority.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-
-        let cpi_ctx = CpiContext::new_with_signer(
-            ctx.accounts.token_metadata_program.to_account_info(),
-            accounts,
-            signer_seeds,
+        let ix = create_metadata_accounts_v3(
+            ctx.accounts.token_metadata_program.key(),
+            ctx.accounts.metadata.key(),
+            ctx.accounts.mint.key(),
+            ctx.accounts.mpc_authority.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.mpc_authority.key(),
+            data,
+            true,
+            true,
+            None,
+            None,
+            None,
         );
 
-        create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
+        anchor_lang::solana_program::program::invoke_signed(
+            &ix,
+            &[
+                ctx.accounts.metadata.to_account_info(),
+                ctx.accounts.mint.to_account_info(),
+                ctx.accounts.mpc_authority.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                ctx.accounts.rent.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
         Ok(())
     }
 }
@@ -203,4 +228,4 @@ pub struct MintNFTWithMPC<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-            }
+                }
