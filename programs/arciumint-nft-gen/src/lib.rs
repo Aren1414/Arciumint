@@ -30,11 +30,12 @@ pub mod arciumintnftgen {
         // Prevent double-mint
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        // Build signer seeds
+        // Build signer seeds for mint_authority PDA
         let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
-        // 1) Mint NFT (supply = 1)
+        // 1) mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -44,10 +45,10 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         mint_to(cpi_ctx, 1)?;
 
-        // 2) Create metadata (with payer as verified creator)
+        // 2) create metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
-            verified: true,
+            verified: false,
             share: 100,
         };
         let data = DataV2 {
@@ -67,25 +68,25 @@ pub mod arciumintnftgen {
             payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.payer.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
         };
-
         let meta_program = ctx.accounts.token_metadata_program.to_account_info();
         let meta_ctx = CpiContext::new_with_signer(meta_program, accounts, signer_seeds);
 
         create_metadata_accounts_v3(
             meta_ctx,
             data,
-            true,
-            true,
+            true,  // is_mutable
+            true,  // update_authority_is_signer
             Option::<CollectionDetails>::None,
         )?;
 
+        // mark minted
         ctx.accounts.user_record.has_minted = true;
-
         Ok(())
     }
 
-    /// Mint using MPC PDA authority (verified creator & update_authority)
+    /// Mint using MPC PDA authority
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -96,6 +97,7 @@ pub mod arciumintnftgen {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
+        // Validate Metaplex program
         require_keys_eq!(
             ctx.accounts.token_metadata_program.key(),
             TOKEN_METADATA_ID,
@@ -104,9 +106,10 @@ pub mod arciumintnftgen {
 
         // signer seeds for MPC PDA
         let bump = ctx.bumps.mpc_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
+        let seeds: &[&[u8]] = &[b"mpc_authority", &[bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
-        // 1) Mint NFT (supply = 1)
+        // 1) mint token with mpc_authority PDA
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -116,7 +119,7 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         mint_to(cpi_ctx, 1)?;
 
-        // 2) Metadata with MPC PDA as verified creator
+        // 2) metadata with MPC PDA as verified creator
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -139,8 +142,8 @@ pub mod arciumintnftgen {
             payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.mpc_authority.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
         };
-
         let meta_program = ctx.accounts.token_metadata_program.to_account_info();
         let meta_ctx = CpiContext::new_with_signer(meta_program, accounts, signer_seeds);
 
@@ -153,12 +156,12 @@ pub mod arciumintnftgen {
         )?;
 
         ctx.accounts.user_record.has_minted = true;
-
         Ok(())
     }
 }
 
 // ----------------- STATE -----------------
+
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
@@ -203,25 +206,17 @@ pub struct MintNFT<'info> {
     /// CHECK: PDA signer only
     pub mint_authority: UncheckedAccount<'info>,
 
-    #[account(
-        mut,
-        seeds = [
-            b"metadata",
-            TOKEN_METADATA_ID.as_ref(),
-            mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = TOKEN_METADATA_ID
-    )]
-    /// CHECK: Metaplex metadata PDA
+    #[account(mut)]
+    /// CHECK: Metaplex metadata account created via CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: validated by require_keys_eq
+    /// CHECK: Metaplex token metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -258,28 +253,21 @@ pub struct MintNFTWithMPC<'info> {
     /// CHECK: PDA signer only
     pub mpc_authority: UncheckedAccount<'info>,
 
-    #[account(
-        mut,
-        seeds = [
-            b"metadata",
-            TOKEN_METADATA_ID.as_ref(),
-            mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = TOKEN_METADATA_ID
-    )]
-    /// CHECK: Metaplex metadata PDA
+    #[account(mut)]
+    /// CHECK: Metaplex metadata account created via CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: validated by require_keys_eq
+    /// CHECK: Metaplex token metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 // ----------------- ERRORS -----------------
+
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
