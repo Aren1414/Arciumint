@@ -11,7 +11,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      CARGO_HOME: ${{ env.HOME }}/.cargo  
+      CARGO_HOME: $HOME/.cargo  
 
     steps:
     - name: Checkout code
@@ -32,14 +32,14 @@ jobs:
         export PATH="$HOME/.cargo/bin:$PATH"
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Install Solana CLI (Anza) and make it available immediately
+    - name: Install Solana CLI (Anza)
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         solana --version
 
-    - name: Install Anchor CLI (avm) and make it available
+    - name: Install Anchor CLI (avm)
       run: |
         cargo install --git https://github.com/coral-xyz/anchor avm --locked --force || true
         avm install 0.31.1 || true
@@ -48,7 +48,7 @@ jobs:
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
         anchor --version
 
-    - name: (Optional) Install Arcium CLI if needed
+    - name: (Optional) Install Arcium CLI
       run: |
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
         arcup install || true
@@ -73,7 +73,7 @@ jobs:
       run: |
         solana airdrop 2 -k wallet.json || echo "Airdrop failed or not necessary"
 
-    - name: Confirm Program ID consistency (debug)
+    - name: Confirm Program ID consistency
       run: |
         grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
         grep "arciumintnftgen" Anchor.toml || true
@@ -82,7 +82,7 @@ jobs:
     - name: Clean Anchor build
       run: anchor clean || true
 
-    - name: Build Anchor program (generate IDL)
+    - name: Build Anchor program
       run: |
         ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
@@ -96,7 +96,7 @@ jobs:
         mkdir -p client/idl
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
 
-    - name: Commit and push IDL to repo (only if changed)
+    - name: Commit and push IDL to repo
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
@@ -119,7 +119,7 @@ jobs:
           exit 1
         fi
 
-    - name: Refresh cluster state before deploy (reduce blockhash issues)
+    - name: Refresh cluster state
       run: |
         solana config set --url https://api.devnet.solana.com
         echo "block-height:" $(solana block-height)
