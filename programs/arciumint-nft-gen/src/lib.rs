@@ -8,12 +8,10 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-// ----------------- PROGRAM -----------------
 #[program]
 pub mod arciumintnftgen {
     use super::*;
 
-    // --------- NFT Mint (payer signer) ---------
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
@@ -23,7 +21,7 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mint_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
-        // ---- Mint NFT ----
+        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -36,7 +34,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // ---- Metadata ----
+        // Metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
@@ -80,7 +78,6 @@ pub mod arciumintnftgen {
         Ok(())
     }
 
-    // --------- NFT Mint with MPC authority ---------
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -90,7 +87,7 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mpc_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
-        // ---- Mint NFT ----
+        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -103,7 +100,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // ---- Metadata ----
+        // Metadata
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -148,14 +145,11 @@ pub mod arciumintnftgen {
     }
 }
 
-// ----------------- CONTEXTS -----------------
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    /// Payer / signer
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Mint account
     #[account(
         init,
         payer = payer,
@@ -164,7 +158,6 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    /// Associated token account of payer
     #[account(
         init,
         payer = payer,
@@ -173,18 +166,15 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// PDA authority
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer only
+    /// CHECK: PDA authority
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// Metadata PDA (Metaplex)
     #[account(mut)]
-    /// CHECK: Metaplex CPI will check
+    /// CHECK: Metaplex metadata
     pub metadata: UncheckedAccount<'info>,
 
-    /// Token Metadata program
-    /// CHECK: verified at runtime
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -195,11 +185,9 @@ pub struct MintNFT<'info> {
 
 #[derive(Accounts)]
 pub struct MintNFTWithMPC<'info> {
-    /// Payer / signer
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Mint account
     #[account(
         init,
         payer = payer,
@@ -208,7 +196,6 @@ pub struct MintNFTWithMPC<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    /// Associated token account of payer
     #[account(
         init,
         payer = payer,
@@ -217,18 +204,15 @@ pub struct MintNFTWithMPC<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// MPC authority PDA
     #[account(seeds = [b"mpc_authority"], bump)]
-    /// CHECK: PDA signer only
+    /// CHECK: PDA authority
     pub mpc_authority: UncheckedAccount<'info>,
 
-    /// Metadata PDA (Metaplex)
     #[account(mut)]
-    /// CHECK: Metaplex CPI will check
+    /// CHECK: Metaplex metadata
     pub metadata: UncheckedAccount<'info>,
 
-    /// Token Metadata program
-    /// CHECK: verified at runtime
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
