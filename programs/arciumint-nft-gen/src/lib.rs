@@ -94,15 +94,10 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[cfg(feature = "exclude-accounts")]
-#[derive(Accounts)]
-pub struct DummyAccounts {}
-
 #[program]
 pub mod arciumintnftgen {
     use super::*;
 
-    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
@@ -117,7 +112,6 @@ pub mod arciumintnftgen {
         Ok(())
     }
 
-    #[cfg(not(feature = "exclude-accounts"))]
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -133,19 +127,8 @@ pub mod arciumintnftgen {
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
-
-    #[cfg(feature = "exclude-accounts")]
-    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    #[cfg(feature = "exclude-accounts")]
-    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
-        Ok(())
-    }
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -163,7 +146,6 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn mint_token_to_user_mpc<'info>(
     ctx: &Context<MintNFTWithMPC>,
     signer_seeds: &[&[&[u8]]],
@@ -181,7 +163,6 @@ fn mint_token_to_user_mpc<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
@@ -218,7 +199,6 @@ fn create_metadata_for_token<'info>(
     Ok(())
 }
 
-#[cfg(not(feature = "exclude-accounts"))]
 fn create_metadata_for_token_mpc<'info>(
     ctx: &Context<MintNFTWithMPC>,
     name: String,
