@@ -8,6 +8,7 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
+// ----------------- PROGRAM -----------------
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -21,7 +22,6 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mint_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
-        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -34,7 +34,6 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
@@ -67,14 +66,7 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
 
-        create_metadata_accounts_v3(
-            cpi_ctx,
-            data,
-            true,
-            true,
-            Option::<CollectionDetails>::None,
-        )?;
-
+        create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
         Ok(())
     }
 
@@ -87,7 +79,6 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mpc_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
-        // Mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -100,7 +91,6 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Metadata
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -133,18 +123,12 @@ pub mod arciumintnftgen {
             signer_seeds,
         );
 
-        create_metadata_accounts_v3(
-            cpi_ctx,
-            data,
-            true,
-            true,
-            Option::<CollectionDetails>::None,
-        )?;
-
+        create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
         Ok(())
     }
 }
 
+// ----------------- CONTEXT STRUCTS -----------------
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -167,11 +151,11 @@ pub struct MintNFT<'info> {
     pub token_account: Account<'info, TokenAccount>,
 
     #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA authority
+    /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    /// CHECK: Metaplex metadata
+    /// CHECK: checked by Metaplex
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex program
@@ -205,11 +189,11 @@ pub struct MintNFTWithMPC<'info> {
     pub token_account: Account<'info, TokenAccount>,
 
     #[account(seeds = [b"mpc_authority"], bump)]
-    /// CHECK: PDA authority
+    /// CHECK: PDA signer
     pub mpc_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    /// CHECK: Metaplex metadata
+    /// CHECK: checked by Metaplex
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex program
