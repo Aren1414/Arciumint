@@ -28,16 +28,18 @@ pub mod arciumintnftgen {
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
         let bump = ctx.bumps.mint_authority;
-        let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.mint_authority.to_account_info(),
         };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
         mint_to(cpi_ctx, 1)?;
 
         let creator = Creator {
@@ -55,17 +57,19 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let accounts = CreateMetadataAccountsV3 {
-            metadata: ctx.accounts.metadata.to_account_info(),
-            mint: ctx.accounts.mint.to_account_info(),
-            mint_authority: ctx.accounts.mint_authority.to_account_info(),
-            payer: ctx.accounts.payer.to_account_info(),
-            update_authority: ctx.accounts.payer.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        let meta_program = ctx.accounts.token_metadata_program.to_account_info();
-        let meta_ctx = CpiContext::new_with_signer(meta_program, accounts, signer_seeds);
+        let meta_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            CreateMetadataAccountsV3 {
+                metadata: ctx.accounts.metadata.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                mint_authority: ctx.accounts.mint_authority.to_account_info(),
+                payer: ctx.accounts.payer.to_account_info(),
+                update_authority: ctx.accounts.payer.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+            signer_seeds,
+        );
 
         create_metadata_accounts_v3(
             meta_ctx,
@@ -96,16 +100,18 @@ pub mod arciumintnftgen {
         );
 
         let bump = ctx.bumps.mpc_authority;
-        let seeds: &[&[u8]] = &[b"mpc_authority", &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.mpc_authority.to_account_info(),
         };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            signer_seeds,
+        );
         mint_to(cpi_ctx, 1)?;
 
         let creator = Creator {
@@ -123,17 +129,19 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let accounts = CreateMetadataAccountsV3 {
-            metadata: ctx.accounts.metadata.to_account_info(),
-            mint: ctx.accounts.mint.to_account_info(),
-            mint_authority: ctx.accounts.mpc_authority.to_account_info(),
-            payer: ctx.accounts.payer.to_account_info(),
-            update_authority: ctx.accounts.mpc_authority.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        let meta_program = ctx.accounts.token_metadata_program.to_account_info();
-        let meta_ctx = CpiContext::new_with_signer(meta_program, accounts, signer_seeds);
+        let meta_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            CreateMetadataAccountsV3 {
+                metadata: ctx.accounts.metadata.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                mint_authority: ctx.accounts.mpc_authority.to_account_info(),
+                payer: ctx.accounts.payer.to_account_info(),
+                update_authority: ctx.accounts.mpc_authority.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+            signer_seeds,
+        );
 
         create_metadata_accounts_v3(
             meta_ctx,
@@ -264,4 +272,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+            }
