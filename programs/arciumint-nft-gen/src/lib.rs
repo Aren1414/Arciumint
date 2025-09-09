@@ -13,29 +13,28 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
-    /// Mint normal: payer is creator & update authority
+    /// Normal mint: payer is creator & update authority
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        // Validate token metadata program if you want
+        // Validate Metaplex program passed in
         require_keys_eq!(
             ctx.accounts.token_metadata_program.key(),
             TOKEN_METADATA_ID,
             ErrorCode::InvalidTokenProgram
         );
 
-        // Prevent double-mint for this payer
+        // Prevent double-mint
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        // Build PDA signer seeds correctly
+        // Build signer seeds
         let bump = ctx.bumps.mint_authority;
-        let authority_seeds: &[&[u8]] = &[&b"mint_authority"[..], &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
-        // 1) Mint 1 token to associated token account (CPI to token program)
+        // 1) Mint NFT (supply = 1)
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -43,13 +42,12 @@ pub mod arciumintnftgen {
         };
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
-        // amount = 1 (for NFT with decimals = 0)
         mint_to(cpi_ctx, 1)?;
 
-        // 2) Create metadata (CPI to token-metadata via anchor-spl wrapper)
+        // 2) Create metadata (with payer as verified creator)
         let creator = Creator {
             address: ctx.accounts.payer.key(),
-            verified: false,
+            verified: true,
             share: 100,
         };
         let data = DataV2 {
@@ -69,7 +67,6 @@ pub mod arciumintnftgen {
             payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.payer.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
         };
 
         let meta_program = ctx.accounts.token_metadata_program.to_account_info();
@@ -83,13 +80,12 @@ pub mod arciumintnftgen {
             Option::<CollectionDetails>::None,
         )?;
 
-        // mark minted
         ctx.accounts.user_record.has_minted = true;
 
         Ok(())
     }
 
-    /// Mint via MPC PDA authority (MPC PDA is creator & update authority)
+    /// Mint using MPC PDA authority (verified creator & update_authority)
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -97,24 +93,20 @@ pub mod arciumintnftgen {
         uri: String,
         encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
-        require!(
-            !ctx.accounts.user_record.has_minted,
-            ErrorCode::AlreadyMinted
-        );
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
+        require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        // Validate token metadata program
         require_keys_eq!(
             ctx.accounts.token_metadata_program.key(),
             TOKEN_METADATA_ID,
             ErrorCode::InvalidTokenProgram
         );
 
+        // signer seeds for MPC PDA
         let bump = ctx.bumps.mpc_authority;
-        let authority_seeds: &[&[u8]] = &[&b"mpc_authority"[..], &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[authority_seeds];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
-        // Mint using mpc_authority PDA
+        // 1) Mint NFT (supply = 1)
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -124,7 +116,7 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         mint_to(cpi_ctx, 1)?;
 
-        // Create metadata with MPC PDA verified creator
+        // 2) Metadata with MPC PDA as verified creator
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -147,7 +139,6 @@ pub mod arciumintnftgen {
             payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.mpc_authority.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
         };
 
         let meta_program = ctx.accounts.token_metadata_program.to_account_info();
@@ -167,8 +158,7 @@ pub mod arciumintnftgen {
     }
 }
 
-// ----------------- ACCOUNTS & STATE -----------------
-
+// ----------------- STATE -----------------
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
@@ -177,14 +167,13 @@ impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-/// Normal mint accounts
+// ----------------- ACCOUNTS -----------------
+
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    /// payer / signer (must be declared before any `payer = payer` usages)
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// user record to prevent double mint; uses payer.key() seed
     #[account(
         init_if_needed,
         payer = payer,
@@ -194,7 +183,6 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
-    /// Mint account (new)
     #[account(
         init,
         payer = payer,
@@ -203,7 +191,6 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    /// Associated token account for payer
     #[account(
         init,
         payer = payer,
@@ -212,33 +199,36 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    /// PDA authority for mint (seed = b"mint_authority")
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer only
     pub mint_authority: UncheckedAccount<'info>,
 
-    /// Metaplex metadata account (will be created via CPI)
-    #[account(mut)]
-    /// CHECK: validated by CPI
+    #[account(
+        mut,
+        seeds = [
+            b"metadata",
+            TOKEN_METADATA_ID.as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        seeds::program = TOKEN_METADATA_ID
+    )]
+    /// CHECK: Metaplex metadata PDA
     pub metadata: UncheckedAccount<'info>,
 
-    /// Metaplex program (pass token metadata program id)
-    /// CHECK: validated at runtime
+    /// CHECK: validated by require_keys_eq
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
-/// MPC flow accounts (separate PDA authority)
 #[derive(Accounts)]
 pub struct MintNFTWithMPC<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// user record shared with normal flow
     #[account(
         init_if_needed,
         payer = payer,
@@ -268,16 +258,25 @@ pub struct MintNFTWithMPC<'info> {
     /// CHECK: PDA signer only
     pub mpc_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    /// CHECK: validated by CPI
+    #[account(
+        mut,
+        seeds = [
+            b"metadata",
+            TOKEN_METADATA_ID.as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        seeds::program = TOKEN_METADATA_ID
+    )]
+    /// CHECK: Metaplex metadata PDA
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: validated by require_keys_eq
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 // ----------------- ERRORS -----------------
@@ -289,4 +288,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+            }
