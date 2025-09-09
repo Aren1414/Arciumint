@@ -165,6 +165,10 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    #[account(seeds = [b"mint_authority"], bump)]
+    /// CHECK: PDA signer only
+    pub mint_authority: UncheckedAccount<'info>,
+
     #[account(
         init_if_needed,
         payer = payer,
@@ -172,17 +176,13 @@ pub struct MintNFT<'info> {
         seeds = [b"user_record", payer.key().as_ref()],
         bump
     )]
-    pub user_record: Account<'info, UserRecord>,
-
-    /// CHECK: PDA signer only
-    #[account(seeds = [b"mint_authority"], bump)]
-    pub mint_authority: UncheckedAccount<'info>,
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     #[account(
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = *mint_authority.key
+        mint::authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
 
@@ -212,6 +212,10 @@ pub struct MintNFTWithMPC<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    #[account(seeds = [b"mpc_authority"], bump)]
+    /// CHECK: PDA signer only
+    pub mpc_authority: UncheckedAccount<'info>,
+
     #[account(
         init_if_needed,
         payer = payer,
@@ -219,17 +223,13 @@ pub struct MintNFTWithMPC<'info> {
         seeds = [b"user_record", payer.key().as_ref()],
         bump
     )]
-    pub user_record: Account<'info, UserRecord>,
-
-    /// CHECK: PDA signer only
-    #[account(seeds = [b"mpc_authority"], bump)]
-    pub mpc_authority: UncheckedAccount<'info>,
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     #[account(
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = *mpc_authority.key
+        mint::authority = mpc_authority
     )]
     pub mint: Account<'info, Mint>,
 
@@ -264,4 +264,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-            }
+        }
