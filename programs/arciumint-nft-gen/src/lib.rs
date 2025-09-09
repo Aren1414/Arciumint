@@ -12,25 +12,22 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
-    /// Mint normally (payer as creator/update_authority)
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        // prevent double-mint for this payer
         require!(
             !ctx.accounts.user_record.has_minted,
             ErrorCode::AlreadyMinted
         );
 
-        // signer seeds for PDA authority
         let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
         let signer = &[&seeds[..]];
 
-        // 1) mint one token to associated token account
+        // Mint one token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -43,7 +40,7 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // 2) create metadata via Anchor SPL CPI
+        // Metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
@@ -83,13 +80,11 @@ pub mod arciumintnftgen {
             Option::<CollectionDetails>::None,
         )?;
 
-        // 3) mark user_record after successful CPIs
         ctx.accounts.user_record.has_minted = true;
 
         Ok(())
     }
 
-    /// Mint with MPC authority
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -105,7 +100,6 @@ pub mod arciumintnftgen {
         let seeds: &[&[u8]] = &[b"mpc_authority", &[bump]];
         let signer = &[&seeds[..]];
 
-        // Mint token using MPC PDA authority
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -118,7 +112,6 @@ pub mod arciumintnftgen {
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Create metadata with MPC PDA as verified creator / update authority
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -212,6 +205,7 @@ pub struct MintNFT<'info> {
     /// CHECK: checked by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -258,6 +252,7 @@ pub struct MintNFTWithMPC<'info> {
     /// CHECK: checked by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
