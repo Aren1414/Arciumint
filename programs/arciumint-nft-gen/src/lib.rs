@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     token::{mint_to, Mint, MintTo, Token, TokenAccount},
     associated_token::AssociatedToken,
+    metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3},
 };
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
 use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -12,16 +12,25 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
+    /// Mint normally (payer as creator/update_authority)
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        // prevent double-mint for this payer
+        require!(
+            !ctx.accounts.user_record.has_minted,
+            ErrorCode::AlreadyMinted
+        );
 
-        // Mint token
+        // signer seeds for PDA authority
+        let bump = ctx.bumps.mint_authority;
+        let seeds = &[b"mint_authority", &[bump]];
+        let signer = &[&seeds[..]];
+
+        // 1) mint one token to associated token account
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -30,17 +39,16 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             cpi_accounts,
-            signer_seeds,
+            signer,
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Metadata
+        // 2) create metadata via Anchor SPL CPI
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
             share: 100,
         };
-
         let data = DataV2 {
             name,
             symbol,
@@ -51,47 +59,48 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let ix = create_metadata_accounts_v3(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.payer.key(),
-            ctx.accounts.payer.key(),
-            data,
-            true,
-            true,
-            None,
-            None,
-            None,
+        let accounts = CreateMetadataAccountsV3 {
+            metadata: ctx.accounts.metadata.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            mint_authority: ctx.accounts.mint_authority.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            update_authority: ctx.accounts.payer.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
+        };
+
+        let meta_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            accounts,
+            signer,
         );
 
-        anchor_lang::solana_program::program::invoke_signed(
-            &ix,
-            &[
-                ctx.accounts.metadata.to_account_info(),
-                ctx.accounts.mint.to_account_info(),
-                ctx.accounts.mint_authority.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-                ctx.accounts.rent.to_account_info(),
-            ],
-            signer_seeds,
-        )?;
+        create_metadata_accounts_v3(meta_ctx, data, true, true, Option::<()>::None)?;
+
+        // 3) mark user_record after successful CPIs
+        ctx.accounts.user_record.has_minted = true;
 
         Ok(())
     }
 
+    /// Mint with MPC authority (uses a different PDA as authority/creator/update_authority)
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let bump = ctx.bumps.mpc_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
+        // prevent double-mint for this payer (same user_record approach could be used; here kept per-MPC flow)
+        require!(
+            !ctx.accounts.user_record.has_minted,
+            ErrorCode::AlreadyMinted
+        );
 
-        // Mint token
+        let bump = ctx.bumps.mpc_authority;
+        let seeds = &[b"mpc_authority", &[bump]];
+        let signer = &[&seeds[..]];
+
+        // Mint token using MPC PDA authority
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -100,17 +109,16 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             cpi_accounts,
-            signer_seeds,
+            signer,
         );
         mint_to(cpi_ctx, 1)?;
 
-        // Metadata
+        // Create metadata with MPC PDA as verified creator / update authority
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
             share: 100,
         };
-
         let data = DataV2 {
             name,
             symbol,
@@ -121,44 +129,48 @@ pub mod arciumintnftgen {
             uses: None,
         };
 
-        let ix = create_metadata_accounts_v3(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mpc_authority.key(),
-            ctx.accounts.payer.key(),
-            ctx.accounts.mpc_authority.key(),
-            data,
-            true,
-            true,
-            None,
-            None,
-            None,
+        let accounts = CreateMetadataAccountsV3 {
+            metadata: ctx.accounts.metadata.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            mint_authority: ctx.accounts.mpc_authority.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            update_authority: ctx.accounts.mpc_authority.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
+        };
+
+        let meta_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            accounts,
+            signer,
         );
 
-        anchor_lang::solana_program::program::invoke_signed(
-            &ix,
-            &[
-                ctx.accounts.metadata.to_account_info(),
-                ctx.accounts.mint.to_account_info(),
-                ctx.accounts.mpc_authority.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-                ctx.accounts.rent.to_account_info(),
-            ],
-            signer_seeds,
-        )?;
+        create_metadata_accounts_v3(meta_ctx, data, true, true, Option::<()>::None)?;
+
+        ctx.accounts.user_record.has_minted = true;
 
         Ok(())
     }
 }
 
-// ----------------- CONTEXT STRUCTS -----------------
+// ----------------- ACCOUNTS & STATE -----------------
+
+/// Shared user record (prevents double mint by the same payer)
+#[account]
+pub struct UserRecord {
+    pub has_minted: bool,
+}
+impl UserRecord {
+    pub const SIZE: usize = 1;
+}
+
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
+    /// payer / signer
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    /// Mint account (new)
     #[account(
         init,
         payer = payer,
@@ -167,6 +179,7 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
+    /// Associated token account for payer
     #[account(
         init,
         payer = payer,
@@ -175,15 +188,28 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
+    /// User record to prevent double minting
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + UserRecord::SIZE,
+        seeds = [b"user_record", payer.key().as_ref()],
+        bump
+    )]
+    pub user_record: Account<'info, UserRecord>,
+
+    /// PDA authority for mint
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
+    /// Metadata account (Metaplex)
     #[account(mut)]
-    /// CHECK: checked by Metaplex
+    /// CHECK: checked by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex program
+    /// Token Metadata program (Metaplex) - pass mpl token metadata program id
+    /// CHECK: verified at runtime by require_keys_eq if you want
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -194,9 +220,11 @@ pub struct MintNFT<'info> {
 
 #[derive(Accounts)]
 pub struct MintNFTWithMPC<'info> {
+    /// payer / signer
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    /// Mint account (new)
     #[account(
         init,
         payer = payer,
@@ -205,6 +233,7 @@ pub struct MintNFTWithMPC<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
+    /// Associated token account for payer
     #[account(
         init,
         payer = payer,
@@ -213,19 +242,40 @@ pub struct MintNFTWithMPC<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
+    /// User record (shared with normal flow)
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + UserRecord::SIZE,
+        seeds = [b"user_record", payer.key().as_ref()],
+        bump
+    )]
+    pub user_record: Account<'info, UserRecord>,
+
+    /// PDA authority for MPC flow
     #[account(seeds = [b"mpc_authority"], bump)]
     /// CHECK: PDA signer
     pub mpc_authority: UncheckedAccount<'info>,
 
+    /// Metadata account (Metaplex)
     #[account(mut)]
-    /// CHECK: checked by Metaplex
+    /// CHECK: checked by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex program
+    /// Token Metadata program (Metaplex) - pass mpl token metadata program id
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-                }
+}
+
+// ----------------- ERRORS -----------------
+#[error_code]
+pub enum ErrorCode {
+    #[msg("This wallet has already minted an NFT.")]
+    AlreadyMinted,
+    #[msg("Invalid MPC input data.")]
+    InvalidMPCData,
+            }
