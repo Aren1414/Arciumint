@@ -13,7 +13,7 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
-    // --------- NFT Mint (simple payer signer) ---------
+    // --------- NFT Mint (payer signer) ---------
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
