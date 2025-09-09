@@ -30,14 +30,13 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mint_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
-        let cpi_accounts = MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
-        };
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            cpi_accounts,
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.token_account.to_account_info(),
+                authority: ctx.accounts.mint_authority.to_account_info(),
+            },
             signer_seeds,
         );
         mint_to(cpi_ctx, 1)?;
@@ -102,14 +101,13 @@ pub mod arciumintnftgen {
         let bump = ctx.bumps.mpc_authority;
         let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
 
-        let cpi_accounts = MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mpc_authority.to_account_info(),
-        };
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            cpi_accounts,
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.token_account.to_account_info(),
+                authority: ctx.accounts.mpc_authority.to_account_info(),
+            },
             signer_seeds,
         );
         mint_to(cpi_ctx, 1)?;
@@ -178,15 +176,6 @@ pub struct MintNFT<'info> {
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(
-        init_if_needed,
-        payer = payer,
-        space = 8 + UserRecord::SIZE,
-        seeds = [b"user_record", payer.key().as_ref()],
-        bump
-    )]
-    pub user_record: Box<Account<'info, UserRecord>>,
-
-    #[account(
         init,
         payer = payer,
         mint::decimals = 0,
@@ -201,6 +190,15 @@ pub struct MintNFT<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + UserRecord::SIZE,
+        seeds = [b"user_record", payer.key().as_ref()],
+        bump
+    )]
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     #[account(mut)]
     /// CHECK: Metaplex metadata account created via CPI
@@ -225,15 +223,6 @@ pub struct MintNFTWithMPC<'info> {
     pub mpc_authority: UncheckedAccount<'info>,
 
     #[account(
-        init_if_needed,
-        payer = payer,
-        space = 8 + UserRecord::SIZE,
-        seeds = [b"user_record", payer.key().as_ref()],
-        bump
-    )]
-    pub user_record: Box<Account<'info, UserRecord>>,
-
-    #[account(
         init,
         payer = payer,
         mint::decimals = 0,
@@ -248,6 +237,15 @@ pub struct MintNFTWithMPC<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + UserRecord::SIZE,
+        seeds = [b"user_record", payer.key().as_ref()],
+        bump
+    )]
+    pub user_record: Box<Account<'info, UserRecord>>,
 
     #[account(mut)]
     /// CHECK: Metaplex metadata account created via CPI
@@ -272,4 +270,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-            }
+    }
