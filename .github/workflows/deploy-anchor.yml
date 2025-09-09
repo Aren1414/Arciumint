@@ -83,6 +83,10 @@ jobs:
       run: |
         ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
+    - name: Generate IDL with full account context
+      run: |
+        ANCHOR_LOG=true anchor idl build -- --no-default-features
+
     - name: Check IDL file exists and copy to client
       run: |
         if [ ! -f target/idl/arciumintnftgen.json ]; then
