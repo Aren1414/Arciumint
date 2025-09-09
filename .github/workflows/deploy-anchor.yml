@@ -34,7 +34,8 @@ jobs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        solana --version
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        "$HOME/.local/share/solana/install/active_release/bin/solana" --version
 
     - name: Install Anchor CLI (avm)
       run: |
@@ -42,6 +43,7 @@ jobs:
         avm install 0.31.1 || true
         avm use 0.31.1 || true
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
     - name: (Optional) Install Arcium CLI
