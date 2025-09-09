@@ -10,6 +10,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Optional top-level env PATH (helps, but we still set PATHs in steps)
+    env:
+      CARGO_HOME: ${{ runner.home }}/.cargo
 
     steps:
     - name: Checkout code
@@ -20,55 +23,64 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev
 
-    - name: Install Rust toolchain and add cargo to PATH
+    - name: Install Rust toolchain and cargo in PATH
       run: |
         rustup self update
         rustup install ${{ env.RUSTUP_TOOLCHAIN }}
         rustup default ${{ env.RUSTUP_TOOLCHAIN }}
         rustc --version
         cargo --version
-        # persist cargo bin to PATH for future steps
+        # ensure cargo bin is available for following steps in the current shell
+        export PATH="$HOME/.cargo/bin:$PATH"
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Install Solana CLI via Anza
+    - name: Install Solana CLI (Anza) and make it available immediately
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+        # export for current shell and for subsequent steps
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         solana --version
 
-    - name: Install Anchor CLI (avm) and add to PATH
+    - name: Install Anchor CLI (avm) and make it available
       run: |
         cargo install --git https://github.com/coral-xyz/anchor avm --locked --force || true
         avm install 0.31.1 || true
         avm use 0.31.1 || true
+        # export for current shell and subsequent steps
+        export PATH="$HOME/.avm/bin:$PATH"
         echo "$HOME/.avm/bin" >> $GITHUB_PATH
         anchor --version
 
-    - name: (optional) Install Arcium CLI
+    - name: (Optional) Install Arcium CLI if needed
       run: |
-        curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash || true
-        # arcup may add its own bins; add if required
-        echo "$HOME/.local/bin" >> $GITHUB_PATH || true
+        # only run if you actually use Arcium in the workflow
+        curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
+        arcup install || true
 
-    - name: Restore wallet keypair
+    - name: Restore wallet keypair and set Solana config
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
         chmod 600 wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
+        solana --version
+        solana config get
 
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
         chmod 600 target/deploy/arciumintnftgen-keypair.json
+        solana address -k target/deploy/arciumintnftgen-keypair.json || true
 
     - name: Airdrop SOL (devnet)
       run: |
-        solana airdrop 2 -k wallet.json || echo "Airdrop failed (maybe rate-limited)"
+        solana airdrop 2 -k wallet.json || echo "Airdrop failed or not necessary"
 
-    - name: Confirm program id / anchor mapping (debug)
+    - name: Confirm Program ID consistency (debug)
       run: |
+        # show declare_id in source and Anchor.toml program mapping
         grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
         grep "arciumintnftgen" Anchor.toml || true
         solana address -k target/deploy/arciumintnftgen-keypair.json || true
@@ -77,36 +89,32 @@ jobs:
       run: anchor clean || true
 
     - name: Build Anchor program (generate IDL)
+      # IMPORTANT: pass features to cargo with `-- --features ...`
       run: |
-        # IMPORTANT: do NOT enable 'exclude-accounts' when you want accounts in IDL
-        ANCHOR_LOG=true anchor build --skip-lint -- --features idl-build
+        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
-    - name: Check IDL file exists
+    - name: Check IDL file exists and copy to client
       run: |
         if [ ! -f target/idl/arciumintnftgen.json ]; then
           echo "❌ IDL file not found!"
           ls -la target/idl || true
           exit 1
         fi
-
-    - name: Copy IDL to client
-      run: |
         mkdir -p client/idl
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
-        echo "Copied IDL (size): $(wc -c < client/idl/arciumintnftgen.json) bytes"
 
-    - name: Commit and push IDL to repo (if changed)
+    - name: Commit and push IDL to repo (only if changed)
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
         git config user.name "github-actions"
-        git config user.email "github-actions@github-actions"
+        git config user.email "github-actions@github.com"
         git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
         git add -f client/idl/arciumintnftgen.json
         if git diff --cached --quiet; then
-          echo "✅ No changes to commit"
+          echo "✅ No IDL changes to commit"
         else
-          git commit -m "Add IDL file for frontend build"
+          git commit -m "Add/Update IDL file for frontend build"
           git push origin main
         fi
 
@@ -118,33 +126,16 @@ jobs:
           exit 1
         fi
 
-    - name: Refresh blockhash / show cluster info
+    - name: Refresh cluster state before deploy (reduce blockhash issues)
       run: |
         solana config set --url https://api.devnet.solana.com
-        solana block-height
-        solana balance
-        sleep 2
+        echo "block-height:" $(solana block-height)
+        echo "slot:" $(solana slot)
+        echo "balance:" $(solana balance)
+        # small pause to ensure node has time to process (helps avoid stale blockhash)
+        sleep 5
 
-    - name: Deploy Anchor program (with retries to avoid transient blockhash issues)
+    - name: Deploy Anchor program
       run: |
-        set -e
-        attempts=0
-        max_attempts=5
-        until [ $attempts -ge $max_attempts ]
-        do
-          echo "Deploy attempt: $((attempts+1))"
-          if anchor deploy --provider.cluster devnet --provider.wallet wallet.json; then
-            echo "✅ anchor deploy succeeded"
-            break
-          else
-            echo "❌ anchor deploy failed (attempt $((attempts+1)))"
-            attempts=$((attempts+1))
-            # try to refresh funding or blockhash
-            solana airdrop 1 -k wallet.json || true
-            sleep 5
-          fi
-        done
-        if [ $attempts -ge $max_attempts ]; then
-          echo "🚨 anchor deploy failed after $max_attempts attempts"
-          exit 1
-        fi
+        # use explicit provider flags
+        anchor deploy --provider.cluster devnet --provider.wallet wallet.json
