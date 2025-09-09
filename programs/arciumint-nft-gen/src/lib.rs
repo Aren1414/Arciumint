@@ -13,29 +13,24 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub mod arciumintnftgen {
     use super::*;
 
-    /// Normal mint: payer is creator & update authority
     pub fn mint_nft(
         ctx: Context<MintNFT>,
         name: String,
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        // Validate Metaplex program passed in
         require_keys_eq!(
             ctx.accounts.token_metadata_program.key(),
             TOKEN_METADATA_ID,
             ErrorCode::InvalidTokenProgram
         );
 
-        // Prevent double-mint
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        // Build signer seeds for mint_authority PDA
         let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[seeds];
 
-        // 1) mint token
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -45,7 +40,6 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         mint_to(cpi_ctx, 1)?;
 
-        // 2) create metadata
         let creator = Creator {
             address: ctx.accounts.payer.key(),
             verified: false,
@@ -76,17 +70,15 @@ pub mod arciumintnftgen {
         create_metadata_accounts_v3(
             meta_ctx,
             data,
-            true,  // is_mutable
-            true,  // update_authority_is_signer
+            true,
+            true,
             Option::<CollectionDetails>::None,
         )?;
 
-        // mark minted
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
 
-    /// Mint using MPC PDA authority
     pub fn mint_nft_with_mpc(
         ctx: Context<MintNFTWithMPC>,
         name: String,
@@ -97,19 +89,16 @@ pub mod arciumintnftgen {
         require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
 
-        // Validate Metaplex program
         require_keys_eq!(
             ctx.accounts.token_metadata_program.key(),
             TOKEN_METADATA_ID,
             ErrorCode::InvalidTokenProgram
         );
 
-        // signer seeds for MPC PDA
         let bump = ctx.bumps.mpc_authority;
         let seeds: &[&[u8]] = &[b"mpc_authority", &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[seeds];
 
-        // 1) mint token with mpc_authority PDA
         let cpi_accounts = MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
@@ -119,7 +108,6 @@ pub mod arciumintnftgen {
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         mint_to(cpi_ctx, 1)?;
 
-        // 2) metadata with MPC PDA as verified creator
         let creator = Creator {
             address: ctx.accounts.mpc_authority.key(),
             verified: true,
@@ -186,11 +174,15 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
+    /// CHECK: PDA signer only
+    #[account(seeds = [b"mint_authority"], bump)]
+    pub mint_authority: UncheckedAccount<'info>,
+
     #[account(
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mint_authority
+        mint::authority = *mint_authority.key
     )]
     pub mint: Account<'info, Mint>,
 
@@ -201,10 +193,6 @@ pub struct MintNFT<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-
-    #[account(seeds = [b"mint_authority"], bump)]
-    /// CHECK: PDA signer only
-    pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
     /// CHECK: Metaplex metadata account created via CPI
@@ -233,11 +221,15 @@ pub struct MintNFTWithMPC<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
+    /// CHECK: PDA signer only
+    #[account(seeds = [b"mpc_authority"], bump)]
+    pub mpc_authority: UncheckedAccount<'info>,
+
     #[account(
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mpc_authority
+        mint::authority = *mpc_authority.key
     )]
     pub mint: Account<'info, Mint>,
 
@@ -248,10 +240,6 @@ pub struct MintNFTWithMPC<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-
-    #[account(seeds = [b"mpc_authority"], bump)]
-    /// CHECK: PDA signer only
-    pub mpc_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
     /// CHECK: Metaplex metadata account created via CPI
