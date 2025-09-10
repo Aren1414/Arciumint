@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::sysvar::rent::Rent;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
@@ -42,12 +43,12 @@ pub struct MintNFT<'info> {
     pub token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"mint_authority"], bump)]
     /// CHECK: PDA signer
-    pub mint_authority: UncheckedAccount<'info>,
+    pub mint_authority: AccountInfo<'info>,
     #[account(mut)]
     /// CHECK: created by Metaplex CPI
-    pub metadata: UncheckedAccount<'info>,
+    pub metadata: AccountInfo<'info>,
     /// CHECK: Metaplex program
-    pub token_metadata_program: UncheckedAccount<'info>,
+    pub token_metadata_program: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -82,12 +83,12 @@ pub struct MintNFTWithMPC<'info> {
     pub token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"mpc_authority"], bump)]
     /// CHECK: PDA signer
-    pub mpc_authority: UncheckedAccount<'info>,
+    pub mpc_authority: AccountInfo<'info>,
     #[account(mut)]
     /// CHECK: created by Metaplex CPI
-    pub metadata: UncheckedAccount<'info>,
+    pub metadata: AccountInfo<'info>,
     /// CHECK: Metaplex program
-    pub token_metadata_program: UncheckedAccount<'info>,
+    pub token_metadata_program: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -138,7 +139,7 @@ fn mint_token_to_user<'info>(
         MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
+            authority: ctx.accounts.mint_authority.clone(),
         },
         signer_seeds,
     );
@@ -155,7 +156,7 @@ fn mint_token_to_user_mpc<'info>(
         MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mpc_authority.to_account_info(),
+            authority: ctx.accounts.mpc_authority.clone(),
         },
         signer_seeds,
     );
@@ -185,15 +186,15 @@ fn create_metadata_for_token<'info>(
         uses: None,
     };
     let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.to_account_info(),
+        metadata: ctx.accounts.metadata.clone(),
         mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mint_authority.to_account_info(),
+        mint_authority: ctx.accounts.mint_authority.clone(),
         payer: ctx.accounts.payer.to_account_info(),
         update_authority: ctx.accounts.payer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-    let program = ctx.accounts.token_metadata_program.to_account_info();
+    let program = ctx.accounts.token_metadata_program.clone();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
     create_metadata_accounts_v3(cpi_ctx, data, true, true, Option::<CollectionDetails>::None)?;
     Ok(())
@@ -221,15 +222,15 @@ fn create_metadata_for_token_mpc<'info>(
         uses: None,
     };
     let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.to_account_info(),
+        metadata: ctx.accounts.metadata.clone(),
         mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mpc_authority.to_account_info(),
+        mint_authority: ctx.accounts.mpc_authority.clone(),
         payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.mpc_authority.to_account_info(),
+        update_authority: ctx.accounts.mpc_authority.clone(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-    let program = ctx.accounts.token_metadata_program.to_account_info();
+    let program = ctx.accounts.token_metadata_program.clone();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
     create_metadata_accounts_v3(cpi_ctx, data, true, true, Option::<CollectionDetails>::None)?;
     Ok(())
@@ -243,4 +244,4 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-}
+    }
