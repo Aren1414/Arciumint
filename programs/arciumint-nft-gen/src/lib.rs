@@ -6,6 +6,14 @@ use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
+#[account]
+pub struct UserRecord {
+    pub has_minted: bool,
+}
+impl UserRecord {
+    pub const SIZE: usize = 1;
+}
+
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -84,14 +92,6 @@ pub struct MintNFTWithMPC<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-#[account]
-pub struct UserRecord {
-    pub has_minted: bool,
-}
-impl UserRecord {
-    pub const SIZE: usize = 1;
 }
 
 #[program]
