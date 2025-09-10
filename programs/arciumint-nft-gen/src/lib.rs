@@ -105,7 +105,7 @@ pub mod arciumintnftgen {
         uri: String,
     ) -> Result<()> {
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
-        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
         ctx.accounts.user_record.has_minted = true;
@@ -121,7 +121,7 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
-        let signer_seeds = &[&[b"mpc_authority", &[ctx.bumps.mpc_authority]]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[ctx.bumps.mpc_authority]]];
         mint_token_to_user_mpc(&ctx, signer_seeds)?;
         create_metadata_for_token_mpc(&ctx, name, symbol, uri, signer_seeds)?;
         ctx.accounts.user_record.has_minted = true;
