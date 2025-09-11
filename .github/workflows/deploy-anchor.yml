@@ -82,7 +82,7 @@ jobs:
 
     - name: Generate IDL with full account context
       run: |
-        ANCHOR_LOG=true anchor idl build --features idl-build
+        ANCHOR_LOG=true anchor idl build -- --features idl-build
 
     - name: Check IDL file exists and copy to client
       run: |
