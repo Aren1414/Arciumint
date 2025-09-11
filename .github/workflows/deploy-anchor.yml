@@ -78,7 +78,7 @@ jobs:
 
     - name: Build Anchor program (.so only)
       run: |
-        ANCHOR_LOG=true anchor build --features exclude-accounts
+        ANCHOR_LOG=true anchor build -- --features exclude-accounts
 
     - name: Generate IDL with full account context
       run: |
