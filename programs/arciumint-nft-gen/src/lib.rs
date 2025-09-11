@@ -1,5 +1,11 @@
 #[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    declare_id,
+    Accounts,
+    program,
+};
+
 #[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 #[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
@@ -105,6 +111,7 @@ pub mod arciumintnftgen {
 #[program]
 pub mod arciumintnftgen {
     use super::*;
+    use anchor_lang::prelude::*;
 
     pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
         Ok(())
@@ -177,4 +184,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-            }
+    }
