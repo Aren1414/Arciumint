@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
-use mpl_token_metadata::types::{Creator, DataV2, CollectionDetails};
+use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
@@ -104,8 +104,9 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
+        let bump = ctx.bumps.mint_authority;
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
-        let signer_seeds = &[&[b"mint_authority", &[ctx.bumps.mint_authority]]];
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
         ctx.accounts.user_record.has_minted = true;
@@ -119,9 +120,10 @@ pub mod arciumintnftgen {
         uri: String,
         encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
+        let bump = ctx.bumps.mpc_authority;
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mpc_authority", &[bump]]];
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
-        let signer_seeds = &[&[b"mpc_authority", &[ctx.bumps.mpc_authority]]];
         mint_token_to_user_mpc(&ctx, signer_seeds)?;
         create_metadata_for_token_mpc(&ctx, name, symbol, uri, signer_seeds)?;
         ctx.accounts.user_record.has_minted = true;
@@ -138,7 +140,7 @@ fn mint_token_to_user<'info>(
         MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.clone(),
+            authority: ctx.accounts.mint_authority.to_account_info(),
         },
         signer_seeds,
     );
@@ -155,7 +157,7 @@ fn mint_token_to_user_mpc<'info>(
         MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mpc_authority.clone(),
+            authority: ctx.accounts.mpc_authority.to_account_info(),
         },
         signer_seeds,
     );
@@ -185,15 +187,15 @@ fn create_metadata_for_token<'info>(
         uses: None,
     };
     let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.clone(),
+        metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mint_authority.clone(),
+        mint_authority: ctx.accounts.mint_authority.to_account_info(),
         payer: ctx.accounts.payer.to_account_info(),
         update_authority: ctx.accounts.payer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-    let program = ctx.accounts.token_metadata_program.clone();
+    let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
     create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
@@ -221,15 +223,15 @@ fn create_metadata_for_token_mpc<'info>(
         uses: None,
     };
     let accounts = CreateMetadataAccountsV3 {
-        metadata: ctx.accounts.metadata.clone(),
+        metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.mpc_authority.clone(),
+        mint_authority: ctx.accounts.mpc_authority.to_account_info(),
         payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.mpc_authority.clone(),
+        update_authority: ctx.accounts.mpc_authority.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-    let program = ctx.accounts.token_metadata_program.clone();
+    let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
     create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
