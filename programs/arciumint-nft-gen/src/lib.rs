@@ -1,12 +1,6 @@
-use anchor_lang::{
-    prelude::*,
-    declare_id,
-    Accounts,
-    Context,
-    Result,
-    error_code,
-    Bumps,
-};
+use anchor_lang::prelude::*;
+use anchor_lang::declare_id;
+use anchor_lang::error_code;
 
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
@@ -76,10 +70,11 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let signer_seeds = &[&[b"mint_authority", ctx.bumps.mint_authority]];
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[ctx.bumps.mint_authority]].concat().as_slice();
+        let binding = [signer_seeds];
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+        mint_token_to_user(&ctx, &binding)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, &binding)?;
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
@@ -92,9 +87,10 @@ pub mod arciumintnftgen {
         encrypted_bytes: Vec<u8>,
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
-        let signer_seeds = &[&[b"mint_authority", ctx.bumps.mint_authority]];
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+        let signer_seeds: &[&[u8]] = &[b"mint_authority", &[ctx.bumps.mint_authority]].concat().as_slice();
+        let binding = [signer_seeds];
+        mint_token_to_user(&ctx, &binding)?;
+        create_metadata_for_token(&ctx, name, symbol, uri, &binding)?;
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
@@ -112,6 +108,7 @@ fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[u8]],
 ) -> Result<()> {
+    let binding = [signer_seeds];
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         MintTo {
@@ -119,7 +116,7 @@ fn mint_token_to_user<'info>(
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.mint_authority.to_account_info(),
         },
-        &[signer_seeds],
+        &binding,
     );
     mint_to(cpi_ctx, 1)?;
     Ok(())
@@ -132,6 +129,7 @@ fn create_metadata_for_token<'info>(
     uri: String,
     signer_seeds: &[&[u8]],
 ) -> Result<()> {
+    let binding = [signer_seeds];
     let creator = Creator {
         address: ctx.accounts.payer.key(),
         verified: false,
@@ -156,7 +154,7 @@ fn create_metadata_for_token<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
     let program = ctx.accounts.token_metadata_program.to_account_info();
-    let cpi_ctx = CpiContext::new_with_signer(program, accounts, &[signer_seeds]);
+    let cpi_ctx = CpiContext::new_with_signer(program, accounts, &binding);
     create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
 }
