@@ -18,7 +18,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev
+        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev dos2unix
 
     - name: Install Rust toolchain and cargo in PATH
       run: |
@@ -78,6 +78,10 @@ jobs:
 
     - name: Clean Anchor build
       run: anchor clean || true
+
+    - name: Normalize Rust source files (remove BOM, fix line endings)
+      run: |
+        find programs/arciumint-nft-gen/src -type f -name "*.rs" -exec dos2unix {} \;
 
     - name: Build Anchor program
       run: |
