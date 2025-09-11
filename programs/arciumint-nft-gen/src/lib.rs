@@ -1,33 +1,33 @@
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
-use anchor_lang::{
-    prelude::*,
-    declare_id,
-    Accounts,
-    program,
-};
+#![allow(unused)]
+use anchor_lang::prelude::*;
+use anchor_lang::prelude::declare_id;
+use anchor_lang::prelude::Accounts;
+use anchor_lang::prelude::Context;
+use anchor_lang::prelude::Result;
+use anchor_lang::prelude::error_code;
+use anchor_lang::prelude::Program;
+use anchor_lang::prelude::Signer;
+use anchor_lang::prelude::System;
+use anchor_lang::prelude::Sysvar;
+use anchor_lang::prelude::UncheckedAccount;
+use anchor_lang::prelude::Account;
+use anchor_lang::prelude::Bumps;
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 use anchor_spl::associated_token::AssociatedToken;
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 #[account]
 pub struct UserRecord {
     pub has_minted: bool,
 }
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 impl UserRecord {
     pub const SIZE: usize = 1;
 }
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
@@ -68,11 +68,15 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[cfg(feature = "exclude-accounts")]
 #[derive(Accounts)]
 pub struct DummyAccounts {}
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
+impl<'info> DummyAccounts {
+    pub fn get_bumps(&self) -> Bumps {
+        Bumps::default()
+    }
+}
+
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -105,24 +109,16 @@ pub mod arciumintnftgen {
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
-}
 
-#[cfg(feature = "exclude-accounts")]
-#[program]
-pub mod arciumintnftgen {
-    use super::*;
-    use anchor_lang::prelude::*;
-
-    pub fn mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
+    pub fn dummy_mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
         Ok(())
     }
 
-    pub fn mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
+    pub fn dummy_mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
         Ok(())
     }
 }
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
@@ -140,7 +136,6 @@ fn mint_token_to_user<'info>(
     Ok(())
 }
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 fn create_metadata_for_token<'info>(
     ctx: &Context<MintNFT>,
     name: String,
@@ -177,7 +172,6 @@ fn create_metadata_for_token<'info>(
     Ok(())
 }
 
-#[cfg(any(feature = "idl-build", not(feature = "exclude-accounts")))]
 #[error_code]
 pub enum ErrorCode {
     #[msg("This wallet has already minted an NFT.")]
