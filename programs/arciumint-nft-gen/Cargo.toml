@@ -3,6 +3,9 @@ name = "arciumintnftgen"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib", "lib"]
+
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", features = ["token", "metadata", "associated_token"] }
@@ -13,6 +16,3 @@ default = []
 exclude-accounts = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 test-bpf = []
-
-[lib]
-crate-type = ["cdylib", "lib"]
