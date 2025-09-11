@@ -35,7 +35,7 @@ jobs:
         sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-        "$HOME/.local/share/solana/install/active_release/bin/solana" --version
+        solana --version
 
     - name: Install Anchor CLI (avm)
       run: |
@@ -46,25 +46,18 @@ jobs:
         export PATH="$HOME/.avm/bin:$PATH"
         anchor --version
 
-    - name: (Optional) Install Arcium CLI
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
-        arcup install || true
-
     - name: Restore wallet keypair and set Solana config
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
         chmod 600 wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
-        solana config get
 
     - name: Restore program keypair
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
         chmod 600 target/deploy/arciumintnftgen-keypair.json
-        solana address -k target/deploy/arciumintnftgen-keypair.json || true
 
     - name: Airdrop SOL (devnet)
       run: |
@@ -83,13 +76,13 @@ jobs:
       run: |
         find programs/arciumint-nft-gen/src -type f -name "*.rs" -exec dos2unix {} \;
 
-    - name: Build Anchor program
+    - name: Build Anchor program (.so only)
       run: |
-        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
+        ANCHOR_LOG=true anchor build --features exclude-accounts
 
     - name: Generate IDL with full account context
       run: |
-        ANCHOR_LOG=true anchor idl build -- --no-default-features
+        ANCHOR_LOG=true anchor idl build --features idl-build
 
     - name: Check IDL file exists and copy to client
       run: |
@@ -112,9 +105,8 @@ jobs:
         if git diff --cached --quiet; then
           echo "✅ No IDL changes to commit"
         else
-          git commit -m "Add/Update IDL file for frontend build"
+          git commit -m "Update IDL for frontend"
           git push origin main
-        fi
 
     - name: Check .so file exists
       run: |
@@ -123,14 +115,6 @@ jobs:
           ls -la target/deploy || true
           exit 1
         fi
-
-    - name: Refresh cluster state
-      run: |
-        solana config set --url https://api.devnet.solana.com
-        echo "block-height:" $(solana block-height)
-        echo "slot:" $(solana slot)
-        echo "balance:" $(solana balance)
-        sleep 5
 
     - name: Deploy Anchor program
       run: |
