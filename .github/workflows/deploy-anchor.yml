@@ -1,4 +1,4 @@
-name: Deploy Anchor Program
+name: Deploy Anchor + Arcium Program
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
 
 env:
   RUSTUP_TOOLCHAIN: 1.69.0
+  CARGO_HOME: $HOME/.cargo
+  PATH: $HOME/.cargo/bin:$PATH
 
 jobs:
   deploy:
@@ -18,17 +20,16 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev dos2unix
+        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev dos2unix curl
 
-    - name: Install Rust toolchain and cargo in PATH
+    - name: Install Rust
       run: |
-        export CARGO_HOME="$HOME/.cargo"
-        rustup self update
+        curl https://sh.rustup.rs -sSf | sh -s -- -y
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         rustup install $RUSTUP_TOOLCHAIN
         rustup default $RUSTUP_TOOLCHAIN
         rustc --version
         cargo --version
-        echo "$CARGO_HOME/bin" >> $GITHUB_PATH
 
     - name: Install Solana CLI (Anza)
       run: |
@@ -37,14 +38,17 @@ jobs:
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
 
-    - name: Install Anchor CLI (avm)
+    - name: Install Anchor CLI directly
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor avm --locked --force || true
-        avm install 0.31.1 || true
-        avm use 0.31.1 || true
-        echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.avm/bin:$PATH"
+        cargo install anchor-cli --version 0.31.1 --locked
         anchor --version
+
+    - name: Install Arcium CLI and Arcup
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        arcup install || true
+        arcium --version || true
 
     - name: Restore wallet keypair and set Solana config
       run: |
@@ -72,19 +76,19 @@ jobs:
     - name: Clean Anchor build
       run: anchor clean || true
 
-    - name: Normalize Rust source files (remove BOM, fix line endings)
+    - name: Normalize Rust source files
       run: |
         find programs/arciumint-nft-gen/src -type f -name "*.rs" -exec dos2unix {} \;
 
-    - name: Build Anchor program (.so only)
+    - name: Build Anchor program
       run: |
         ANCHOR_LOG=true anchor build --features exclude-accounts,idl-build
 
-    - name: Generate IDL with full account context
+    - name: Generate IDL
       run: |
         ANCHOR_LOG=true anchor idl build --features exclude-accounts,idl-build
 
-    - name: Check IDL file exists and copy to client
+    - name: Check IDL file and copy to client
       run: |
         if [ ! -f target/idl/arciumintnftgen.json ]; then
           echo "❌ IDL file not found!"
@@ -94,7 +98,7 @@ jobs:
         mkdir -p client/idl
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
 
-    - name: Commit and push IDL to repo
+    - name: Commit and push IDL
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
@@ -108,7 +112,7 @@ jobs:
           git commit -m "Update IDL for frontend"
           git push origin main
 
-    - name: Check .so file exists
+    - name: Check .so file
       run: |
         if [ ! -f target/deploy/arciumintnftgen.so ]; then
           echo "❌ .so file not found!"
