@@ -57,9 +57,6 @@ pub struct MintNFT<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-#[derive(Accounts)]
-pub struct DummyAccounts {}
-
 #[program]
 pub mod arciumintnftgen {
     use super::*;
@@ -74,7 +71,7 @@ pub mod arciumintnftgen {
         let mut seed = [0u8; 15];
         seed[..14].copy_from_slice(b"mint_authority");
         seed[14] = bump;
-        let signer_seeds: &[&[u8]] = &[&seed];
+        let signer_seeds: &[&[&[u8]]] = &[&[&seed]];
 
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
         mint_token_to_user(&ctx, signer_seeds)?;
@@ -96,26 +93,18 @@ pub mod arciumintnftgen {
         let mut seed = [0u8; 15];
         seed[..14].copy_from_slice(b"mint_authority");
         seed[14] = bump;
-        let signer_seeds: &[&[u8]] = &[&seed];
+        let signer_seeds: &[&[&[u8]]] = &[&[&seed]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
-
-    pub fn dummy_mint_nft(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn dummy_mint_nft_with_mpc(_ctx: Context<DummyAccounts>, _name: String, _symbol: String, _uri: String, _encrypted_bytes: Vec<u8>) -> Result<()> {
-        Ok(())
-    }
 }
 
 fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
-    signer_seeds: &[&[u8]],
+    signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
@@ -135,7 +124,7 @@ fn create_metadata_for_token<'info>(
     name: String,
     symbol: String,
     uri: String,
-    signer_seeds: &[&[u8]],
+    signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creator = Creator {
         address: ctx.accounts.payer.key(),
