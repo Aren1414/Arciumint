@@ -13,27 +13,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    container:
+      image: rust:1.69
+
     steps:
-    - name: Install system dependencies early
+    - name: Install system dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y git tar curl libudev-dev pkg-config build-essential libssl-dev dos2unix
+        apt-get update
+        apt-get install -y git tar curl libudev-dev pkg-config build-essential libssl-dev dos2unix cmake
 
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Rust
-      run: |
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-        rustup install $RUSTUP_TOOLCHAIN
-        rustup default $RUSTUP_TOOLCHAIN
-        rustc --version
-        cargo --version
-
     - name: Install Solana CLI (Anza)
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+        curl -sSfL https://release.anza.xyz/v2.1.0/install | bash
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
@@ -41,12 +35,12 @@ jobs:
     - name: Install Anchor CLI directly
       run: |
         cargo install anchor-cli --version 0.31.1 --locked
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         anchor --version
 
     - name: Install Arcium CLI and Arcup
       run: |
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         arcup install || true
         arcium --version || true
 
