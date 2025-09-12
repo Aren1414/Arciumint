@@ -19,8 +19,8 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        apt-get update
-        apt-get install -y git tar curl libudev-dev pkg-config build-essential libssl-dev dos2unix cmake
+        sudo apt-get update
+        sudo apt-get install -y git tar curl libudev-dev pkg-config build-essential libssl-dev dos2unix cmake
 
     - name: Install Rust
       run: |
@@ -28,26 +28,20 @@ jobs:
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         rustup install $RUSTUP_TOOLCHAIN
         rustup default $RUSTUP_TOOLCHAIN
-        rustc --version
-        cargo --version
 
     - name: Install Solana CLI (Anza)
       run: |
         curl -sSfL https://release.anza.xyz/v2.1.0/install | bash
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-        solana --version
 
     - name: Install Anchor CLI
       run: |
         cargo install anchor-cli --version 0.31.1 --locked
-        anchor --version
 
     - name: Install Arcium CLI and Arcup
       run: |
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
         arcup install || true
-        arcium --version || true
 
     - name: Restore wallet keypair and set Solana config
       run: |
@@ -66,12 +60,6 @@ jobs:
       run: |
         solana airdrop 2 -k wallet.json || echo "Airdrop failed or not necessary"
 
-    - name: Confirm Program ID consistency
-      run: |
-        grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
-        grep "arciumintnftgen" Anchor.toml || true
-        solana address -k target/deploy/arciumintnftgen-keypair.json || true
-
     - name: Clean Anchor build
       run: anchor clean || true
 
@@ -87,37 +75,10 @@ jobs:
       run: |
         ANCHOR_LOG=true anchor idl build --features exclude-accounts,idl-build
 
-    - name: Check IDL file and copy to client
+    - name: Copy IDL to client
       run: |
-        if [ ! -f target/idl/arciumintnftgen.json ]; then
-          echo "❌ IDL file not found!"
-          ls -la target/idl || true
-          exit 1
-        fi
         mkdir -p client/idl
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
-
-    - name: Commit and push IDL
-      env:
-        GH_PAT: ${{ secrets.GH_PAT }}
-      run: |
-        git config user.name "github-actions"
-        git config user.email "github-actions@github.com"
-        git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
-        git add -f client/idl/arciumintnftgen.json
-        if git diff --cached --quiet; then
-          echo "✅ No IDL changes to commit"
-        else
-          git commit -m "Update IDL for frontend"
-          git push origin main
-
-    - name: Check .so file
-      run: |
-        if [ ! -f target/deploy/arciumintnftgen.so ]; then
-          echo "❌ .so file not found!"
-          ls -la target/deploy || true
-          exit 1
-        fi
 
     - name: Deploy Anchor program
       run: |
