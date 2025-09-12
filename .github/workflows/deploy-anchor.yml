@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: 1.89.0
+  RUSTUP_TOOLCHAIN: 1.69.0
 
 jobs:
   deploy:
@@ -78,11 +78,11 @@ jobs:
 
     - name: Build Anchor program (.so only)
       run: |
-        ANCHOR_LOG=true anchor build -- --features exclude-accounts
+        ANCHOR_LOG=true anchor build --features exclude-accounts,idl-build
 
     - name: Generate IDL with full account context
       run: |
-        ANCHOR_LOG=true anchor idl build -- --features idl-build
+        ANCHOR_LOG=true anchor idl build --features exclude-accounts,idl-build
 
     - name: Check IDL file exists and copy to client
       run: |
