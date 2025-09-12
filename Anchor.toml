@@ -10,7 +10,8 @@ anchor_version = "0.31.1"
 solana_version = "2.1.0"
 
 [scripts]
-test = "mocha -t 1000000 tests/"
+test = "anchor test"
 
 [features]
-default = []
+exclude-accounts = []
+idl-build = []
