@@ -7,12 +7,11 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", features = ["token", "metadata", "associated_token"] }
+anchor-lang = { version = "0.31.1", features = ["init-if-needed", "idl-build"] }
+anchor-spl = { version = "0.31.1", features = ["token", "metadata", "associated_token", "idl-build"] }
 mpl-token-metadata = { version = "5.1.1", default-features = false }
 
 [features]
 default = []
 exclude-accounts = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
-test-bpf = []
+idl-build = []
