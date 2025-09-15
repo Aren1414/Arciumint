@@ -54,7 +54,7 @@ pub struct MintNFT<'info> {
     pub mint_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
-    /// CHECK: Metaplex metadata PDA
+    /// CHECK: manually derived metadata PDA
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex program
@@ -167,4 +167,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+                           }
