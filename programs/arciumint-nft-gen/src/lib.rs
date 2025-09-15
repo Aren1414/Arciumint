@@ -16,7 +16,6 @@ impl UserRecord {
 }
 
 #[derive(Accounts)]
-#[instruction()]
 pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -54,17 +53,8 @@ pub struct MintNFT<'info> {
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
-    #[account(
-        mut,
-        seeds = [
-            b"metadata",
-            token_metadata_program.key().as_ref(),
-            mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = token_metadata_program.key()
-    )]
-    /// CHECK: created by Metaplex CPI
+    #[account(mut)]
+    /// CHECK: Metaplex metadata PDA
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex program
@@ -177,4 +167,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-    }
+        }
