@@ -18,20 +18,20 @@ impl UserRecord {
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub signer: Signer<'info>,
 
     #[account(
         init_if_needed,
-        payer = payer,
+        payer = signer,
         space = 8 + UserRecord::SIZE,
-        seeds = [b"user_record", payer.key().as_ref()],
+        seeds = [b"user_record", signer.key().as_ref()],
         bump
     )]
     pub user_record: Account<'info, UserRecord>,
 
     #[account(
         init,
-        payer = payer,
+        payer = signer,
         mint::decimals = 0,
         mint::authority = mint_authority,
         mint::freeze_authority = mint_authority
@@ -40,9 +40,9 @@ pub struct MintNFT<'info> {
 
     #[account(
         init,
-        payer = payer,
+        payer = signer,
         associated_token::mint = mint,
-        associated_token::authority = payer
+        associated_token::authority = signer
     )]
     pub token_account: Account<'info, TokenAccount>,
 
@@ -133,7 +133,7 @@ fn create_metadata_for_token<'info>(
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     let creator = Creator {
-        address: ctx.accounts.payer.key(),
+        address: ctx.accounts.signer.key(),
         verified: false,
         share: 100,
     };
@@ -150,8 +150,8 @@ fn create_metadata_for_token<'info>(
         metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
         mint_authority: ctx.accounts.mint_authority.to_account_info(),
-        payer: ctx.accounts.payer.to_account_info(),
-        update_authority: ctx.accounts.payer.to_account_info(),
+        payer: ctx.accounts.signer.to_account_info(),
+        update_authority: ctx.accounts.signer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
@@ -167,4 +167,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+    }
