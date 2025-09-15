@@ -1,7 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::declare_id;
 use anchor_lang::error_code;
-
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
@@ -18,9 +16,11 @@ impl UserRecord {
 }
 
 #[derive(Accounts)]
+#[instruction()]
 pub struct MintNFT<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
         init_if_needed,
         payer = payer,
@@ -29,13 +29,16 @@ pub struct MintNFT<'info> {
         bump
     )]
     pub user_record: Account<'info, UserRecord>,
+
     #[account(
         init,
         payer = payer,
         mint::decimals = 0,
-        mint::authority = mint_authority
+        mint::authority = mint_authority,
+        mint::freeze_authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
+
     #[account(
         init,
         payer = payer,
@@ -43,14 +46,30 @@ pub struct MintNFT<'info> {
         associated_token::authority = payer
     )]
     pub token_account: Account<'info, TokenAccount>,
-    #[account(seeds = [b"mint_authority"], bump)]
+
+    #[account(
+        seeds = [b"mint_authority"],
+        bump
+    )]
     /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
-    #[account(mut)]
+
+    #[account(
+        mut,
+        seeds = [
+            b"metadata",
+            token_metadata_program.key().as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        seeds::program = token_metadata_program.key()
+    )]
     /// CHECK: created by Metaplex CPI
     pub metadata: UncheckedAccount<'info>,
+
     /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -67,15 +86,14 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        let bump = ctx.bumps.mint_authority;
-        let mut seed = [0u8; 15];
-        seed[..14].copy_from_slice(b"mint_authority");
-        seed[14] = bump;
-        let signer_seeds: &[&[&[u8]]] = &[&[&seed]];
-
         require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
+
+        let bump = ctx.bumps.mint_authority;
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
@@ -90,13 +108,11 @@ pub mod arciumintnftgen {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
         let bump = ctx.bumps.mint_authority;
-        let mut seed = [0u8; 15];
-        seed[..14].copy_from_slice(b"mint_authority");
-        seed[14] = bump;
-        let signer_seeds: &[&[&[u8]]] = &[&[&seed]];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
+
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
@@ -161,4 +177,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-        }
+    }
