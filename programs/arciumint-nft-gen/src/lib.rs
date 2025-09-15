@@ -167,4 +167,4 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-                           }
+                                  }
