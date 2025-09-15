@@ -1,13 +1,11 @@
-name: Deploy Anchor + Arcium Program
+name: Deploy Anchor Program
 
 on:
   push:
     branches: [main]
 
 env:
-  RUSTUP_TOOLCHAIN: 1.69.0
-  CARGO_HOME: $HOME/.cargo
-  PATH: $HOME/.cargo/bin:$PATH
+  RUSTUP_TOOLCHAIN: 1.89.0
 
 jobs:
   deploy:
@@ -20,33 +18,43 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git tar curl libudev-dev pkg-config build-essential libssl-dev dos2unix cmake
+        sudo apt-get install -y libudev-dev pkg-config build-essential libssl-dev
 
     - name: Install Rust
       run: |
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-        rustup install $RUSTUP_TOOLCHAIN
-        rustup default $RUSTUP_TOOLCHAIN
+        rustup self update
+        rustup install ${{ env.RUSTUP_TOOLCHAIN }}
+        rustup default ${{ env.RUSTUP_TOOLCHAIN }}
+        rustc --version
+        cargo --version
 
-    - name: Install Solana CLI (Anza)
+    - name: Install Solana CLI via Anza
       run: |
-        curl -sSfL https://release.anza.xyz/v2.1.0/install | bash
+        sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        solana --version
 
     - name: Install Anchor CLI
       run: |
-        cargo install anchor-cli --version 0.31.1 --locked
+        cargo install --git https://github.com/coral-xyz/anchor avm --locked --force || true
+        avm install 0.31.1 || true
+        avm use 0.31.1 || true
+        echo "$HOME/.avm/bin" >> $GITHUB_PATH
+        export PATH="$HOME/.avm/bin:$PATH"
+        anchor --version
 
-    - name: Install Arcium CLI and Arcup
+    - name: Install Arcium CLI
       run: |
         curl --proto '=https' --tlsv1.2 -sSfL https://arcium-install.arcium.workers.dev/ | bash
-        arcup install || true
+        arcup install
 
-    - name: Restore wallet keypair and set Solana config
+    - name: Add cargo bin to PATH
+      run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Restore wallet keypair
       run: |
         echo '${{ secrets.WALLET_KEY }}' > wallet.json
-        chmod 600 wallet.json
         solana config set --keypair wallet.json
         solana config set --url https://api.devnet.solana.com
 
@@ -54,31 +62,60 @@ jobs:
       run: |
         mkdir -p target/deploy
         echo '${{ secrets.PROGRAM_KEYPAIR }}' > target/deploy/arciumintnftgen-keypair.json
-        chmod 600 target/deploy/arciumintnftgen-keypair.json
 
-    - name: Airdrop SOL (devnet)
+    - name: Airdrop SOL
+      run: solana airdrop 1 -k wallet.json || echo "Airdrop failed"
+
+    - name: Confirm Program ID consistency
       run: |
-        solana airdrop 2 -k wallet.json || echo "Airdrop failed or not necessary"
+        grep "declare_id!" programs/arciumint-nft-gen/src/lib.rs || true
+        grep "arciumintnftgen" Anchor.toml || true
+        solana address -k target/deploy/arciumintnftgen-keypair.json || true
 
     - name: Clean Anchor build
-      run: anchor clean || true
+      run: anchor clean
 
-    - name: Normalize Rust source files
+    - name: Build Anchor program with IDL features
       run: |
-        find programs/arciumint-nft-gen/src -type f -name "*.rs" -exec dos2unix {} \;
+        ANCHOR_LOG=true anchor build --skip-lint -- --features exclude-accounts,idl-build
 
-    - name: Build Anchor program
+    - name: Check IDL file exists
       run: |
-        ANCHOR_LOG=true anchor build --features exclude-accounts,idl-build
-
-    - name: Generate IDL
-      run: |
-        ANCHOR_LOG=true anchor idl build --features exclude-accounts,idl-build
+        if [ ! -f target/idl/arciumintnftgen.json ]; then
+          echo "❌ IDL file not found!"
+          exit 1
+        fi
 
     - name: Copy IDL to client
       run: |
         mkdir -p client/idl
         cp target/idl/arciumintnftgen.json client/idl/arciumintnftgen.json
+
+    - name: Commit and push IDL to repo
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git remote set-url origin https://x-access-token:${GH_PAT}@github.com/Aren1414/Arciumint.git
+
+        # Force add IDL file
+        git add -f client/idl/arciumintnftgen.json
+
+        # Only commit if changes exist
+        if git diff --cached --quiet; then
+          echo "✅ No changes to commit"
+        else
+          git commit -m "Add IDL file for frontend build"
+          git push origin main
+        fi
+
+    - name: Check .so file exists
+      run: |
+        if [ ! -f target/deploy/arciumintnftgen.so ]; then
+          echo "❌ .so file not found!"
+          exit 1
+        fi
 
     - name: Deploy Anchor program
       run: |
