@@ -29,15 +29,15 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    /// CHECK: Metaplex metadata program
-    pub token_metadata_program: UncheckedAccount<'info>,
-
     /// CHECK: PDA authority for minting
     #[account(
         seeds = [b"mint_authority"],
         bump
     )]
     pub mint_authority: UncheckedAccount<'info>,
+
+    /// CHECK: Metaplex metadata program
+    pub token_metadata_program: UncheckedAccount<'info>,
 
     #[account(
         init_if_needed,
@@ -174,4 +174,4 @@ pub enum ErrorCode {
     InvalidMPCData,
     #[msg("Could not find bump for mint_authority PDA.")]
     InvalidBump,
-        }
+    }
