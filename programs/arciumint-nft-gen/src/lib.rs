@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_lang::error_code;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
+
+
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2};
 
@@ -17,9 +19,11 @@ impl UserRecord {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
+    
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    
     #[account(
         init_if_needed,
         payer = signer,
@@ -29,6 +33,7 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
+    
     #[account(
         init,
         payer = signer,
@@ -38,6 +43,7 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
+    
     #[account(
         init,
         payer = signer,
@@ -46,18 +52,28 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
+    
     #[account(
         seeds = [b"mint_authority"],
         bump
     )]
-    /// CHECK: PDA signer
+    
     pub mint_authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    /// CHECK: manually derived metadata PDA
+    
+    #[account(
+        mut,
+        seeds = [
+            b"metadata",
+            token_metadata_program.key().as_ref(),
+            mint.key().as_ref()
+        ],
+        bump,
+        seeds::program = token_metadata_program.key()
+    )]
+    
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Metaplex program
     pub token_metadata_program: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -76,10 +92,14 @@ pub mod arciumintnftgen {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        require!(!ctx.accounts.user_record.has_minted, ErrorCode::AlreadyMinted);
+        require!(
+            !ctx.accounts.user_record.has_minted,
+            ErrorCode::AlreadyMinted
+        );
 
-        let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        let bump = *ctx.bumps.get("mint_authority").ok_or(ErrorCode::InvalidBump)?;
+        let seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -97,8 +117,9 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
-        let bump = ctx.bumps.mint_authority;
-        let signer_seeds: &[&[&[u8]]] = &[&[b"mint_authority", &[bump]]];
+        let bump = *ctx.bumps.get("mint_authority").ok_or(ErrorCode::InvalidBump)?;
+        let seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
 
         mint_token_to_user(&ctx, signer_seeds)?;
         create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
@@ -112,15 +133,14 @@ fn mint_token_to_user<'info>(
     ctx: &Context<MintNFT>,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        MintTo {
-            mint: ctx.accounts.mint.to_account_info(),
-            to: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.mint_authority.to_account_info(),
-        },
-        signer_seeds,
-    );
+    let cpi_accounts = MintTo {
+        mint: ctx.accounts.mint.to_account_info(),
+        to: ctx.accounts.token_account.to_account_info(),
+        authority: ctx.accounts.mint_authority.to_account_info(),
+    };
+    let cpi_program = ctx.accounts.token_program.to_account_info();
+
+    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
     mint_to(cpi_ctx, 1)?;
     Ok(())
 }
@@ -146,6 +166,7 @@ fn create_metadata_for_token<'info>(
         collection: None,
         uses: None,
     };
+
     let accounts = CreateMetadataAccountsV3 {
         metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
@@ -155,8 +176,10 @@ fn create_metadata_for_token<'info>(
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
+
     let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
+
     create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
 }
@@ -167,4 +190,6 @@ pub enum ErrorCode {
     AlreadyMinted,
     #[msg("Invalid MPC input data.")]
     InvalidMPCData,
-    }
+    #[msg("Could not find bump for mint_authority PDA.")]
+    InvalidBump,
+        }
