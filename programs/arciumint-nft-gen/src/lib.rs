@@ -3,7 +3,6 @@ use anchor_lang::error_code;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 
-
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2};
 
@@ -19,11 +18,9 @@ impl UserRecord {
 
 #[derive(Accounts)]
 pub struct MintNFT<'info> {
-    
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    
     #[account(
         init_if_needed,
         payer = signer,
@@ -33,7 +30,6 @@ pub struct MintNFT<'info> {
     )]
     pub user_record: Account<'info, UserRecord>,
 
-    
     #[account(
         init,
         payer = signer,
@@ -43,7 +39,6 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    
     #[account(
         init,
         payer = signer,
@@ -52,15 +47,12 @@ pub struct MintNFT<'info> {
     )]
     pub token_account: Account<'info, TokenAccount>,
 
-    
     #[account(
         seeds = [b"mint_authority"],
         bump
     )]
-    
     pub mint_authority: UncheckedAccount<'info>,
 
-    
     #[account(
         mut,
         seeds = [
@@ -71,11 +63,9 @@ pub struct MintNFT<'info> {
         bump,
         seeds::program = token_metadata_program.key()
     )]
-    
     pub metadata: UncheckedAccount<'info>,
 
     pub token_metadata_program: UncheckedAccount<'info>,
-
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
@@ -97,7 +87,7 @@ pub mod arciumintnftgen {
             ErrorCode::AlreadyMinted
         );
 
-        let bump = *ctx.bumps.get("mint_authority").ok_or(ErrorCode::InvalidBump)?;
+        let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[seeds];
 
@@ -117,7 +107,7 @@ pub mod arciumintnftgen {
     ) -> Result<()> {
         require!(encrypted_bytes.len() > 0, ErrorCode::InvalidMPCData);
 
-        let bump = *ctx.bumps.get("mint_authority").ok_or(ErrorCode::InvalidBump)?;
+        let bump = ctx.bumps.mint_authority;
         let seeds: &[&[u8]] = &[b"mint_authority".as_ref(), &[bump]];
         let signer_seeds: &[&[&[u8]]] = &[seeds];
 
