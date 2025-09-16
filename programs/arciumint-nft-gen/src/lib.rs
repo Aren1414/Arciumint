@@ -7,6 +7,23 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 #[derive(Accounts)] pub struct MintNFT<'info> { #[account(mut)] pub signer: Signer<'info>,
 
 #[account(
+    init,
+    payer = signer,
+    mint::decimals = 0,
+    mint::authority = mint_authority,
+    mint::freeze_authority = mint_authority
+)]
+pub mint: Account<'info, Mint>,
+
+pub token_metadata_program: UncheckedAccount<'info>,
+
+#[account(
+    seeds = [b"mint_authority"],
+    bump
+)]
+pub mint_authority: UncheckedAccount<'info>,
+
+#[account(
     init_if_needed,
     payer = signer,
     space = 8 + UserRecord::SIZE,
@@ -16,29 +33,12 @@ declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
 pub user_record: Account<'info, UserRecord>,
 
 #[account(
-    seeds = [b"mint_authority"],
-    bump
-)]
-pub mint_authority: UncheckedAccount<'info>,
-
-#[account(
-    init,
-    payer = signer,
-    mint::decimals = 0,
-    mint::authority = mint_authority,
-    mint::freeze_authority = mint_authority
-)]
-pub mint: Account<'info, Mint>,
-
-#[account(
     init,
     payer = signer,
     associated_token::mint = mint,
     associated_token::authority = signer
 )]
 pub token_account: Account<'info, TokenAccount>,
-
-pub token_metadata_program: UncheckedAccount<'info>,
 
 #[account(
     mut,
