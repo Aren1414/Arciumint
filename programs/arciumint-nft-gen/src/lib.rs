@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
+use anchor_spl::token::{self, mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2};
@@ -87,26 +87,6 @@ pub mod arciumintnftgen {
         ctx.accounts.user_record.has_minted = true;
         Ok(())
     }
-
-    pub fn mint_nft_with_mpc(
-        ctx: Context<MintNFT>,
-        name: String,
-        symbol: String,
-        uri: String,
-        encrypted_bytes: Vec<u8>,
-    ) -> Result<()> {
-        require!(!encrypted_bytes.is_empty(), ErrorCode::InvalidMPCData);
-
-        let bump = ctx.bumps.mint_authority;
-        let seeds: &[&[u8]] = &[b"mint_authority", &[bump]];
-        let signer_seeds: &[&[&[u8]]] = &[seeds];
-
-        mint_token_to_user(&ctx, signer_seeds)?;
-        create_metadata_for_token(&ctx, name, symbol, uri, signer_seeds)?;
-
-        ctx.accounts.user_record.has_minted = true;
-        Ok(())
-    }
 }
 
 fn mint_token_to_user<'info>(
@@ -172,4 +152,4 @@ pub enum ErrorCode {
     InvalidMPCData,
     #[msg("Could not find bump for mint_authority PDA.")]
     InvalidBump,
-        }
+    }
