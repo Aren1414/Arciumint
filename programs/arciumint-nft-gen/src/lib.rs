@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::error_code;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
-use mpl_token_metadata::accounts::CreateMetadataAccountsV3;
+use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -30,11 +28,11 @@ pub struct MintNFT<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
-    /// CHECK: PDA authority for minting
     #[account(
         seeds = [b"mint_authority"],
         bump
     )]
+    /// CHECK: PDA signer
     pub mint_authority: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex metadata program
@@ -139,7 +137,6 @@ fn create_metadata_for_token<'info>(
         verified: false,
         share: 100,
     };
-
     let data = DataV2 {
         name,
         symbol,
@@ -149,7 +146,6 @@ fn create_metadata_for_token<'info>(
         collection: None,
         uses: None,
     };
-
     let accounts = CreateMetadataAccountsV3 {
         metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
@@ -159,10 +155,8 @@ fn create_metadata_for_token<'info>(
         system_program: ctx.accounts.system_program.to_account_info(),
         rent: ctx.accounts.rent.to_account_info(),
     };
-
     let program = ctx.accounts.token_metadata_program.to_account_info();
     let cpi_ctx = CpiContext::new_with_signer(program, accounts, signer_seeds);
-
     create_metadata_accounts_v3(cpi_ctx, data, true, true, None)?;
     Ok(())
 }
@@ -175,4 +169,4 @@ pub enum ErrorCode {
     InvalidMPCData,
     #[msg("Could not find bump for mint_authority PDA.")]
     InvalidBump,
-        }
+      }
