@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
-use mpl_token_metadata::instruction::create_metadata_accounts_v3;
+use anchor_spl::metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3};
 use mpl_token_metadata::types::{Creator, DataV2};
 
 declare_id!("22aiFCK8g424HHtkhcZfJTrCx34eQMcRHNgsWGyXB8Vn");
@@ -147,7 +147,7 @@ fn create_metadata_for_token<'info>(
         uses: None,
     };
 
-    let accounts = mpl_token_metadata::accounts::CreateMetadataAccountsV3 {
+    let accounts = CreateMetadataAccountsV3 {
         metadata: ctx.accounts.metadata.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
         mint_authority: ctx.accounts.mint_authority.to_account_info(),
@@ -172,4 +172,4 @@ pub enum ErrorCode {
     InvalidMPCData,
     #[msg("Could not find bump for mint_authority PDA.")]
     InvalidBump,
-}
+        }
