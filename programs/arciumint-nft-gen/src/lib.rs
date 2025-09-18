@@ -20,6 +20,13 @@ pub struct MintNFT<'info> {
     pub signer: Signer<'info>,
 
     #[account(
+        seeds = [b"mint_authority"],
+        bump
+    )]
+    /// CHECK: PDA signer authority for mint
+    pub mint_authority: UncheckedAccount<'info>,
+
+    #[account(
         init,
         payer = signer,
         mint::decimals = 0,
@@ -27,13 +34,6 @@ pub struct MintNFT<'info> {
         mint::freeze_authority = mint_authority
     )]
     pub mint: Account<'info, Mint>,
-
-    #[account(
-        seeds = [b"mint_authority"],
-        bump
-    )]
-    /// CHECK: PDA signer
-    pub mint_authority: UncheckedAccount<'info>,
 
     /// CHECK: Metaplex metadata program
     pub token_metadata_program: UncheckedAccount<'info>,
@@ -152,4 +152,4 @@ pub enum ErrorCode {
     InvalidMPCData,
     #[msg("Could not find bump for mint_authority PDA.")]
     InvalidBump,
-    }
+        }
