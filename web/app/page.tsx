@@ -21,20 +21,18 @@ export default function Home() {
         <h1 className="text-lg font-semibold">Arciumint</h1>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="px-3 py-1 sm:px-4 sm:py-2 bg-white/10 rounded-lg hover:bg-white/20 transition text-sm sm:text-base">
+          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
 
-          <button className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition text-sm sm:text-base">
+          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-600 rounded-lg hover:bg-blue-700 transition">
             Faucet (Devnet)
           </button>
         </div>
       </header>
 
-      {/* Banner Video - FULL, NO BLACK BARS, NO CROP */}
-      <section className="relative w-full h-[260px] sm:h-[350px] overflow-hidden">
-
-        {/* VIDEO FIX: always full width, auto height, no crop */}
+      {/* Banner Video - FULL WIDTH, NO BLACK BARS, NO CROP */}
+      <section className="relative w-full h-[260px] sm:h-[350px] overflow-hidden bg-black">
         <video
           src="/banner.mp4"
           autoPlay
@@ -72,7 +70,6 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Footer */}
       <footer className="mt-auto py-6 text-center text-white/50 border-t border-white/10">
         © 2025 Arciumint — Devnet Demo
       </footer>
