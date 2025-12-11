@@ -16,14 +16,14 @@ export default function Home() {
 
       {/* Header */}
       <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Arciumint</h1>
+        <h1 className="text-lg font-semibold lg:text-xl">Arciumint</h1>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
             Faucet (Devnet)
           </button>
 
-          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
         </div>
@@ -46,11 +46,13 @@ export default function Home() {
         className="
           max-w-3xl mx-auto 
           px-6
-          py-12 space-y-6       /* Mobile defaults */
-          lg:py-8 lg:space-y-4  /* Desktop tighter spacing */
+          py-12 space-y-6        /* Mobile */
+          lg:py-6 lg:space-y-5   /* Desktop tighter */
+          lg:text-lg             /* Desktop bigger text */
+          lg:mb-10               /* Pull content lower to reduce empty space */
         "
       >
-        <h3 className="text-2xl font-semibold">About the Project</h3>
+        <h3 className="text-2xl font-semibold lg:text-3xl">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed">
           This platform offers a psychology-driven personality evaluation system that
@@ -77,7 +79,7 @@ export default function Home() {
         </p>
       </section>
 
-      <footer className="mt-auto py-6 text-center text-white/50 border-t border-white/10">
+      <footer className="mt-auto py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
         © 2025 Arciumint — Devnet Demo
       </footer>
     </main>
