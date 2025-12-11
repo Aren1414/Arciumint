@@ -29,8 +29,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ====== FULL VIDEO — NO CROP — NO EMPTY SPACE ====== */}
-      <section className="relative w-full aspect-[852/416] bg-black">
+      {/* ====== FULL VIDEO — NO CROP ====== */}
+      <section className="relative w-full aspect-[852/416] bg-black 
+                          sm:max-h-[360px] lg:max-h-[300px] overflow-hidden">
         <video
           src="/banner.mp4"
           autoPlay
@@ -42,7 +43,9 @@ export default function Home() {
       </section>
 
       {/* Description */}
-      <section className="max-w-3xl mx-auto py-12 px-6 space-y-6">
+      <section className="max-w-3xl mx-auto py-10 px-6 
+                          sm:py-12 
+                          lg:py-8 space-y-6 lg:space-y-4">
         <h3 className="text-2xl font-semibold">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed">
