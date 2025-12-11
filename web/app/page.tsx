@@ -6,41 +6,31 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-none">
-
-      {/* Global fixes */}
-      <style jsx global>{`
-        html, body {
-          background: #000;
-        }
-        * {
-          -webkit-tap-highlight-color: transparent;
-        }
-      `}</style>
+    <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-none touch-manipulation">
 
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-black" />
 
-        {/* Neon glows (tuned to avoid color band on mobile scroll) */}
-        <div className="absolute inset-0 opacity-35">
-          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[160px]" />
-          {/* Lift further from bottom and soften blur to avoid color band */}
-          <div className="absolute w-[640px] h-[640px] bottom-40 right-2 bg-indigo-600 blur-[160px]" />
+        {/* Neon glows */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
+          {/* فیکس نوار صورتی: پایین‌تر بردن و کاهش blur */}
+          <div className="absolute w-[700px] h-[700px] bottom-[80px] right-0 bg-indigo-600 blur-[160px]" />
         </div>
 
         {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-8 bg-[url('/grid-lines.svg')] bg-repeat" />
+        <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
 
-        {/* Solid bottom mask to fully cover any edge glow on mobile */}
-        <div className="absolute left-0 right-0 bottom-0 h-10 bg-black" />
+        {/* ماسک نهایی برای جلوگیری از نشت رنگ پایین */}
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-black" />
       </div>
 
       {/* Header */}
       <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between relative z-20">
         <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-        {/* Desktop: all buttons visible (no hamburger) */}
+        {/* Desktop buttons */}
         <div className="hidden sm:flex items-center gap-3">
           <Link href="/tests">
             <button className="px-4 py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
@@ -55,7 +45,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Mobile: only Connect + hamburger */}
+        {/* Mobile buttons */}
         <div className="flex sm:hidden items-center gap-3">
           <button className="px-3 py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
@@ -70,9 +60,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Mobile menu: inline, pushes video down; matches page background via translucent layer */}
+      {/* Mobile menu */}
       {menuOpen && (
-        <div className="sm:hidden w-full bg-white/10 backdrop-blur-sm border-b border-white/20 flex flex-col p-4 gap-3 z-30">
+        <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
           <Link href="/tests">
             <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
@@ -104,7 +94,7 @@ export default function Home() {
           This platform offers a psychology-driven personality evaluation system that
           analyzes user responses, generates a uniquely encoded NFT that reflects the
           individual’s behavioral profile, and processes all sensitive computations through
-          Arcíum’s MPC infrastructure. By leveraging secure multi-party computation,
+          Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
           personal data remains private while still enabling high-integrity behavioral
           insights suitable for both users and Web3-native applications.
         </p>
@@ -120,7 +110,7 @@ export default function Home() {
         <p className="text-white/80 leading-relaxed lg:text-3xl lg:leading-relaxed">
           The upcoming mainnet release will introduce expanded test categories, more
           advanced behavioral modeling, enriched analytics dashboards, and tighter
-          integration with Arcíum’s broader privacy architecture—all designed to provide a
+          integration with Arcium’s broader privacy architecture—all designed to provide a
           comprehensive and secure foundation for personality-based identity in Web3.
         </p>
       </section>
