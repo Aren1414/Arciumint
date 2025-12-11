@@ -19,35 +19,54 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
+      <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between relative z-20">
         <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-        <div className="flex items-center gap-3">
-          {/* Connect Wallet */}
+        {/* Desktop Buttons */}
+        <div className="hidden lg:flex items-center gap-3">
+          <Link href="/tests">
+            <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+              Start Assessment
+            </button>
+          </Link>
+          <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+            Faucet (Devnet)
+          </button>
           <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
+        </div>
 
-          {/* Hamburger Menu */}
+        {/* Mobile Buttons */}
+        <div className="flex lg:hidden items-center gap-3">
+          <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
+            Connect Wallet
+          </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition lg:hidden"
+            className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
           >
             ☰
           </button>
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {menuOpen && (
-        <div className="absolute top-14 right-4 bg-black border border-white/20 rounded-lg shadow-lg flex flex-col p-4 gap-3 lg:hidden">
+        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center gap-6 z-30 lg:hidden">
           <Link href="/tests">
-            <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+            <button className="w-48 px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition">
               Start Assessment
             </button>
           </Link>
-          <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="w-48 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
             Faucet (Devnet)
+          </button>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="w-48 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+          >
+            Close Menu
           </button>
         </div>
       )}
@@ -72,24 +91,16 @@ export default function Home() {
           This platform offers a psychology-driven personality evaluation system that
           analyzes user responses, generates a uniquely encoded NFT that reflects the
           individual’s behavioral profile, and processes all sensitive computations through
-          Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
-          personal data remains private while still enabling high-integrity behavioral
-          insights suitable for both users and Web3-native applications.
+          Arcium’s MPC infrastructure...
         </p>
 
         <p className="text-white/80 leading-relaxed lg:text-3xl lg:leading-relaxed">
           Users gain a deeper understanding of their cognitive patterns,
-          decision-making tendencies, and communication styles, empowering them with
-          actionable self-awareness. Projects receive access to aggregated,
-          privacy-preserving personality analytics secured by MPC, ensuring that no raw
-          personal information is ever exposed during evaluation or storage.
+          decision-making tendencies, and communication styles...
         </p>
 
         <p className="text-white/80 leading-relaxed lg:text-3xl lg:leading-relaxed">
-          The upcoming mainnet release will introduce expanded test categories, more
-          advanced behavioral modeling, enriched analytics dashboards, and tighter
-          integration with Arcium’s broader privacy architecture, all designed to provide a
-          comprehensive and secure foundation for personality-based identity in Web3.
+          The upcoming mainnet release will introduce expanded test categories...
         </p>
       </section>
 
