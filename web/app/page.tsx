@@ -6,16 +6,24 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <main className="relative min-h-screen flex flex-col text-white">
+    <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-contain">
 
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-black" />
+
+        {/* Neon glows (tuned to avoid color band on mobile scroll) */}
         <div className="absolute inset-0 opacity-40">
           <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
-          <div className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]" />
+          {/* Lifted off the very bottom to prevent pink/indigo band on scroll */}
+          <div className="absolute w-[700px] h-[700px] bottom-20 right-0 bg-indigo-600 blur-[200px]" />
         </div>
+
+        {/* Grid overlay */}
         <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
+
+        {/* Soft bottom fade to black to fully mask any edge glow on mobile */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black opacity-60" />
       </div>
 
       {/* Header */}
@@ -52,9 +60,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Mobile menu: inline, pushes video down */}
+      {/* Mobile menu: inline, pushes video down; matches page background */}
       {menuOpen && (
-        <div className="sm:hidden w-full bg-black/80 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
+        <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
           <Link href="/tests">
             <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
