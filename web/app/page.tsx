@@ -16,7 +16,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold lg:text-xl">Arciumint</h1>
+        <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
         <div className="flex items-center gap-2 sm:gap-4">
           <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
@@ -29,7 +29,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ====== FULL VIDEO — NO CROP — NO EMPTY SPACE ====== */}
+      {/* Banner Video */}
       <section className="relative w-full aspect-[852/416] bg-black">
         <video
           src="/banner.mp4"
@@ -46,15 +46,16 @@ export default function Home() {
         className="
           max-w-3xl mx-auto 
           px-6
-          py-12 space-y-6        /* Mobile */
-          lg:py-6 lg:space-y-5   /* Desktop tighter */
-          lg:text-lg             /* Desktop bigger text */
-          lg:mb-10               /* Pull content lower to reduce empty space */
+          py-10 space-y-6
+          lg:py-6 lg:space-y-4
+          pb-8
         "
       >
-        <h3 className="text-2xl font-semibold lg:text-3xl">About the Project</h3>
+        <h3 className="text-2xl font-semibold lg:text-4xl">
+          About the Project
+        </h3>
 
-        <p className="text-white/80 leading-relaxed">
+        <p className="text-white/80 leading-relaxed lg:text-xl">
           This platform offers a psychology-driven personality evaluation system that
           analyzes user responses, generates a uniquely encoded NFT that reflects the
           individual’s behavioral profile, and processes all sensitive computations through
@@ -63,7 +64,7 @@ export default function Home() {
           insights suitable for both users and Web3-native applications.
         </p>
 
-        <p className="text-white/80 leading-relaxed">
+        <p className="text-white/80 leading-relaxed lg:text-xl">
           Users gain a deeper understanding of their cognitive patterns, decision-making
           tendencies, and communication styles—empowering them with actionable
           self-awareness. Projects receive access to aggregated, privacy-preserving
@@ -71,7 +72,7 @@ export default function Home() {
           is ever exposed during evaluation or storage.
         </p>
 
-        <p className="text-white/80 leading-relaxed">
+        <p className="text-white/80 leading-relaxed lg:text-xl">
           The upcoming mainnet release will introduce expanded test categories, more
           advanced behavioral modeling, enriched analytics dashboards, and tighter
           integration with Arcium’s broader privacy architecture—all designed to provide a
@@ -79,7 +80,7 @@ export default function Home() {
         </p>
       </section>
 
-      <footer className="mt-auto py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
+      <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
         © 2025 Arciumint — Devnet Demo
       </footer>
     </main>
