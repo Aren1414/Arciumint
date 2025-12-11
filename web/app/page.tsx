@@ -9,14 +9,14 @@ export default function Home() {
     <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-none touch-manipulation">
 
       {/* Global Neon Background */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {/* پایه پس‌زمینه یکدست */}
         <div className="absolute inset-0 bg-black" />
 
-        
+        {/* Neon glows - محدود شده به بالا و وسط صفحه، نه پایین */}
         <div className="absolute inset-0 opacity-40">
-          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
-          <div className="absolute w-[600px] h-[600px] bottom-[120px] right-0 bg-indigo-600 blur-[150px]" />
+          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[160px]" />
+          <div className="absolute w-[600px] h-[600px] top-[40%] right-0 bg-indigo-600 blur-[140px]" />
         </div>
 
         {/* Grid overlay */}
