@@ -1,6 +1,20 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col">
+    <main className="relative min-h-screen text-white flex flex-col">
+
+      {/* Global Neon Background */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-black" />
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
+          <div className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]" />
+        </div>
+
+        {/* Fine neon lines */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 bg-[url('/grid-lines.svg')] bg-repeat opacity-10" />
+        </div>
+      </div>
 
       {/* Header */}
       <header className="w-full border-b border-white/10 py-4 px-6 flex items-center justify-between">
@@ -17,28 +31,16 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Banner / Video Section */}
-      <section className="relative w-full h-[300px] sm:h-[380px] overflow-hidden">
-
-        {/* Neon Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-700/40 to-indigo-800/40 blur-2xl" />
-
-        {/* Glow Layer */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-purple-500/20 blur-3xl" />
-          <div className="absolute inset-0 bg-indigo-500/20 blur-3xl" />
-        </div>
-
-        {/* Video */}
+      {/* Banner Video */}
+      <section className="relative w-full h-[320px] sm:h-[380px] bg-black flex items-center justify-center overflow-hidden">
         <video
           src="/banner.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-contain z-10"
+          className="w-full h-full object-contain"
         />
-
       </section>
 
       {/* Description Section */}
@@ -46,22 +48,22 @@ export default function Home() {
         <h3 className="text-2xl font-semibold">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed">
-          This platform enables users to take psychology-based personality tests,
-          generate a unique NFT from their results, and store it securely using
-          Arcium’s MPC infrastructure. Our goal is to help both individuals and
-          Web3 projects better understand behavioral patterns and decision-making styles.
+          This platform enables users to access psychology-based personality evaluations, 
+          generate a unique NFT from their results, and secure it through Arcium MPC infrastructure. 
+          The objective is to help individuals and Web3 projects better understand behavioral patterns 
+          and decision-making tendencies.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          For users, the insights can guide personal development and improve
-          communication in real-world or business scenarios. For projects, aggregated
-          insights (fully private and MPC-secured) help understand community traits
-          without exposing any individual’s identity.
+          For individuals, the insights support personal development and improve communication 
+          in both real-world and professional environments. For projects, aggregated insights—secured 
+          privately through MPC—provide a deeper understanding of community profiles without exposing 
+          individual identities.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          On mainnet, we plan to expand test categories and provide on-chain
-          personality analytics with strong privacy guarantees powered by Arcium.
+          On mainnet, additional test categories and advanced on-chain personality analytics will be 
+          introduced, backed by Arcium’s privacy-preserving architecture.
         </p>
       </section>
 
