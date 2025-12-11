@@ -12,21 +12,28 @@ export default function Home() {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #0b0018;
+          background: #0b0018 !important;
         }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden touch-manipulation">
 
+        {/* BACKGROUND FIXED — UNIFIED & NON-NEON */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
+          {/* Base solid background */}
           <div className="absolute inset-0 bg-[#0b0018]" />
-          <div className="absolute w-[900px] h-[900px] top-[20%] left-[-30%] bg-purple-700 blur-[160px] opacity-40" />
-          <div className="absolute w-[700px] h-[700px] top-[40%] right-[-20%] bg-indigo-700 blur-[160px] opacity-40" />
+
+          {/* Very subtle glows (removed neon effect) */}
+          <div className="absolute w-[900px] h-[900px] top-[15%] left-[-25%] bg-purple-700 blur-[200px] opacity-15" />
+          <div className="absolute w-[700px] h-[700px] top-[45%] right-[-20%] bg-indigo-700 blur-[200px] opacity-15" />
+
+          {/* Grid overlay */}
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
         </div>
 
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
+
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/tests">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
@@ -40,6 +47,7 @@ export default function Home() {
               Connect Wallet
             </button>
           </div>
+
           <div className="flex sm:hidden items-center gap-3">
             <button className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
               Connect Wallet
@@ -79,6 +87,7 @@ export default function Home() {
 
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
+
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             This platform offers a psychology-driven personality evaluation system that
             analyzes user responses, generates a uniquely encoded NFT that reflects the
@@ -87,6 +96,7 @@ export default function Home() {
             personal data remains private while still enabling high-integrity behavioral
             insights suitable for both users and Web3-native applications.
           </p>
+
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             Users gain a deeper understanding of their cognitive patterns, decision-making
             tendencies, and communication styles—empowering them with actionable
@@ -94,6 +104,7 @@ export default function Home() {
             personality analytics secured by MPC, ensuring that no raw personal information
             is ever exposed during evaluation or storage.
           </p>
+
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             The upcoming mainnet release will introduce expanded test categories, more
             advanced behavioral modeling, enriched analytics dashboards, and tighter
