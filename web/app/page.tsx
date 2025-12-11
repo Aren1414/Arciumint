@@ -47,15 +47,15 @@ export default function Home() {
           max-w-3xl mx-auto 
           px-6
           py-10 space-y-6
-          lg:py-6 lg:space-y-4
-          pb-8
+          lg:py-8 lg:space-y-6
+          lg:mb-8
         "
       >
-        <h3 className="text-2xl font-semibold lg:text-4xl">
+        <h3 className="text-2xl font-semibold lg:text-5xl">
           About the Project
         </h3>
 
-        <p className="text-white/80 leading-relaxed lg:text-xl">
+        <p className="text-white/80 leading-relaxed lg:text-2xl lg:leading-relaxed">
           This platform offers a psychology-driven personality evaluation system that
           analyzes user responses, generates a uniquely encoded NFT that reflects the
           individual’s behavioral profile, and processes all sensitive computations through
@@ -64,7 +64,7 @@ export default function Home() {
           insights suitable for both users and Web3-native applications.
         </p>
 
-        <p className="text-white/80 leading-relaxed lg:text-xl">
+        <p className="text-white/80 leading-relaxed lg:text-2xl lg:leading-relaxed">
           Users gain a deeper understanding of their cognitive patterns, decision-making
           tendencies, and communication styles—empowering them with actionable
           self-awareness. Projects receive access to aggregated, privacy-preserving
@@ -72,7 +72,7 @@ export default function Home() {
           is ever exposed during evaluation or storage.
         </p>
 
-        <p className="text-white/80 leading-relaxed lg:text-xl">
+        <p className="text-white/80 leading-relaxed lg:text-2xl lg:leading-relaxed">
           The upcoming mainnet release will introduce expanded test categories, more
           advanced behavioral modeling, enriched analytics dashboards, and tighter
           integration with Arcium’s broader privacy architecture—all designed to provide a
