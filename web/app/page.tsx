@@ -22,8 +22,8 @@ export default function Home() {
       <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between relative z-20">
         <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-        {/* Desktop Buttons */}
-        <div className="hidden lg:flex items-center gap-3">
+        {/* Desktop: all buttons visible (no hamburger) */}
+        <div className="hidden sm:flex items-center gap-3">
           <Link href="/tests">
             <button className="px-4 py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
@@ -37,23 +37,24 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Mobile Buttons */}
-        <div className="flex lg:hidden items-center gap-3">
+        {/* Mobile: only Connect + hamburger (strictly hidden on >= sm) */}
+        <div className="flex sm:hidden items-center gap-3">
           <button className="px-3 py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => setMenuOpen((v) => !v)}
             className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+            aria-label="Open menu"
           >
             ☰
           </button>
         </div>
       </header>
 
-      {/* Mobile Menu (appears below header, overlaying video) */}
+      {/* Mobile menu: appears below header, overlays video; hidden on >= sm */}
       {menuOpen && (
-        <div className="absolute top-[60px] right-4 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg flex flex-col p-4 gap-3 z-30 lg:hidden">
+        <div className="absolute sm:hidden top-[60px] right-4 left-4 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg flex flex-col p-4 gap-3 z-30">
           <Link href="/tests">
             <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
