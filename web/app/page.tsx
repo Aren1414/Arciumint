@@ -37,7 +37,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Mobile: only Connect + hamburger (strictly hidden on >= sm) */}
+        {/* Mobile: only Connect + hamburger */}
         <div className="flex sm:hidden items-center gap-3">
           <button className="px-3 py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
@@ -52,9 +52,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Mobile menu: appears below header, overlays video; hidden on >= sm */}
+      {/* Mobile menu: inline, pushes video down */}
       {menuOpen && (
-        <div className="absolute sm:hidden top-[60px] right-4 left-4 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg flex flex-col p-4 gap-3 z-30">
+        <div className="sm:hidden w-full bg-black/80 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
           <Link href="/tests">
             <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
