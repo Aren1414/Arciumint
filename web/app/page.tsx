@@ -6,24 +6,34 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-contain">
+    <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden overscroll-y-none">
+
+      {/* Global fixes */}
+      <style jsx global>{`
+        html, body {
+          background: #000;
+        }
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+      `}</style>
 
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-black" />
 
         {/* Neon glows (tuned to avoid color band on mobile scroll) */}
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
-          {/* Lifted off the very bottom to prevent pink/indigo band on scroll */}
-          <div className="absolute w-[700px] h-[700px] bottom-20 right-0 bg-indigo-600 blur-[200px]" />
+        <div className="absolute inset-0 opacity-35">
+          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[160px]" />
+          {/* Lift further from bottom and soften blur to avoid color band */}
+          <div className="absolute w-[640px] h-[640px] bottom-40 right-2 bg-indigo-600 blur-[160px]" />
         </div>
 
         {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
+        <div className="absolute inset-0 opacity-8 bg-[url('/grid-lines.svg')] bg-repeat" />
 
-        {/* Soft bottom fade to black to fully mask any edge glow on mobile */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black opacity-60" />
+        {/* Solid bottom mask to fully cover any edge glow on mobile */}
+        <div className="absolute left-0 right-0 bottom-0 h-10 bg-black" />
       </div>
 
       {/* Header */}
@@ -60,9 +70,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Mobile menu: inline, pushes video down; matches page background */}
+      {/* Mobile menu: inline, pushes video down; matches page background via translucent layer */}
       {menuOpen && (
-        <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
+        <div className="sm:hidden w-full bg-white/10 backdrop-blur-sm border-b border-white/20 flex flex-col p-4 gap-3 z-30">
           <Link href="/tests">
             <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
@@ -94,7 +104,7 @@ export default function Home() {
           This platform offers a psychology-driven personality evaluation system that
           analyzes user responses, generates a uniquely encoded NFT that reflects the
           individual’s behavioral profile, and processes all sensitive computations through
-          Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
+          Arcíum’s MPC infrastructure. By leveraging secure multi-party computation,
           personal data remains private while still enabling high-integrity behavioral
           insights suitable for both users and Web3-native applications.
         </p>
@@ -110,7 +120,7 @@ export default function Home() {
         <p className="text-white/80 leading-relaxed lg:text-3xl lg:leading-relaxed">
           The upcoming mainnet release will introduce expanded test categories, more
           advanced behavioral modeling, enriched analytics dashboards, and tighter
-          integration with Arcium’s broader privacy architecture—all designed to provide a
+          integration with Arcíum’s broader privacy architecture—all designed to provide a
           comprehensive and secure foundation for personality-based identity in Web3.
         </p>
       </section>
