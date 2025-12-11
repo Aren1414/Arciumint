@@ -8,55 +8,73 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        html,
-        body,
-        #__next {
+        /* Base reset + base solid background (single, uniform) */
+        html, body, #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: linear-gradient(180deg, #050009 0%, #0e0220 100%);
+          background: #050009; /* deep uniform base */
           -webkit-overflow-scrolling: touch;
-          overscroll-behavior: auto;
+          overscroll-behavior: auto; /* keep pull-to-refresh enabled */
         }
 
-        .glow-wrapper {
+        /* Make the full-screen neon overlay a single composited layer */
+        .neon-overlay {
           position: fixed;
           inset: 0;
-          z-index: -10;
           pointer-events: none;
-          overflow: hidden;
+          z-index: -10;
           will-change: transform, opacity;
           transform: translateZ(0);
         }
 
-        .glow-layer {
+        /* Full-screen radial gradients produce a uniform neon look
+           without producing partial repaint artifacts on scroll */
+        .neon-bg {
           position: absolute;
           inset: 0;
-          opacity: 0.45;
+          background-image:
+            radial-gradient(
+              circle at 10% 20%,
+              rgba(124, 58, 237, 0.18) 0%,
+              rgba(124, 58, 237, 0.09) 15%,
+              rgba(124, 58, 237, 0.03) 30%,
+              transparent 60%
+            ),
+            radial-gradient(
+              circle at 90% 75%,
+              rgba(79, 70, 229, 0.16) 0%,
+              rgba(79, 70, 229, 0.07) 18%,
+              rgba(79, 70, 229, 0.02) 35%,
+              transparent 70%
+            );
           mix-blend-mode: screen;
-          will-change: transform;
-          transform: translateZ(0);
+          opacity: 0.95;
+        }
+
+        /* Optional subtle grid on top */
+        .neon-grid {
+          position: absolute;
+          inset: 0;
+          background-image: url('/grid-lines.svg');
+          background-repeat: repeat;
+          opacity: 0.08;
+        }
+
+        /* Prevent tap highlight and improve scrolling visuals */
+        main {
+          -webkit-tap-highlight-color: transparent;
         }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
 
-        {/* === UNIFIED BACKGROUND (FINAL FIX) === */}
-        <div className="glow-wrapper">
-          {/* Glow layer */}
-          <div className="glow-layer">
-            <div
-              className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[200px]"
-            />
-            <div
-              className="absolute w-[800px] h-[800px] bottom-0 right-0 bg-indigo-600 blur-[220px]"
-            />
-          </div>
-
-          {/* Grid overlay */}
-          <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
+        {/* === FULL-SCREEN UNIFIED NEON OVERLAY (single composited layer) === */}
+        <div className="neon-overlay" aria-hidden="true">
+          <div className="neon-bg" />
+          <div className="neon-grid" />
         </div>
-        {/* === END BACKGROUND === */}
+        {/* === end overlay === */}
 
         {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
@@ -68,9 +86,11 @@ export default function Home() {
                 Start Assessment
               </button>
             </Link>
+
             <button className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
+
             <button className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition shadow-md">
               Connect Wallet
             </button>
@@ -89,7 +109,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* MOBILE MENU */}
+        {/* MOBILE DROPDOWN */}
         {menuOpen && (
           <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
@@ -103,8 +123,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIDEO */}
-        <section className="relative w-full bg-black">
+        {/* BANNER VIDEO — unchanged */}
+        <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
             autoPlay
@@ -115,25 +135,32 @@ export default function Home() {
           />
         </section>
 
-        {/* CONTENT */}
+        {/* CONTENT — full text preserved */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            This platform offers a psychology-driven personality evaluation system that analyzes user 
-            responses, generates a uniquely encoded NFT that reflects the individual’s behavioral profile, 
-            and processes all sensitive computations through Arcium’s MPC infrastructure.
+            This platform offers a psychology-driven personality evaluation system that
+            analyzes user responses, generates a uniquely encoded NFT that reflects the
+            individual’s behavioral profile, and processes all sensitive computations through
+            Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
+            personal data remains private while still enabling high-integrity behavioral
+            insights suitable for both users and Web3-native applications.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            Users gain a deeper understanding of their cognitive patterns, decision-making tendencies, 
-            and communication styles—empowering them with actionable self-awareness.
+            Users gain a deeper understanding of their cognitive patterns, decision-making
+            tendencies, and communication styles—empowering them with actionable
+            self-awareness. Projects receive access to aggregated, privacy-preserving
+            personality analytics secured by MPC, ensuring that no raw personal information
+            is ever exposed during evaluation or storage.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            The upcoming mainnet release will introduce expanded test categories, more advanced behavioral 
-            modeling, enriched analytics dashboards, and tighter integration with Arcium’s broader privacy 
-            architecture.
+            The upcoming mainnet release will introduce expanded test categories, more
+            advanced behavioral modeling, enriched analytics dashboards, and tighter
+            integration with Arcium’s broader privacy architecture—all designed to provide a
+            comprehensive and secure foundation for personality-based identity in Web3.
           </p>
         </section>
 
@@ -144,4 +171,4 @@ export default function Home() {
       </main>
     </>
   );
-}
+  }
