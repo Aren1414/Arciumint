@@ -1,15 +1,15 @@
 export default function Home() {
   return (
-    <main className="relative min-h-fit flex flex-col text-white overflow-hidden">
+    <main className="relative min-h-screen flex flex-col text-white">
 
       {/* Global Neon Background */}
-      <div className="pointer-events-none fixed inset-0 -z-10 max-h-screen">
-        <div className="absolute inset-0 bg-black" />
-        <div className="absolute inset-0 opacity-40">
+      <div className="pointer-events-none absolute top-0 left-0 w-full h-full -z-10">
+        <div className="absolute w-full h-full bg-black" />
+        <div className="absolute w-full h-full opacity-40">
           <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
           <div className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]" />
         </div>
-        <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
+        <div className="absolute w-full h-full opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
       </div>
 
       {/* Header */}
@@ -26,14 +26,14 @@ export default function Home() {
       </header>
 
       {/* Banner Video */}
-      <section className="relative w-full aspect-[852/416] bg-black">
+      <section className="relative w-full bg-black">
         <video
           src="/banner.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-contain"
+          className="w-full h-auto object-cover aspect-video"
         />
       </section>
 
