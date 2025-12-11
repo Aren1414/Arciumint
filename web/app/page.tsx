@@ -21,9 +21,9 @@ export default function Home() {
 
         <div className="pointer-events-none fixed inset-0 -z-10">
           <div className="absolute inset-0 bg-[#0b0018]" />
-          <div className="absolute inset-0 opacity-50">
+          <div className="absolute inset-0 opacity-40">
             <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-700 blur-[180px]" />
-            <div className="absolute w-[700px] h-[700px] top-1/3 right-0 bg-indigo-700 blur-[160px]" />
+            <div className="absolute w-[700px] h-[700px] -bottom-40 right-0 bg-indigo-700 blur-[180px]" />
           </div>
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
         </div>
