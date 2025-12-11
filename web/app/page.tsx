@@ -20,20 +20,19 @@ export default function Home() {
       <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Start Assessment Button */}
-          <Link href="/tests">
-            <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition whitespace-nowrap">
+          <Link href="/tests" className="shrink-0">
+            <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition">
               Start Assessment
             </button>
           </Link>
 
-          <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
+          <button className="shrink-0 px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
             Faucet (Devnet)
           </button>
 
-          <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition whitespace-nowrap">
+          <button className="shrink-0 px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
         </div>
