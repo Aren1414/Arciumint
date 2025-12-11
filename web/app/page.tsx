@@ -18,10 +18,10 @@ export default function Home() {
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden touch-manipulation">
 
-        <div className="fixed inset-0 -z-10">
+        <div className="fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-[#0b0018]" />
-          <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-700 blur-[180px] opacity-40" />
-          <div className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-700 blur-[180px] opacity-40" />
+          <div className="absolute w-[900px] h-[900px] top-[20%] left-[-30%] bg-purple-700 blur-[160px] opacity-40" />
+          <div className="absolute w-[700px] h-[700px] top-[40%] right-[-20%] bg-indigo-700 blur-[160px] opacity-40" />
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
         </div>
 
