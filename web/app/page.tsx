@@ -3,7 +3,7 @@ export default function Home() {
     <main className="relative flex flex-col text-white">
 
       {/* Global Neon Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      <div className="pointer-events-none absolute inset-0 -z-10 h-full">
         <div className="absolute inset-0 bg-black" />
 
         <div className="absolute inset-0 opacity-40">
