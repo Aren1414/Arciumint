@@ -10,20 +10,17 @@ export default function Home() {
 
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
+        
         <div className="absolute inset-0 bg-black" />
 
-        {/* Neon glows */}
+        
         <div className="absolute inset-0 opacity-40">
           <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
-          {/* فیکس نوار صورتی: پایین‌تر بردن و کاهش blur */}
-          <div className="absolute w-[700px] h-[700px] bottom-[80px] right-0 bg-indigo-600 blur-[160px]" />
+          <div className="absolute w-[600px] h-[600px] bottom-[120px] right-0 bg-indigo-600 blur-[150px]" />
         </div>
 
         {/* Grid overlay */}
         <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
-
-        {/* ماسک نهایی برای جلوگیری از نشت رنگ پایین */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-black" />
       </div>
 
       {/* Header */}
