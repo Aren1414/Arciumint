@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="relative min-h-screen text-white flex flex-col">
+    <main className="relative text-white flex flex-col">  {/* min-h-screen حذف شد */}
 
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -46,10 +46,9 @@ export default function Home() {
         className="
           max-w-3xl mx-auto 
           px-6
-          py-10 space-y-6                /* mobile defaults */
-          lg:py-20 lg:space-y-8         /* desktop: more vertical space (approx. 2x) */
-          lg:min-h-[60vh]               /* ensure description block takes substantial height on desktop */
-          lg:mb-8
+          py-10 space-y-6
+          lg:py-20 lg:space-y-8   /* فقط padding افزایش یافت */
+          lg:mb-10
         "
       >
         <h3 className="text-2xl font-semibold lg:text-5xl">
@@ -81,6 +80,7 @@ export default function Home() {
         </p>
       </section>
 
+      {/* Footer */}
       <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
         © 2025 Arciumint — Devnet Demo
       </footer>
