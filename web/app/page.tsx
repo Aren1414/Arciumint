@@ -1,9 +1,9 @@
 export default function Home() {
   return (
-    <main className="relative flex flex-col text-white">
+    <main className="relative min-h-screen flex flex-col text-white">
 
       {/* Global Neon Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 h-full">
+      <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-black" />
 
         <div className="absolute inset-0 opacity-40">
@@ -42,7 +42,7 @@ export default function Home() {
       </section>
 
       {/* Description */}
-      <section className="max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6 lg:space-y-8">
+      <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6 lg:space-y-8">
         <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed lg:text-3xl lg:leading-relaxed">
