@@ -8,47 +8,55 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* یک‌دست‌سازی و فعال‌کردن Pull-to-Refresh */
-        html, body, #__next {
+        html,
+        body,
+        #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #050009; /* مشکی عمیق یکپارچه */
+          background: linear-gradient(180deg, #050009 0%, #0e0220 100%);
           -webkit-overflow-scrolling: touch;
-          overscroll-behavior: auto; /* Pull-to-Refresh دوباره فعال */
+          overscroll-behavior: auto;
         }
 
-        /* Glow layer fix */
-        .bg-glow {
+        .glow-wrapper {
+          position: fixed;
+          inset: 0;
+          z-index: -10;
+          pointer-events: none;
+          overflow: hidden;
+          will-change: transform, opacity;
           transform: translateZ(0);
-          will-change: opacity, transform;
-          backface-visibility: hidden;
+        }
+
+        .glow-layer {
+          position: absolute;
+          inset: 0;
+          opacity: 0.45;
+          mix-blend-mode: screen;
+          will-change: transform;
+          transform: translateZ(0);
         }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
 
-        {/* FIXED UNIFIED BACKGROUND — NO GRADIENT */}
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          {/* Solid base */}
-          <div className="absolute inset-0 bg-black" />
-
-          {/* Glow fields */}
-          <div className="absolute inset-0 opacity-40 overflow-hidden bg-glow"
-               style={{ overscrollBehavior: "contain" }}>
+        {/* === UNIFIED BACKGROUND (FINAL FIX) === */}
+        <div className="glow-wrapper">
+          {/* Glow layer */}
+          <div className="glow-layer">
             <div
-              className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]"
-              aria-hidden="true"
+              className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[200px]"
             />
             <div
-              className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]"
-              aria-hidden="true"
+              className="absolute w-[800px] h-[800px] bottom-0 right-0 bg-indigo-600 blur-[220px]"
             />
           </div>
 
           {/* Grid overlay */}
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
         </div>
+        {/* === END BACKGROUND === */}
 
         {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
@@ -95,7 +103,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* BANNER VIDEO */}
+        {/* VIDEO */}
         <section className="relative w-full bg-black">
           <video
             src="/banner.mp4"
@@ -107,32 +115,25 @@ export default function Home() {
           />
         </section>
 
-        {/* TEXT SECTION */}
+        {/* CONTENT */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            This platform offers a psychology-driven personality evaluation system that
-            analyzes user responses, generates a uniquely encoded NFT that reflects the
-            individual’s behavioral profile, and processes all sensitive computations through
-            Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
-            personal data remains private while still enabling high-integrity behavioral
-            insights suitable for both users and Web3-native applications.
+            This platform offers a psychology-driven personality evaluation system that analyzes user 
+            responses, generates a uniquely encoded NFT that reflects the individual’s behavioral profile, 
+            and processes all sensitive computations through Arcium’s MPC infrastructure.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            Users gain a deeper understanding of their cognitive patterns, decision-making
-            tendencies, and communication styles—empowering them with actionable
-            self-awareness. Projects receive access to aggregated, privacy-preserving
-            personality analytics secured by MPC, ensuring that no raw personal information
-            is ever exposed during evaluation or storage.
+            Users gain a deeper understanding of their cognitive patterns, decision-making tendencies, 
+            and communication styles—empowering them with actionable self-awareness.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
-            The upcoming mainnet release will introduce expanded test categories, more
-            advanced behavioral modeling, enriched analytics dashboards, and tighter
-            integration with Arcium’s broader privacy architecture—all designed to provide a
-            comprehensive and secure foundation for personality-based identity in Web3.
+            The upcoming mainnet release will introduce expanded test categories, more advanced behavioral 
+            modeling, enriched analytics dashboards, and tighter integration with Arcium’s broader privacy 
+            architecture.
           </p>
         </section>
 
