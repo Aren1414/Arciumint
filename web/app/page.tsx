@@ -46,8 +46,9 @@ export default function Home() {
         className="
           max-w-3xl mx-auto 
           px-6
-          py-10 space-y-6
-          lg:py-8 lg:space-y-6
+          py-10 space-y-6                /* mobile defaults */
+          lg:py-20 lg:space-y-8         /* desktop: more vertical space (approx. 2x) */
+          lg:min-h-[60vh]               /* ensure description block takes substantial height on desktop */
           lg:mb-8
         "
       >
