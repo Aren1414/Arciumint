@@ -17,36 +17,35 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header className="w-full border-b border-white/10 py-4 px-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Arciumint</h1>
+      <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Arciumint</h1>
 
-        <div className="flex items-center gap-4">
-          <button className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button className="px-3 py-1 sm:px-4 sm:py-2 bg-white/10 rounded-lg hover:bg-white/20 transition text-sm sm:text-base">
             Connect Wallet
           </button>
 
-          <button className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition text-sm sm:text-base">
             Faucet (Devnet)
           </button>
         </div>
       </header>
 
-      {/* Banner Video - FULL VIDEO, NO CROP */}
-      <section className="relative w-full h-[260px] sm:h-[350px] flex items-center justify-center overflow-hidden bg-black">
+      {/* Banner Video - FULL, NO BLACK BARS, NO CROP */}
+      <section className="relative w-full h-[260px] sm:h-[350px] overflow-hidden">
 
-        {/* Neon background behind the video to avoid empty areas */}
-        <div className="absolute inset-0 -z-10 opacity-40">
-          <div className="absolute w-[700px] h-[700px] -top-20 left-1/2 -translate-x-1/2 bg-purple-700 blur-[160px]" />
-          <div className="absolute w-[600px] h-[600px] bottom-0 left-1/3 bg-indigo-700 blur-[200px]" />
-        </div>
-
+        {/* VIDEO FIX: always full width, auto height, no crop */}
         <video
           src="/banner.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className="max-w-full max-h-full object-contain"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                     w-full h-auto min-h-full"
+          style={{
+            objectFit: "fill"
+          }}
         />
       </section>
 
