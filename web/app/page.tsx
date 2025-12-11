@@ -46,21 +46,27 @@ export default function Home() {
         <h3 className="text-2xl font-semibold">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed">
-          This platform provides psychology-based personality evaluation tests, generates
-          a unique NFT based on the results, and secures it using Arcium’s MPC
-          infrastructure. The goal is to deliver deeper insight into behavioral tendencies
-          for both users and Web3 projects.
+          This platform offers a psychology-driven personality evaluation system that
+          analyzes user responses, generates a uniquely encoded NFT that reflects the
+          individual’s behavioral profile, and processes all sensitive computations through
+          Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
+          personal data remains private while still enabling high-integrity behavioral
+          insights suitable for both users and Web3-native applications.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          Users benefit through increased self-awareness and improved communication
-          strategies. Projects gain access to aggregated personality insights secured
-          through MPC, without exposing any sensitive information.
+          Users gain a deeper understanding of their cognitive patterns, decision-making
+          tendencies, and communication styles—empowering them with actionable
+          self-awareness. Projects receive access to aggregated, privacy-preserving
+          personality analytics secured by MPC, ensuring that no raw personal information
+          is ever exposed during evaluation or storage.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          The mainnet version will include additional test categories, enhanced analytics,
-          and expanded personality modeling powered by Arcium’s privacy architecture.
+          The upcoming mainnet release will introduce expanded test categories, more
+          advanced behavioral modeling, enriched analytics dashboards, and tighter
+          integration with Arcium’s broader privacy architecture—all designed to provide a
+          comprehensive and secure foundation for personality-based identity in Web3.
         </p>
       </section>
 
