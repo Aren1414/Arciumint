@@ -13,17 +13,17 @@ export default function Home() {
           padding: 0;
           height: 100%;
           overscroll-behavior: none;
-          background: #000;
+          background: #0b0018;
         }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden touch-manipulation">
 
         <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-black" />
-          <div className="absolute inset-0 opacity-40">
-            <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[160px]" />
-            <div className="absolute w-[600px] h-[600px] top-1/3 right-0 bg-indigo-600 blur-[140px]" />
+          <div className="absolute inset-0 bg-[#0b0018]" />
+          <div className="absolute inset-0 opacity-50">
+            <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-700 blur-[180px]" />
+            <div className="absolute w-[700px] h-[700px] top-1/3 right-0 bg-indigo-700 blur-[160px]" />
           </div>
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
         </div>
@@ -70,7 +70,7 @@ export default function Home() {
           </div>
         )}
 
-        <section className="relative w-full bg-black">
+        <section className="relative w-full bg-[#0b0018]">
           <video
             src="/banner.mp4"
             autoPlay
