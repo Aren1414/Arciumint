@@ -2,5 +2,15 @@
   "dependencies": {
     "@arcium-hq/client": "^0.5.2",
     "@solana/web3.js": "^1.98.4"
-  }
+  },
+  "name": "arciumint",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
