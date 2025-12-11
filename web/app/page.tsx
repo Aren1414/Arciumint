@@ -12,20 +12,19 @@ export default function Home() {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #0b0018 !important;
+          background: linear-gradient(180deg, #0b0018 0%, #0f022b 100%);
         }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden touch-manipulation">
 
-        {/* BACKGROUND FIXED — UNIFIED & NON-NEON */}
+        {/* BACKGROUND FIXED — UNIFIED NEON */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
-          {/* Base solid background */}
-          <div className="absolute inset-0 bg-[#0b0018]" />
-
-          {/* Very subtle glows (removed neon effect) */}
-          <div className="absolute w-[900px] h-[900px] top-[15%] left-[-25%] bg-purple-700 blur-[200px] opacity-15" />
-          <div className="absolute w-[700px] h-[700px] top-[45%] right-[-20%] bg-indigo-700 blur-[200px] opacity-15" />
+          {/* Gradient base handled globally */}
+          
+          {/* Subtle neons */}
+          <div className="absolute w-[900px] h-[900px] top-[20%] left-[-30%] bg-purple-700 blur-[220px] opacity-20" />
+          <div className="absolute w-[700px] h-[700px] top-[40%] right-[-20%] bg-indigo-700 blur-[220px] opacity-20" />
 
           {/* Grid overlay */}
           <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
