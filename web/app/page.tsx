@@ -21,17 +21,17 @@ export default function Home() {
         <h1 className="text-lg font-semibold">Arciumint</h1>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
-            Connect Wallet
-          </button>
-
           <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-blue-600 rounded-lg hover:bg-blue-700 transition">
             Faucet (Devnet)
+          </button>
+
+          <button className="px-2 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
+            Connect Wallet
           </button>
         </div>
       </header>
 
-      {/* Banner Video - FULL WIDTH, NO BLACK BARS, NO CROP */}
+      {/* ================= FULL VIDEO — NO CROP — NO EMPTY SPACE ================= */}
       <section className="relative w-full h-[260px] sm:h-[350px] overflow-hidden bg-black">
         <video
           src="/banner.mp4"
@@ -39,10 +39,15 @@ export default function Home() {
           loop
           muted
           playsInline
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                     w-full h-auto min-h-full"
+          className="
+            absolute top-1/2 left-1/2 
+            -translate-x-1/2 -translate-y-1/2
+            w-auto h-auto
+            min-w-full min-h-full
+            max-w-none max-h-none
+          "
           style={{
-            objectFit: "fill"
+            objectFit: "contain"
           }}
         />
       </section>
@@ -53,20 +58,20 @@ export default function Home() {
 
         <p className="text-white/80 leading-relaxed">
           This platform provides psychology-based personality evaluation tests, generates
-          a unique NFT based on the results, and secures the asset using Arcium’s MPC
-          infrastructure. The purpose is to offer deeper insight into behavioral tendencies
+          a unique NFT based on the results, and secures it using Arcium’s MPC
+          infrastructure. The goal is to deliver deeper insight into behavioral tendencies
           for both users and Web3 projects.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          Individuals benefit through better self-awareness and improved communication
-          approaches. Projects gain access to aggregated, privacy-preserving insights
-          without exposing any personal data, ensuring strong security through MPC.
+          Users benefit through increased self-awareness and improved communication
+          strategies. Projects gain access to aggregated personality insights secured
+          through MPC, without exposing any sensitive information.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          The mainnet roadmap includes additional test categories and advanced personality
-          analytics, fully powered by Arcium’s privacy architecture.
+          The mainnet version will include additional test categories, enhanced analytics,
+          and expanded personality modeling powered by Arcium’s privacy architecture.
         </p>
       </section>
 
