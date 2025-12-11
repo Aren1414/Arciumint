@@ -8,44 +8,40 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* پایه صفحه و کنترل overscroll */
+        /* یک‌دست‌سازی و فعال‌کردن Pull-to-Refresh */
         html, body, #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #0b0018;
-          -webkit-overflow-scrolling: touch; /* smooth touch scrolling */
-          overscroll-behavior: contain; /* جلوگیری از نمایش اثرات overscroll بیرونی */
+          background: #050009; /* مشکی عمیق یکپارچه */
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: auto; /* Pull-to-Refresh دوباره فعال */
         }
 
-        /* اجزای glow را به لایهٔ compositor منتقل می‌کنیم تا artifact نداشته باشند */
+        /* Glow layer fix */
         .bg-glow {
           transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-          will-change: transform, opacity;
+          will-change: opacity, transform;
           backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
         }
-
-        /* اطمینان از اینکه ویدیو یا سایر عناصر باعث اسکرول اضافی نمی‌شوند */
-        main { -webkit-tap-highlight-color: transparent; }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
 
-        {/* GLOBAL UNIFIED NEON BACKGROUND (fixed) */}
+        {/* FIXED UNIFIED BACKGROUND — NO GRADIENT */}
         <div className="pointer-events-none fixed inset-0 -z-10">
           {/* Solid base */}
           <div className="absolute inset-0 bg-black" />
 
-          {/* Neons — کلاس bg-glow اضافه شده */}
-          <div className="absolute inset-0 opacity-40">
+          {/* Glow fields */}
+          <div className="absolute inset-0 opacity-40 overflow-hidden bg-glow"
+               style={{ overscrollBehavior: "contain" }}>
             <div
-              className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px] bg-glow"
+              className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]"
               aria-hidden="true"
             />
             <div
-              className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px] bg-glow"
+              className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]"
               aria-hidden="true"
             />
           </div>
