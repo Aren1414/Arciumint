@@ -17,22 +17,23 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header className="w-full border-b border-white/10 py-3 px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+      <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
+
           {/* Start Assessment Button */}
           <Link href="/tests">
-            <button className="w-full sm:w-auto px-4 py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+            <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition whitespace-nowrap">
               Start Assessment
             </button>
           </Link>
 
-          <button className="w-full sm:w-auto px-4 py-2 text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition whitespace-nowrap">
             Faucet (Devnet)
           </button>
 
-          <button className="w-full sm:w-auto px-4 py-2 text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <button className="px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition whitespace-nowrap">
             Connect Wallet
           </button>
         </div>
