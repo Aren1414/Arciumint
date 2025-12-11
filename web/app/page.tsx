@@ -1,9 +1,9 @@
 export default function Home() {
   return (
-    <main className="relative min-h-0 flex flex-col text-white">
+    <main className="relative min-h-fit flex flex-col text-white overflow-hidden">
 
       {/* Global Neon Background */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
+      <div className="pointer-events-none fixed inset-0 -z-10 max-h-screen">
         <div className="absolute inset-0 bg-black" />
         <div className="absolute inset-0 opacity-40">
           <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
