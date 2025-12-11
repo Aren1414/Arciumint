@@ -25,21 +25,21 @@ export default function Home() {
         {/* Desktop Buttons */}
         <div className="hidden lg:flex items-center gap-3">
           <Link href="/tests">
-            <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+            <button className="px-4 py-2 text-sm lg:text-base bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
             </button>
           </Link>
-          <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="px-4 py-2 text-sm lg:text-base bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
             Faucet (Devnet)
           </button>
-          <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <button className="px-4 py-2 text-sm lg:text-base bg-white/10 rounded-lg hover:bg-white/20 transition shadow-md">
             Connect Wallet
           </button>
         </div>
 
         {/* Mobile Buttons */}
         <div className="flex lg:hidden items-center gap-3">
-          <button className="px-3 py-1 sm:px-4 sm:py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <button className="px-3 py-2 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">
             Connect Wallet
           </button>
           <button
@@ -53,13 +53,13 @@ export default function Home() {
 
       {/* Mobile Menu (appears below header, overlaying video) */}
       {menuOpen && (
-        <div className="absolute top-[60px] right-4 bg-black/90 border border-white/20 rounded-lg shadow-lg flex flex-col p-4 gap-3 z-30 lg:hidden">
+        <div className="absolute top-[60px] right-4 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg flex flex-col p-4 gap-3 z-30 lg:hidden">
           <Link href="/tests">
-            <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+            <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
               Start Assessment
             </button>
           </Link>
-          <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
             Faucet (Devnet)
           </button>
         </div>
