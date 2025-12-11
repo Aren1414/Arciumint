@@ -5,10 +5,14 @@ export default function Home() {
       {/* Global Neon Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-black" />
+
+        {/* Neon blobs */}
         <div className="absolute inset-0 opacity-40">
           <div className="absolute w-[900px] h-[900px] -top-40 -left-40 bg-purple-600 blur-[180px]" />
           <div className="absolute w-[700px] h-[700px] bottom-0 right-0 bg-indigo-600 blur-[200px]" />
         </div>
+
+        {/* Subtle grid */}
         <div className="absolute inset-0 opacity-10 bg-[url('/grid-lines.svg')] bg-repeat" />
       </div>
 
@@ -27,39 +31,45 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Banner Video — FULL WIDTH */}
-      <section className="relative w-full h-[260px] sm:h-[350px] overflow-hidden">
+      {/* Banner Video - FULL VIDEO, NO CROP */}
+      <section className="relative w-full h-[260px] sm:h-[350px] flex items-center justify-center overflow-hidden bg-black">
+
+        {/* Neon background behind the video to avoid empty areas */}
+        <div className="absolute inset-0 -z-10 opacity-40">
+          <div className="absolute w-[700px] h-[700px] -top-20 left-1/2 -translate-x-1/2 bg-purple-700 blur-[160px]" />
+          <div className="absolute w-[600px] h-[600px] bottom-0 left-1/3 bg-indigo-700 blur-[200px]" />
+        </div>
+
         <video
           src="/banner.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="max-w-full max-h-full object-contain"
         />
       </section>
 
-      {/* Description Section */}
+      {/* Description */}
       <section className="max-w-3xl mx-auto py-12 px-6 space-y-6">
         <h3 className="text-2xl font-semibold">About the Project</h3>
 
         <p className="text-white/80 leading-relaxed">
-          This platform enables users to access psychology-based personality evaluations,
-          generate a unique NFT from their results, and secure it through Arcium’s MPC infrastructure.
-          The objective is to help individuals and Web3 projects better understand behavioral patterns
-          and decision-making tendencies.
+          This platform provides psychology-based personality evaluation tests, generates
+          a unique NFT based on the results, and secures the asset using Arcium’s MPC
+          infrastructure. The purpose is to offer deeper insight into behavioral tendencies
+          for both users and Web3 projects.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          For individuals, the insights support personal development and improve communication in both
-          real-world and professional environments. For projects, aggregated insights—secured privately
-          through MPC—provide a deeper understanding of community profiles without exposing any individual
-          identities.
+          Individuals benefit through better self-awareness and improved communication
+          approaches. Projects gain access to aggregated, privacy-preserving insights
+          without exposing any personal data, ensuring strong security through MPC.
         </p>
 
         <p className="text-white/80 leading-relaxed">
-          On mainnet, additional test categories and advanced on-chain personality analytics will be introduced,
-          backed by Arcium’s privacy-preserving architecture.
+          The mainnet roadmap includes additional test categories and advanced personality
+          analytics, fully powered by Arcium’s privacy architecture.
         </p>
       </section>
 
