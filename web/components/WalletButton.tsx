@@ -5,11 +5,28 @@ import type { ReactElement } from "react";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 
+/** موبایل بودن را تشخیص می‌دهد */
 function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
 }
 
+/** داخل اپ Phantom بودن را تشخیص می‌دهد (in-app browser) */
+function isPhantomInApp(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /Phantom/i.test(ua) || !!(window as any).phantom?.solana?.isPhantom;
+}
+
+/** وجود اکستنشن Phantom روی دسکتاپ */
+function isPhantomExtensionInstalled(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as any;
+  // اکستنشن Phantom باید این‌ها را تزریق کند
+  return !!(w.solana?.isPhantom || w.phantom?.solana?.isPhantom);
+}
+
+/** Deeplink استاندارد Phantom برای مرورگرهای موبایل خارجی، همان تب */
 function launchPhantomDeepLink(): void {
   const kp = nacl.box.keyPair();
   const dapp_pub = bs58.encode(Buffer.from(kp.publicKey));
@@ -26,32 +43,51 @@ function launchPhantomDeepLink(): void {
     "&dapp_encryption_public_key=" + dapp_pub +
     "&cluster=devnet";
 
-  window.location.assign(url); 
+  window.location.assign(url); // همان تب، بدون باز کردن تب جدید
 }
 
 export default function WalletButton(): ReactElement {
   const { connected, publicKey, connecting, connect, disconnect } = useWallet();
 
   const handleClick = async (): Promise<void> => {
+    // اگر وصل است، قطع اتصال
     if (connected) {
       await disconnect();
       return;
     }
 
-    try {
-      
-      await connect();
-      return;
-    } catch (err) {
-      console.error("Phantom connect failed:", err);
-      
-      if (isMobile()) {
-        launchPhantomDeepLink();
+    // دسکتاپ: فقط اگر اکستنشن Phantom واقعاً نصب است، تلاش برای اتصال
+    if (!isMobile()) {
+      if (isPhantomExtensionInstalled()) {
+        try {
+          await connect();
+          return;
+        } catch (err) {
+          console.error("Phantom desktop connect failed:", err);
+          // هیچ انتقالی به صفحه‌ی دانلود انجام نمی‌دهیم
+          return;
+        }
+      } else {
+        // اکستنشن نصب نیست → هیچ کاری نمی‌کنیم (یا UI خودت پیام بده)
+        console.warn("Phantom extension not detected.");
         return;
       }
-      
-      window.open("https://phantom.app/", "_blank");
     }
+
+    // موبایل: اگر داخل اپ Phantom هستیم، اتصال مستقیم با Adapter
+    if (isPhantomInApp()) {
+      try {
+        await connect();
+        return;
+      } catch (err) {
+        console.error("Phantom in-app mobile connect failed:", err);
+        // اگر به هر دلیل شکست خورد، هیچ صفحه‌ی دانلودی باز نمی‌کنیم
+        return;
+      }
+    }
+
+    // موبایلِ مرورگر خارجی → deeplink در همان تب
+    launchPhantomDeepLink();
   };
 
   return (
