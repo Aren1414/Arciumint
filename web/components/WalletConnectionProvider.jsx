@@ -10,11 +10,7 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 export default function WalletConnectionProvider({ children }) {
   const endpoint = "https://api.devnet.solana.com";
 
-  const wallets = useMemo(() => {
-    return [
-      new PhantomWalletAdapter(), // keep default config; wallet-adapter handles desktop/mobile behavior
-    ];
-  }, []);
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
