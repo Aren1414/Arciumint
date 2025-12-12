@@ -58,7 +58,7 @@ export default function WalletButton() {
       return;
     }
 
-    // fallback: open extension dialog
+    // fallback
     window.open("https://phantom.app/", "_blank");
   };
 
