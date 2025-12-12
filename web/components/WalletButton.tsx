@@ -5,13 +5,13 @@ import type { ReactElement } from "react";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 
-/** موبایل بودن را تشخیص می‌دهد */
+/** تشخیص موبایل */
 function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
 }
 
-/** داخل اپ Phantom بودن را تشخیص می‌دهد (in-app browser) */
+/** داخل اپ Phantom بودن (in-app browser) */
 function isPhantomInApp(): boolean {
   if (typeof window === "undefined") return false;
   const ua = navigator.userAgent || "";
@@ -22,20 +22,26 @@ function isPhantomInApp(): boolean {
 function isPhantomExtensionInstalled(): boolean {
   if (typeof window === "undefined") return false;
   const w = window as any;
-  // اکستنشن Phantom باید این‌ها را تزریق کند
   return !!(w.solana?.isPhantom || w.phantom?.solana?.isPhantom);
 }
 
-/** Deeplink استاندارد Phantom برای مرورگرهای موبایل خارجی، همان تب */
+/** Deeplink استاندارد Phantom برای موبایلِ مرورگر خارجی، با بازگشت در همان تب */
 function launchPhantomDeepLink(): void {
   const kp = nacl.box.keyPair();
   const dapp_pub = bs58.encode(Buffer.from(kp.publicKey));
   const dapp_secret = bs58.encode(Buffer.from(kp.secretKey));
-  sessionStorage.setItem("phantom_dapp_secret", dapp_secret);
+
+  // نگهداری دَپ‌سکرت برای رمزگشایی پاسخ
+  try {
+    sessionStorage.setItem("phantom_dapp_secret", dapp_secret);
+  } catch {
+    // در صورت بلاک بودن sessionStorage توسط مرورگر، خطا را نادیده می‌گیریم
+  }
 
   const origin = window.location.origin;
   const callback = `${origin}/phantom-callback`;
 
+  // طبق داکیومنت Phantom: connect URI با redirect_link و کلید رمزنگاری
   const url =
     "https://phantom.app/ul/v1/connect" +
     "?app_url=" + encodeURIComponent(origin) +
@@ -43,45 +49,45 @@ function launchPhantomDeepLink(): void {
     "&dapp_encryption_public_key=" + dapp_pub +
     "&cluster=devnet";
 
-  window.location.assign(url); // همان تب، بدون باز کردن تب جدید
+  // همان تب، نه تب جدید
+  window.location.replace(url);
 }
 
 export default function WalletButton(): ReactElement {
   const { connected, publicKey, connecting, connect, disconnect } = useWallet();
 
   const handleClick = async (): Promise<void> => {
-    // اگر وصل است، قطع اتصال
+    // قطع اتصال در صورت اتصال
     if (connected) {
       await disconnect();
       return;
     }
 
-    // دسکتاپ: فقط اگر اکستنشن Phantom واقعاً نصب است، تلاش برای اتصال
+    // دسکتاپ → فقط اگر اکستنشن واقعاً تزریق شده باشد
     if (!isMobile()) {
       if (isPhantomExtensionInstalled()) {
         try {
-          await connect();
+          await connect(); // Wallet Adapter UI اکستنشن را باز می‌کند
           return;
         } catch (err) {
           console.error("Phantom desktop connect failed:", err);
-          // هیچ انتقالی به صفحه‌ی دانلود انجام نمی‌دهیم
+          // هیچ انتقالی به صفحه دانلود انجام نمی‌دهیم
           return;
         }
       } else {
-        // اکستنشن نصب نیست → هیچ کاری نمی‌کنیم (یا UI خودت پیام بده)
+        // اکستنشن نصب نیست → هیچ خروجی اجباری؛ می‌تونی پیام UI بدهی
         console.warn("Phantom extension not detected.");
         return;
       }
     }
 
-    // موبایل: اگر داخل اپ Phantom هستیم، اتصال مستقیم با Adapter
+    // موبایل داخل اپ Phantom → اتصال مستقیم
     if (isPhantomInApp()) {
       try {
         await connect();
         return;
       } catch (err) {
         console.error("Phantom in-app mobile connect failed:", err);
-        // اگر به هر دلیل شکست خورد، هیچ صفحه‌ی دانلودی باز نمی‌کنیم
         return;
       }
     }
