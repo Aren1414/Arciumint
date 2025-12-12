@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import WalletButton from "@/components/WalletButton";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -16,7 +17,6 @@ export default function Home() {
           height: 100%;
         }
 
-        /* یک گرادیان یک دست و پایدار برای تمام صفحه */
         body {
           background: radial-gradient(
             circle at top left,
@@ -28,8 +28,6 @@ export default function Home() {
           background-size: cover;
           background-attachment: fixed;
           color: white;
-
-          /* برای موبایل از رفتار صحیح اسکرول استفاده می‌کنیم */
           -webkit-overflow-scrolling: touch;
           overscroll-behavior-y: auto;
         }
@@ -57,16 +55,15 @@ export default function Home() {
               Faucet (Devnet)
             </button>
 
-            <button className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition shadow-md">
-              Connect Wallet
-            </button>
+            {/* CONNECT WALLET DESKTOP */}
+            <WalletButton />
           </div>
 
           {/* Mobile */}
           <div className="flex sm:hidden items-center gap-3">
-            <button className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
-              Connect Wallet
-            </button>
+
+            {/* CONNECT WALLET MOBILE */}
+            <WalletButton />
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -89,6 +86,9 @@ export default function Home() {
             <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
+
+            {/* CONNECT WALLET MOBILE MENU */}
+            <WalletButton />
           </div>
         )}
 
@@ -140,4 +140,4 @@ export default function Home() {
       </main>
     </>
   );
-}
+      }
