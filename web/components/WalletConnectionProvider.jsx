@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
+import { useMemo } from "react";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -11,12 +11,6 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 
 require("@solana/wallet-adapter-react-ui/styles.css");
 
-const WalletContext = createContext(null);
-
-export function useWalletContext() {
-  return useContext(WalletContext);
-}
-
 export default function WalletConnectionProvider({ children }) {
   const endpoint = "https://api.devnet.solana.com";
 
@@ -25,11 +19,7 @@ export default function WalletConnectionProvider({ children }) {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <WalletContext.Provider value={null}>
-            {children}
-          </WalletContext.Provider>
-        </WalletModalProvider>
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
