@@ -1,17 +1,44 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { useWallet } from "@solana/wallet-adapter-react";
 
-const WalletMultiButton = dynamic(
-  async () =>
-    (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false }
-);
+// device detection
+function isMobile() {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 export default function WalletButton() {
+  const { connected, publicKey, connecting, disconnect, select } = useWallet();
+
+  const handleClick = async () => {
+    if (connected) {
+      await disconnect();
+      return;
+    }
+
+    // Mobile → OPEN PHANTOM APP
+    if (isMobile()) {
+      const url = `phantom://app/ul/v1/connect?app_url=https://arciumint.vercel.app`;
+      window.location.href = url;
+      return;
+    }
+
+    // Desktop → open Phantom Extension
+    await select("phantom");
+  };
+
   return (
-    <div className="flex items-center">
-      <WalletMultiButton />
-    </div>
+    <button
+      onClick={handleClick}
+      disabled={connecting}
+      className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition"
+    >
+      {connecting
+        ? "Connecting..."
+        : connected
+        ? `Connected: ${publicKey?.toBase58().slice(0, 4)}...`
+        : "Connect Phantom Wallet"}
+    </button>
   );
 }
