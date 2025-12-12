@@ -8,90 +8,34 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* ========== Base reset ========== */
         html, body, #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          width: 100%;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: auto;
-          background: #050014; /* deep base — kept dark so neon reads well */
         }
 
-        /* ========== Neon overlay (SINGLE UNIFORM LAYER) ========== */
-        .neon-overlay {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: -10;
-
-          /* put on its own compositing layer to avoid repaint artifacts */
-          will-change: transform, opacity;
-          transform: translateZ(0);
+        body {
+          background: radial-gradient(
+            circle at top left,
+            #4f1aff,
+            #3700b3,
+            #0b0018
+          );
+          background-repeat: no-repeat;
+          background-size: cover;
+          color: white;
         }
 
-        /* The single full-screen tint that produces an even neon look.
-           This intentionally avoids multiple localized gradients that create
-           stronger spots; instead we use a single tint + very subtle texture. */
-        .neon-overlay::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-
-          /* uniform neon tint (adjust rgba alpha to control strength) */
-          background: rgba(138, 64, 255, 0.24); /* purple tint */
-          mix-blend-mode: screen;
-
-          /* slight blur to soften edges if any, but very small to avoid artifacts */
-          filter: blur(18px);
-
-          /* keep composited */
-          will-change: opacity, transform;
-          transform: translateZ(0);
-        }
-
-        /* Optional: faint secondary tint to add cyan hue evenly */
-        .neon-overlay::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: rgba(38, 142, 255, 0.12); /* cyan tint */
-          mix-blend-mode: screen;
-          filter: blur(24px);
-          opacity: 1;
-        }
-
-        /* Very subtle full-screen texture (low opacity) — won't change perceived tint */
-        .neon-texture {
-          position: absolute;
-          inset: 0;
-          background-image: url("/grid-lines.svg");
-          background-repeat: repeat;
-          opacity: 0.06;
-          pointer-events: none;
-        }
-
-        /* Ensure main doesn't create its own background that overrides tint */
-        main, section, header, footer {
+        main, header, section, footer {
           background: transparent;
         }
 
-        /* Remove tap highlight */
-        * { -webkit-tap-highlight-color: transparent; }
-
-        /* Some accessibility / typography sanity */
-        body { color: #fff; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
-
-        {/* FULL-SCREEN UNIFORM NEON OVERLAY */}
-        <div className="neon-overlay" aria-hidden="true">
-          <div className="neon-texture" />
-        </div>
 
         {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
@@ -135,13 +79,14 @@ export default function Home() {
                 Start Assessment
               </button>
             </Link>
+
             <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
           </div>
         )}
 
-        {/* BANNER VIDEO */}
+        {/* VIDEO */}
         <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
@@ -186,6 +131,7 @@ export default function Home() {
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
+
       </main>
     </>
   );
