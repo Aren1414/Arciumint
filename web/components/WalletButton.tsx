@@ -3,13 +3,14 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
+import type { ReactElement } from "react";
 
 function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
 }
 
-export default function WalletButton(): JSX.Element {
+export default function WalletButton(): ReactElement {
   const { connected, publicKey, connecting, disconnect } = useWallet();
 
   const handleMobileConnect = (): void => {
@@ -33,7 +34,6 @@ export default function WalletButton(): JSX.Element {
       dapp_pub +
       "&cluster=devnet";
 
-    // در موبایل: همان تب جاری را redirect کن
     window.location.href = url;
   };
 
@@ -43,7 +43,6 @@ export default function WalletButton(): JSX.Element {
       return;
     }
 
-    // دسکتاپ: اتصال مستقیم با اکستنشن
     if (typeof window !== "undefined" && (window as any).phantom?.solana?.isPhantom) {
       try {
         await (window as any).phantom.solana.connect();
@@ -53,13 +52,11 @@ export default function WalletButton(): JSX.Element {
       }
     }
 
-    // موبایل: deep link
     if (isMobile()) {
       handleMobileConnect();
       return;
     }
 
-    // fallback
     window.open("https://phantom.app/", "_blank");
   };
 
