@@ -8,72 +8,89 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* Base reset + uniform transparent dark base */
-        html,
-        body,
-        #__next {
+        /* ========== Base reset ========== */
+        html, body, #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: rgba(5, 0, 9, 0.35); /* unified transparent base */
+          width: 100%;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: auto;
+          background: #050014; /* deep base — kept dark so neon reads well */
         }
 
-        /* === FULLSCREEN UNIFIED NEON === */
+        /* ========== Neon overlay (SINGLE UNIFORM LAYER) ========== */
         .neon-overlay {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: -10;
+
+          /* put on its own compositing layer to avoid repaint artifacts */
+          will-change: transform, opacity;
+          transform: translateZ(0);
+        }
+
+        /* The single full-screen tint that produces an even neon look.
+           This intentionally avoids multiple localized gradients that create
+           stronger spots; instead we use a single tint + very subtle texture. */
+        .neon-overlay::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+
+          /* uniform neon tint (adjust rgba alpha to control strength) */
+          background: rgba(138, 64, 255, 0.24); /* purple tint */
+          mix-blend-mode: screen;
+
+          /* slight blur to soften edges if any, but very small to avoid artifacts */
+          filter: blur(18px);
+
+          /* keep composited */
           will-change: opacity, transform;
           transform: translateZ(0);
         }
 
-        /* Stronger and smoother neon gradients */
-        .neon-bg {
+        /* Optional: faint secondary tint to add cyan hue evenly */
+        .neon-overlay::after {
+          content: "";
           position: absolute;
           inset: 0;
-
-          background-image:
-            radial-gradient(
-              circle at 20% 15%,
-              rgba(157, 78, 255, 0.65) 0%,
-              rgba(157, 78, 255, 0.45) 25%,
-              rgba(157, 78, 255, 0.25) 50%,
-              rgba(157, 78, 255, 0.12) 70%,
-              transparent 100%
-            ),
-            radial-gradient(
-              circle at 85% 80%,
-              rgba(92, 78, 255, 0.55) 0%,
-              rgba(92, 78, 255, 0.35) 30%,
-              rgba(92, 78, 255, 0.18) 60%,
-              rgba(92, 78, 255, 0.08) 80%,
-              transparent 100%
-            );
-
-          opacity: 1;
+          background: rgba(38, 142, 255, 0.12); /* cyan tint */
           mix-blend-mode: screen;
+          filter: blur(24px);
+          opacity: 1;
         }
 
-        .neon-grid {
+        /* Very subtle full-screen texture (low opacity) — won't change perceived tint */
+        .neon-texture {
           position: absolute;
           inset: 0;
           background-image: url("/grid-lines.svg");
           background-repeat: repeat;
-          opacity: 0.12;
+          opacity: 0.06;
+          pointer-events: none;
         }
 
-        main {
-          -webkit-tap-highlight-color: transparent;
+        /* Ensure main doesn't create its own background that overrides tint */
+        main, section, header, footer {
+          background: transparent;
         }
+
+        /* Remove tap highlight */
+        * { -webkit-tap-highlight-color: transparent; }
+
+        /* Some accessibility / typography sanity */
+        body { color: #fff; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
+
+        {/* FULL-SCREEN UNIFORM NEON OVERLAY */}
         <div className="neon-overlay" aria-hidden="true">
-          <div className="neon-bg" />
-          <div className="neon-grid" />
+          <div className="neon-texture" />
         </div>
 
         {/* HEADER */}
@@ -110,6 +127,7 @@ export default function Home() {
           </div>
         </header>
 
+        {/* MOBILE MENU */}
         {menuOpen && (
           <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
@@ -123,7 +141,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIDEO */}
+        {/* BANNER VIDEO */}
         <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
@@ -164,6 +182,7 @@ export default function Home() {
           </p>
         </section>
 
+        {/* FOOTER */}
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
