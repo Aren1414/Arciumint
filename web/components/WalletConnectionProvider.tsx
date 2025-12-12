@@ -8,6 +8,9 @@ import {
 } from "@solana/wallet-adapter-react";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+
+require("@solana/wallet-adapter-react-ui/styles.css");
 
 interface Props {
   children: React.ReactNode;
@@ -17,14 +20,12 @@ export default function WalletConnectionProvider({ children }: Props): ReactElem
   const endpoint = "https://api.devnet.solana.com";
   const network = WalletAdapterNetwork.Devnet;
 
-  // Adapter با شبکه devnet
   const wallets = useMemo(() => [new PhantomWalletAdapter({ network })], [network]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      {/* autoConnect تا سشن موبایل/دسکتاپ به‌صورت خودکار برگردد */}
       <WalletProvider wallets={wallets} autoConnect={true}>
-        {children}
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
