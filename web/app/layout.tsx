@@ -19,11 +19,7 @@ export const metadata: Metadata = {
   description: "Privacy-preserving personality evaluation powered by Arcium MPC.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
