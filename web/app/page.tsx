@@ -8,60 +8,63 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* Base reset + base solid background (single, uniform) */
-        html, body, #__next {
+        /* Base reset + deep uniform base */
+        html,
+        body,
+        #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #050009; /* deep uniform base */
+          background: #050009; /* very deep base to blend neon perfectly */
           -webkit-overflow-scrolling: touch;
-          overscroll-behavior: auto; /* keep pull-to-refresh enabled */
+          overscroll-behavior: auto;
         }
 
-        /* Make the full-screen neon overlay a single composited layer */
+        /* === FULLSCREEN UNIFIED NEON === */
         .neon-overlay {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: -10;
-          will-change: transform, opacity;
+          will-change: opacity, transform;
           transform: translateZ(0);
         }
 
-        /* Full-screen radial gradients produce a uniform neon look
-           without producing partial repaint artifacts on scroll */
+        /* Much brighter + fully unified neon gradients */
         .neon-bg {
           position: absolute;
           inset: 0;
+
+          /* TWO HUGE RADIAL GRADIENTS TO LIGHT THE ENTIRE SCREEN */
           background-image:
             radial-gradient(
-              circle at 10% 20%,
-              rgba(124, 58, 237, 0.18) 0%,
-              rgba(124, 58, 237, 0.09) 15%,
-              rgba(124, 58, 237, 0.03) 30%,
-              transparent 60%
+              circle at 20% 15%,
+              rgba(157, 78, 255, 0.45) 0%,
+              rgba(157, 78, 255, 0.25) 18%,
+              rgba(157, 78, 255, 0.12) 35%,
+              transparent 75%
             ),
             radial-gradient(
-              circle at 90% 75%,
-              rgba(79, 70, 229, 0.16) 0%,
-              rgba(79, 70, 229, 0.07) 18%,
-              rgba(79, 70, 229, 0.02) 35%,
-              transparent 70%
+              circle at 85% 80%,
+              rgba(92, 78, 255, 0.42) 0%,
+              rgba(92, 78, 255, 0.22) 20%,
+              rgba(92, 78, 255, 0.10) 40%,
+              transparent 80%
             );
+
           mix-blend-mode: screen;
-          opacity: 0.95;
+          opacity: 1; /* brighter neon */
         }
 
-        /* Optional subtle grid on top */
+        /* subtle grid */
         .neon-grid {
           position: absolute;
           inset: 0;
-          background-image: url('/grid-lines.svg');
+          background-image: url("/grid-lines.svg");
           background-repeat: repeat;
-          opacity: 0.08;
+          opacity: 0.10;
         }
 
-        /* Prevent tap highlight and improve scrolling visuals */
         main {
           -webkit-tap-highlight-color: transparent;
         }
@@ -69,17 +72,17 @@ export default function Home() {
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
 
-        {/* === FULL-SCREEN UNIFIED NEON OVERLAY (single composited layer) === */}
+        {/* === Neon Overlay === */}
         <div className="neon-overlay" aria-hidden="true">
           <div className="neon-bg" />
           <div className="neon-grid" />
         </div>
-        {/* === end overlay === */}
 
-        {/* HEADER */}
+        {/* === HEADER === */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
+          {/* Desktop buttons */}
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/tests">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
@@ -96,10 +99,12 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Mobile header buttons */}
           <div className="flex sm:hidden items-center gap-3">
             <button className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
               Connect Wallet
             </button>
+
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
@@ -109,7 +114,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* MOBILE DROPDOWN */}
+        {/* === MOBILE MENU === */}
         {menuOpen && (
           <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
@@ -117,13 +122,14 @@ export default function Home() {
                 Start Assessment
               </button>
             </Link>
+
             <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
           </div>
         )}
 
-        {/* BANNER VIDEO — unchanged */}
+        {/* === BANNER VIDEO === */}
         <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
@@ -135,7 +141,7 @@ export default function Home() {
           />
         </section>
 
-        {/* CONTENT — full text preserved */}
+        {/* === CONTENT SECTION === */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
@@ -164,7 +170,7 @@ export default function Home() {
           </p>
         </section>
 
-        {/* FOOTER */}
+        {/* === FOOTER === */}
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
