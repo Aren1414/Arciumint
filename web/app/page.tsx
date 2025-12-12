@@ -1,10 +1,35 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WalletButton from "@/components/WalletButton";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [phantomSessionReceived, setPhantomSessionReceived] = useState(false);
+
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      try {
+        if (!e.data || e.data?.type !== "phantom_session") return;
+        const payload = e.data.payload;
+        if (payload?.public_key) {
+          localStorage.setItem("phantom_mobile_session", JSON.stringify({
+            public_key: payload.public_key,
+            session: payload.session,
+            created: Date.now()
+          }));
+          setPhantomSessionReceived(true);
+          // refresh to let UI / wallet adapter pick up changes
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error("Error handling phantom_session message:", err);
+      }
+    }
+
+    window.addEventListener("message", onMessage, false);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   return (
     <>
@@ -140,4 +165,4 @@ export default function Home() {
       </main>
     </>
   );
-      }
+}
