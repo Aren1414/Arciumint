@@ -8,32 +8,42 @@ function isMobile() {
 }
 
 export default function WalletButton() {
-  const { connected, publicKey, connecting, disconnect, select } = useWallet();
+  const {
+    connected,
+    publicKey,
+    connecting,
+    disconnect,
+    select
+  } = useWallet();
 
+  const APP_URL = "https://arciumint.vercel.app";
   
-  const MOBILE_DEEPLINK = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(
-    "https://arciumint.vercel.app"
-  )}`;
+  
+  const mobileLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(APP_URL)}&redirect_link=${encodeURIComponent(APP_URL)}`;
 
-  const handleClick = async () => {
+  const handleConnect = async () => {
     if (connected) {
       await disconnect();
       return;
     }
 
-    // ***** MOBILE *****
+    
     if (isMobile()) {
-      window.location.href = MOBILE_DEEPLINK;
+      window.location.href = mobileLink;
       return;
     }
 
-    // ***** DESKTOP (Extension) *****
-    await select("phantom");
+    
+    try {
+      await select("Phantom");
+    } catch (e) {
+      console.error("Phantom select failed:", e);
+    }
   };
 
   return (
     <button
-      onClick={handleClick}
+      onClick={handleConnect}
       disabled={connecting}
       className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition"
     >
