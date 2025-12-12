@@ -1,11 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import {
+  ConnectionProvider,
+  WalletProvider
+} from "@solana/wallet-adapter-react";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 
-export default function WalletConnectionProvider({ children }) {
-  const endpoint = "https://api.devnet.solana.com";
+interface Props {
+  children: React.ReactNode;
+}
+
+export default function WalletConnectionProvider({ children }: Props): JSX.Element {
+  const endpoint: string = "https://api.devnet.solana.com";
 
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
