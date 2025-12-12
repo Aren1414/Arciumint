@@ -1,6 +1,8 @@
 "use client";
 
 import { useWallet } from "@solana/wallet-adapter-react";
+import nacl from "tweetnacl";
+import bs58 from "bs58";
 
 function isMobile() {
   if (typeof navigator === "undefined") return false;
@@ -8,59 +10,56 @@ function isMobile() {
 }
 
 export default function WalletButton() {
-  const { connected, publicKey, connecting, connect, disconnect, select } = useWallet();
+  const { connected, publicKey, connecting, disconnect } = useWallet();
+
+  const handleMobileConnect = () => {
+    const kp = nacl.box.keyPair();
+
+    const dapp_pub = bs58.encode(Buffer.from(kp.publicKey));
+    const dapp_secret = bs58.encode(Buffer.from(kp.secretKey));
+
+    sessionStorage.setItem("phantom_dapp_secret", dapp_secret);
+
+    const origin = window.location.origin;
+    const callback = `${origin}/phantom-callback`;
+
+    const url =
+      "https://phantom.app/ul/v1/connect" +
+      "?app_url=" +
+      encodeURIComponent(origin) +
+      "&redirect_link=" +
+      encodeURIComponent(callback) +
+      "&dapp_encryption_public_key=" +
+      dapp_pub +
+      "&cluster=devnet";
+
+    window.location.href = url;
+  };
 
   const handleClick = async () => {
-    try {
-      if (connected) {
-        await disconnect();
-        return;
-      }
-
-      // Select Phantom wallet
-      await select("Phantom");
-
-      // DESKTOP EXTENSION — SAFE CHECK (بدون TypeScript)
-      const hasPhantom =
-        typeof window !== "undefined" &&
-        window.phantom &&
-        window.phantom.solana &&
-        window.phantom.solana.isPhantom;
-
-      if (hasPhantom) {
-        await connect(); // show extension popup
-        return;
-      }
-
-      // MOBILE — deep link fallback
-      if (isMobile()) {
-        const origin =
-          typeof window !== "undefined"
-            ? window.location.origin
-            : "https://arciumint.vercel.app";
-
-        const redirect =
-          typeof window !== "undefined"
-            ? window.location.href
-            : origin;
-
-        const url =
-          "https://phantom.app/ul/v1/connect" +
-          "?app_url=" +
-          encodeURIComponent(origin) +
-          "&redirect_link=" +
-          encodeURIComponent(redirect) +
-          "&cluster=devnet";
-
-        window.location.href = url;
-        return;
-      }
-
-      // desktop fallback
-      await connect();
-    } catch (err) {
-      console.error("Wallet connect error:", err);
+    if (connected) {
+      await disconnect();
+      return;
     }
+
+    // desktop extension
+    if (typeof window !== "undefined" && window.phantom?.solana?.isPhantom) {
+      try {
+        await window.phantom.solana.connect();
+        return;
+      } catch (err) {
+        console.error("Phantom desktop connect failed:", err);
+      }
+    }
+
+    // mobile deeplink
+    if (isMobile()) {
+      handleMobileConnect();
+      return;
+    }
+
+    // fallback: open extension dialog
+    window.open("https://phantom.app/", "_blank");
   };
 
   return (
