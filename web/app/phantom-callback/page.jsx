@@ -16,7 +16,6 @@ export default function PhantomCallback() {
 
         const secret58 = sessionStorage.getItem("phantom_dapp_secret");
         if (!secret58 || !phantom_pub || !nonce58 || !data58) {
-          // nothing to do
           window.location.replace("/");
           return;
         }
@@ -42,16 +41,22 @@ export default function PhantomCallback() {
           created: Date.now(),
         };
 
-        // If this callback tab was opened by the original page, send it there and close this tab
+        // اگر این callback در یک تب جدید باز شده و opener موجود است -> به opener پیام بده و سپس این تب را ببند
         try {
           if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({ type: "phantom_session", payload: sessionObj }, window.location.origin);
-            // give a moment for the message to be delivered, then close
+            try {
+              window.opener.postMessage({ type: "phantom_session", payload: sessionObj }, "*");
+            } catch (e) {
+              // اگر ارسال با origin مشخص شکست خورد، از "*" استفاده کن
+              window.opener.postMessage({ type: "phantom_session", payload: sessionObj }, "*");
+            }
+
+            // پاک‌سازی و بستن این تب پس از کمی زمان برای اطمینان از ارسال پیام
+            sessionStorage.removeItem("phantom_dapp_secret");
             setTimeout(() => {
               try {
                 window.close();
               } catch (e) {
-                // if close fails, redirect home
                 window.location.replace("/");
               }
             }, 300);
@@ -61,7 +66,7 @@ export default function PhantomCallback() {
           console.warn("postMessage to opener failed:", e);
         }
 
-        // Otherwise store locally and redirect to home
+        // حالت fallback: اگر opener موجود نبود، session را ذخیره و بازگشت به صفحه اصلی
         localStorage.setItem("phantom_mobile_session", JSON.stringify(sessionObj));
         sessionStorage.removeItem("phantom_dapp_secret");
         window.location.replace("/");
