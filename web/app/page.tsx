@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import type { ReactElement } from "react";
 import WalletButton from "@/components/WalletButton";
 
-export default function Home(): JSX.Element {
+export default function Home(): ReactElement {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
   return (
