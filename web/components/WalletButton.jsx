@@ -17,26 +17,46 @@ export default function WalletButton() {
         return;
       }
 
-      // Try to select Phantom via wallet-adapter
+      // Select Phantom wallet
       await select("Phantom");
 
-      // If Phantom extension/provider is available in window, call connect() to prompt immediately
-      if (typeof window !== "undefined" && (window as any)?.phantom?.solana?.isPhantom) {
-        await connect();
+      // DESKTOP EXTENSION — SAFE CHECK (بدون TypeScript)
+      const hasPhantom =
+        typeof window !== "undefined" &&
+        window.phantom &&
+        window.phantom.solana &&
+        window.phantom.solana.isPhantom;
+
+      if (hasPhantom) {
+        await connect(); // show extension popup
         return;
       }
 
-      // If mobile, open Phantom universal link as fallback (Phantom app will handle connect)
+      // MOBILE — deep link fallback
       if (isMobile()) {
-        const origin = typeof window !== "undefined" ? window.location.origin : "https://arciumint.vercel.app";
-        const redirect = typeof window !== "undefined" ? window.location.href : origin;
-        const url = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(origin)}&redirect_link=${encodeURIComponent(redirect)}&cluster=devnet`;
-        // open universal link
+        const origin =
+          typeof window !== "undefined"
+            ? window.location.origin
+            : "https://arciumint.vercel.app";
+
+        const redirect =
+          typeof window !== "undefined"
+            ? window.location.href
+            : origin;
+
+        const url =
+          "https://phantom.app/ul/v1/connect" +
+          "?app_url=" +
+          encodeURIComponent(origin) +
+          "&redirect_link=" +
+          encodeURIComponent(redirect) +
+          "&cluster=devnet";
+
         window.location.href = url;
         return;
       }
 
-      // Otherwise try connect (desktop extension) — select() may have set adapter
+      // desktop fallback
       await connect();
     } catch (err) {
       console.error("Wallet connect error:", err);
