@@ -14,15 +14,12 @@ interface Props {
 }
 
 export default function WalletConnectionProvider({ children }: Props): ReactElement {
-  
   const endpoint = "https://api.devnet.solana.com";
-  const network = WalletAdapterNetwork.Devnet;
 
-  
-  const wallets = useMemo(() => [new PhantomWalletAdapter({ network })], [network]);
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
-    <ConnectionProvider endpoint={endpoint} config={{ commitment: "confirmed" }}>
+    <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect={true}>
         {children}
       </WalletProvider>
