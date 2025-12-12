@@ -17,10 +17,12 @@ export default function WalletConnectionProvider({ children }: Props): ReactElem
   const endpoint = "https://api.devnet.solana.com";
   const network = WalletAdapterNetwork.Devnet;
 
+  // Adapter با شبکه devnet
   const wallets = useMemo(() => [new PhantomWalletAdapter({ network })], [network]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
+      {/* autoConnect تا سشن موبایل/دسکتاپ به‌صورت خودکار برگردد */}
       <WalletProvider wallets={wallets} autoConnect={true}>
         {children}
       </WalletProvider>
