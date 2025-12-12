@@ -8,14 +8,14 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        /* Base reset + deep uniform base */
+        /* Base reset + uniform transparent dark base */
         html,
         body,
         #__next {
           margin: 0;
           padding: 0;
           height: 100%;
-          background: #050009; /* very deep base to blend neon perfectly */
+          background: rgba(5, 0, 9, 0.35); /* unified transparent base */
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: auto;
         }
@@ -30,39 +30,39 @@ export default function Home() {
           transform: translateZ(0);
         }
 
-        /* Much brighter + fully unified neon gradients */
+        /* Stronger and smoother neon gradients */
         .neon-bg {
           position: absolute;
           inset: 0;
 
-          /* TWO HUGE RADIAL GRADIENTS TO LIGHT THE ENTIRE SCREEN */
           background-image:
             radial-gradient(
               circle at 20% 15%,
-              rgba(157, 78, 255, 0.45) 0%,
-              rgba(157, 78, 255, 0.25) 18%,
-              rgba(157, 78, 255, 0.12) 35%,
-              transparent 75%
+              rgba(157, 78, 255, 0.65) 0%,
+              rgba(157, 78, 255, 0.45) 25%,
+              rgba(157, 78, 255, 0.25) 50%,
+              rgba(157, 78, 255, 0.12) 70%,
+              transparent 100%
             ),
             radial-gradient(
               circle at 85% 80%,
-              rgba(92, 78, 255, 0.42) 0%,
-              rgba(92, 78, 255, 0.22) 20%,
-              rgba(92, 78, 255, 0.10) 40%,
-              transparent 80%
+              rgba(92, 78, 255, 0.55) 0%,
+              rgba(92, 78, 255, 0.35) 30%,
+              rgba(92, 78, 255, 0.18) 60%,
+              rgba(92, 78, 255, 0.08) 80%,
+              transparent 100%
             );
 
+          opacity: 1;
           mix-blend-mode: screen;
-          opacity: 1; /* brighter neon */
         }
 
-        /* subtle grid */
         .neon-grid {
           position: absolute;
           inset: 0;
           background-image: url("/grid-lines.svg");
           background-repeat: repeat;
-          opacity: 0.10;
+          opacity: 0.12;
         }
 
         main {
@@ -71,18 +71,15 @@ export default function Home() {
       `}</style>
 
       <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
-
-        {/* === Neon Overlay === */}
         <div className="neon-overlay" aria-hidden="true">
           <div className="neon-bg" />
           <div className="neon-grid" />
         </div>
 
-        {/* === HEADER === */}
+        {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-          {/* Desktop buttons */}
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/tests">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
@@ -99,7 +96,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Mobile header buttons */}
           <div className="flex sm:hidden items-center gap-3">
             <button className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
               Connect Wallet
@@ -114,7 +110,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* === MOBILE MENU === */}
         {menuOpen && (
           <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
@@ -122,14 +117,13 @@ export default function Home() {
                 Start Assessment
               </button>
             </Link>
-
             <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
           </div>
         )}
 
-        {/* === BANNER VIDEO === */}
+        {/* VIDEO */}
         <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
@@ -141,7 +135,7 @@ export default function Home() {
           />
         </section>
 
-        {/* === CONTENT SECTION === */}
+        {/* CONTENT */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
@@ -170,11 +164,10 @@ export default function Home() {
           </p>
         </section>
 
-        {/* === FOOTER === */}
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
       </main>
     </>
   );
-  }
+}
