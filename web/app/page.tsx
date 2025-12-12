@@ -8,12 +8,15 @@ export default function Home() {
   return (
     <>
       <style jsx global>{`
-        html, body, #__next {
+        html,
+        body,
+        #__next {
           margin: 0;
           padding: 0;
           height: 100%;
         }
 
+        /* یک گرادیان یک دست و پایدار برای تمام صفحه */
         body {
           background: radial-gradient(
             circle at top left,
@@ -23,11 +26,12 @@ export default function Home() {
           );
           background-repeat: no-repeat;
           background-size: cover;
+          background-attachment: fixed;
           color: white;
-        }
 
-        main, header, section, footer {
-          background: transparent;
+          /* برای موبایل از رفتار صحیح اسکرول استفاده می‌کنیم */
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: auto;
         }
 
         * {
@@ -35,12 +39,13 @@ export default function Home() {
         }
       `}</style>
 
-      <main className="relative min-h-screen flex flex-col text-white overflow-x-hidden">
+      <main className="relative min-h-[100dvh] flex flex-col text-white overflow-x-hidden">
 
         {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
+          {/* Desktop */}
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/tests">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
@@ -57,6 +62,7 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Mobile */}
           <div className="flex sm:hidden items-center gap-3">
             <button className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition">
               Connect Wallet
@@ -73,7 +79,7 @@ export default function Home() {
 
         {/* MOBILE MENU */}
         {menuOpen && (
-          <div className="sm:hidden w-full bg-white/5 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
+          <div className="sm:hidden w-full bg-white/10 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
               <button className="w-full px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
                 Start Assessment
@@ -86,7 +92,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIDEO */}
+        {/* BANNER VIDEO */}
         <section className="relative w-full bg-transparent">
           <video
             src="/banner.mp4"
@@ -94,7 +100,7 @@ export default function Home() {
             loop
             muted
             playsInline
-            className="w-full h-auto"
+            className="w-full h-auto block"
           />
         </section>
 
@@ -105,18 +111,18 @@ export default function Home() {
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             This platform offers a psychology-driven personality evaluation system that
             analyzes user responses, generates a uniquely encoded NFT that reflects the
-            individual’s behavioral profile, and processes all sensitive computations through
-            Arcium’s MPC infrastructure. By leveraging secure multi-party computation,
-            personal data remains private while still enabling high-integrity behavioral
-            insights suitable for both users and Web3-native applications.
+            individual’s behavioral profile, and processes all sensitive computations
+            through Arcium’s MPC infrastructure. By leveraging secure multi-party
+            computation, personal data remains private while still enabling high-integrity
+            behavioral insights suitable for both users and Web3-native applications.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             Users gain a deeper understanding of their cognitive patterns, decision-making
             tendencies, and communication styles—empowering them with actionable
             self-awareness. Projects receive access to aggregated, privacy-preserving
-            personality analytics secured by MPC, ensuring that no raw personal information
-            is ever exposed during evaluation or storage.
+            personality analytics secured by MPC, ensuring that no raw personal
+            information is ever exposed during evaluation or storage.
           </p>
 
           <p className="text-white/80 leading-relaxed lg:text-3xl">
@@ -131,7 +137,6 @@ export default function Home() {
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
-
       </main>
     </>
   );
