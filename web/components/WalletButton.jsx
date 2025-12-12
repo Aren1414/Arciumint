@@ -1,9 +1,10 @@
 "use client";
 
-import { useWallet } from "@/components/WalletConnectionProvider";
+import { useWalletContext } from "@/components/WalletConnectionProvider";
 
 export default function WalletButton() {
-  const { wallet, connecting, connected, disconnect, select } = useWallet();
+  const { wallet, connecting, connected, disconnect, select } =
+    useWalletContext();
 
   const handleClick = async () => {
     if (connected) {
