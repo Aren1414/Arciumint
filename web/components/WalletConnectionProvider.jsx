@@ -1,31 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { useMemo, createContext, useContext } from "react";
 import {
-  PhantomWalletAdapter,
-} from "@solana/wallet-adapter-wallets";
+  ConnectionProvider,
+  WalletProvider,
+  useWallet,
+} from "@solana/wallet-adapter-react";
+
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 require("@solana/wallet-adapter-react-ui/styles.css");
 
+const WalletContext = createContext(null);
+
 export default function WalletConnectionProvider({ children }) {
-  // Solana Devnet endpoint
   const endpoint = "https://api.devnet.solana.com";
 
-  // Supported wallets
   const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-    ],
+    () => [new PhantomWalletAdapter()],
     []
   );
 
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <WalletModalProvider>
+          <WalletContext.Provider value={useWallet()}>
+            {children}
+          </WalletContext.Provider>
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
+}
+
+export function useWalletContext() {
+  return useContext(WalletContext);
 }
