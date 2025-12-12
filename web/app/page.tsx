@@ -3,8 +3,8 @@ import Link from "next/link";
 import { useState } from "react";
 import WalletButton from "@/components/WalletButton";
 
-export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
+export default function Home(): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
   return (
     <>
@@ -38,7 +38,6 @@ export default function Home() {
       `}</style>
 
       <main className="relative min-h-[100dvh] flex flex-col text-white overflow-x-hidden">
-
         {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
@@ -127,8 +126,8 @@ export default function Home() {
           <p className="text-white/80 leading-relaxed lg:text-3xl">
             The upcoming mainnet release will introduce expanded test categories, more
             advanced behavioral modeling, enriched analytics dashboards, and tighter
-            integration with Arcium’s broader privacy architecture—all designed to provide a
-            comprehensive and for personality-based identity in Web3.
+            integration with Arcium’s broader privacy architecture—all designed to provide
+            a comprehensive and secure foundation for personality-based identity in Web3.
           </p>
         </section>
 
