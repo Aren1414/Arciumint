@@ -11,20 +11,19 @@ function isMobile(): boolean {
 }
 
 export default function WalletButton(): ReactElement {
-  const { connected, publicKey, connecting, disconnect } = useWallet();
+  const { connected, publicKey, connecting, connect, disconnect } = useWallet();
 
-  const handleMobileConnect = (): void => {
+  const mobileDeepLink = (): void => {
     const kp = nacl.box.keyPair();
-
-    const dapp_pub: string = bs58.encode(Buffer.from(kp.publicKey));
-    const dapp_secret: string = bs58.encode(Buffer.from(kp.secretKey));
+    const dapp_pub = bs58.encode(Buffer.from(kp.publicKey));
+    const dapp_secret = bs58.encode(Buffer.from(kp.secretKey));
 
     sessionStorage.setItem("phantom_dapp_secret", dapp_secret);
 
-    const origin: string = window.location.origin;
-    const callback: string = `${origin}/phantom-callback`;
+    const origin = window.location.origin;
+    const callback = `${origin}/phantom-callback`;
 
-    const url: string =
+    const url =
       "https://phantom.app/ul/v1/connect" +
       "?app_url=" +
       encodeURIComponent(origin) +
@@ -34,7 +33,8 @@ export default function WalletButton(): ReactElement {
       dapp_pub +
       "&cluster=devnet";
 
-    window.location.href = url;
+    // return in the same tab
+    window.location.assign(url);
   };
 
   const handleClick = async (): Promise<void> => {
@@ -43,21 +43,19 @@ export default function WalletButton(): ReactElement {
       return;
     }
 
-    if (typeof window !== "undefined" && (window as any).phantom?.solana?.isPhantom) {
-      try {
-        await (window as any).phantom.solana.connect();
-        return;
-      } catch (err) {
-        console.error("Phantom desktop connect failed:", err);
-      }
-    }
-
-    if (isMobile()) {
-      handleMobileConnect();
+    try {
+      // Primary path: use Wallet Adapter (handles desktop extension and Phantom in-app browser)
+      await connect();
       return;
+    } catch (err) {
+      // Fallback for external mobile browsers: use Phantom deeplink
+      if (isMobile()) {
+        mobileDeepLink();
+        return;
+      }
+      // Desktop fallback: open Phantom site
+      window.open("https://phantom.app/", "_blank");
     }
-
-    window.open("https://phantom.app/", "_blank");
   };
 
   return (
