@@ -14,16 +14,15 @@ interface Props {
 }
 
 export default function WalletConnectionProvider({ children }: Props): ReactElement {
-  // Devnet endpoint
+  
   const endpoint = "https://api.devnet.solana.com";
   const network = WalletAdapterNetwork.Devnet;
 
-  // فقط Phantom رجیستر می‌شود
+  
   const wallets = useMemo(() => [new PhantomWalletAdapter({ network })], [network]);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      {/* autoConnect باعث می‌شود سشن موبایل بعد از callback به‌صورت خودکار برگردد */}
+    <ConnectionProvider endpoint={endpoint} config={{ commitment: "confirmed" }}>
       <WalletProvider wallets={wallets} autoConnect={true}>
         {children}
       </WalletProvider>
