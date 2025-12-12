@@ -2,7 +2,6 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 
-// device detection
 function isMobile() {
   if (typeof window === "undefined") return false;
   return /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -11,20 +10,24 @@ function isMobile() {
 export default function WalletButton() {
   const { connected, publicKey, connecting, disconnect, select } = useWallet();
 
+  
+  const MOBILE_DEEPLINK = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(
+    "https://arciumint.vercel.app"
+  )}`;
+
   const handleClick = async () => {
     if (connected) {
       await disconnect();
       return;
     }
 
-    // Mobile → OPEN PHANTOM APP
+    // ***** MOBILE *****
     if (isMobile()) {
-      const url = `phantom://app/ul/v1/connect?app_url=https://arciumint.vercel.app`;
-      window.location.href = url;
+      window.location.href = MOBILE_DEEPLINK;
       return;
     }
 
-    // Desktop → open Phantom Extension
+    // ***** DESKTOP (Extension) *****
     await select("phantom");
   };
 
