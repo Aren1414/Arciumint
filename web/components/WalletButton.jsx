@@ -3,15 +3,13 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function WalletButton() {
-  const { connected, publicKey, connecting, connect, disconnect, select } =
-    useWallet();
+  const { connected, publicKey, connecting, disconnect, select } = useWallet();
 
   const handleClick = async () => {
     if (connected) {
-      disconnect();
+      await disconnect();
     } else {
       await select("phantom");
-      await connect();
     }
   };
 
@@ -24,7 +22,7 @@ export default function WalletButton() {
       {connecting
         ? "Connecting..."
         : connected
-        ? `Connected: ${publicKey.toBase58().slice(0, 4)}...`
+        ? `Connected: ${publicKey?.toBase58().slice(0, 4)}...`
         : "Connect Phantom Wallet"}
     </button>
   );
