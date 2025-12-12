@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+/**
+ * IMPORT GLOBAL CSS FOR WALLET-ADAPTER UI HERE (allowed only in layout/_app)
+ */
+import "@solana/wallet-adapter-react-ui/styles.css";
+
 import ClientWalletProvider from "@/components/ClientWalletProvider";
 
 const geistSans = Geist({
@@ -23,9 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClientWalletProvider>
-          {children}
-        </ClientWalletProvider>
+        <ClientWalletProvider>{children}</ClientWalletProvider>
       </body>
     </html>
   );
