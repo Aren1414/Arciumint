@@ -17,11 +17,12 @@ export default function WalletConnectionProvider({ children }: Props): ReactElem
   const endpoint = "https://api.devnet.solana.com";
   const network = WalletAdapterNetwork.Devnet;
 
-  // فقط Phantom رجیستر میشه
+  // فقط Phantom. هیچ ولت دیگری رجیستر نمی‌شود.
   const wallets = useMemo(() => [new PhantomWalletAdapter({ network })], [network]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
+      {/* autoConnect برای برگرداندن سشن (در صورت وجود) */}
       <WalletProvider wallets={wallets} autoConnect={true}>
         {children}
       </WalletProvider>
