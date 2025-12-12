@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import type { ReactElement } from "react";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 
@@ -10,7 +11,7 @@ interface PhantomSession {
   created: number;
 }
 
-export default function PhantomCallback(): JSX.Element {
+export default function PhantomCallback(): ReactElement {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
