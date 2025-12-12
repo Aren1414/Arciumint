@@ -33,7 +33,13 @@ export default function WalletButton() {
       dapp_pub +
       "&cluster=devnet";
 
-    window.location.href = url;
+    // باز کردن در یک پنجره/تب جدید به‌صورت عمدی (تا callback پنجره‌ای داشته باشد که opener را نگه می‌دارد)
+    const win = window.open(url, "_blank");
+
+    // اگر browser popup blocker مانع شد، از همان روش سندی استفاده کن (fallback)
+    if (!win) {
+      window.location.href = url;
+    }
   };
 
   const handleClick = async () => {
@@ -42,7 +48,7 @@ export default function WalletButton() {
       return;
     }
 
-    // desktop extension
+    // دسکتاپ: اگر اکستنشن فانتوم موجود است، مستقیم اتصال بزن (سریع‌ترین راه)
     if (typeof window !== "undefined" && window.phantom?.solana?.isPhantom) {
       try {
         await window.phantom.solana.connect();
@@ -52,13 +58,13 @@ export default function WalletButton() {
       }
     }
 
-    // mobile deeplink
+    // موبایل: از deep link استفاده کن (که در بالا پنجرهٔ جدید باز می‌کند)
     if (isMobile()) {
       handleMobileConnect();
       return;
     }
 
-    // fallback
+    // fallback: بازدید از صفحه phantom
     window.open("https://phantom.app/", "_blank");
   };
 
