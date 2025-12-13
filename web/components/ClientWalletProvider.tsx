@@ -13,9 +13,7 @@ export default function ClientWalletProvider({
   const endpoint = "https://api.devnet.solana.com";
 
   const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(), 
-    ],
+    () => [new PhantomWalletAdapter()],
     []
   );
 
