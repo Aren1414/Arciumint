@@ -86,16 +86,16 @@ export default function Home(): ReactElement {
         )}
 
         {/* BANNER VIDEO */}
-        <section className="relative w-full bg-transparent">
-          <video
-            src="/banner.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-auto block"
-          />
-        </section>
+<section className="relative w-full bg-transparent">
+  <video
+    src="https://www.dropbox.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8&dl=1"
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="w-full h-auto block"
+  />
+</section>
 
         {/* CONTENT */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
