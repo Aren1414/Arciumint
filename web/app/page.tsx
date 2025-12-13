@@ -55,13 +55,11 @@ export default function Home(): ReactElement {
               Faucet (Devnet)
             </button>
 
-            {/* CONNECT WALLET DESKTOP */}
             <WalletButton />
           </div>
 
           {/* Mobile */}
           <div className="flex sm:hidden items-center gap-3">
-            {/* CONNECT WALLET MOBILE */}
             <WalletButton />
 
             <button
@@ -85,9 +83,6 @@ export default function Home(): ReactElement {
             <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
-
-            {/* CONNECT WALLET MOBILE MENU */}
-            <WalletButton />
           </div>
         )}
 
@@ -139,4 +134,4 @@ export default function Home(): ReactElement {
       </main>
     </>
   );
-}
+  }
