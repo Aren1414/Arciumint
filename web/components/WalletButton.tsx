@@ -1,22 +1,39 @@
 "use client";
 
+import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useEffect, useState } from "react";
+
+function isMobileBrowser() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function openPhantomDeeplink() {
+  const params = new URLSearchParams({
+    cluster: "devnet",
+    app_url: window.location.origin,
+    redirect_link: window.location.href,
+  });
+
+  const url = `https://phantom.app/ul/v1/connect?${params.toString()}`;
+  window.location.href = url;
+}
 
 export default function WalletButton() {
-  const [mounted, setMounted] = useState(false);
+  const { connected } = useWallet();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <div className="h-10 w-32 rounded bg-purple-600/20 animate-pulse" />;
+  // Desktop OR Phantom In-App Browser
+  if (!isMobileBrowser()) {
+    return <WalletMultiButton />;
   }
 
+  // Mobile browser (Chrome / Safari)
   return (
-    <div suppressHydrationWarning>
-      <WalletMultiButton />
-    </div>
+    <button
+      onClick={openPhantomDeeplink}
+      className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition shadow-md"
+    >
+      {connected ? "Wallet Connected" : "Connect Wallet"}
+    </button>
   );
 }
