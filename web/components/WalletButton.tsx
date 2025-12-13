@@ -11,9 +11,7 @@ export default function WalletButton() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="h-10 w-32 bg-purple-600/20 rounded animate-pulse" />
-    );
+    return <div className="h-10 w-32 rounded bg-purple-600/20 animate-pulse" />;
   }
 
   return (
