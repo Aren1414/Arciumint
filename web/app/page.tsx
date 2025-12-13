@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactElement } from "react";
@@ -43,28 +44,26 @@ export default function Home(): ReactElement {
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-          {/* Desktop */}
-          <div className="hidden sm:flex items-center gap-3">
-            <Link href="/tests">
+          {/* ACTIONS (Desktop + Mobile unified) */}
+          <div className="flex items-center gap-3">
+            {/* Desktop only */}
+            <Link href="/tests" className="hidden sm:block">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
                 Start Assessment
               </button>
             </Link>
 
-            <button className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
+            <button className="hidden sm:block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
               Faucet (Devnet)
             </button>
 
-            <WalletButton />
-          </div>
-
-          {/* Mobile */}
-          <div className="flex sm:hidden items-center gap-3">
+            
             <WalletButton />
 
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+              className="sm:hidden px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
             >
               ☰
             </button>
