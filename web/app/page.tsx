@@ -88,7 +88,7 @@ export default function Home(): ReactElement {
         {/* BANNER VIDEO */}
 <section className="relative w-full bg-transparent">
   <video
-    src="https://www.dropbox.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8&dl=1"
+    src="https://dl.dropboxusercontent.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8"
     autoPlay
     loop
     muted
