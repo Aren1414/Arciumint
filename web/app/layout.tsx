@@ -1,7 +1,4 @@
 import "./globals.css";
-
-import "@solana/wallet-adapter-react-ui/styles.css";
-
 import ClientWalletProvider from "@/components/ClientWalletProvider";
 
 export const metadata = {
