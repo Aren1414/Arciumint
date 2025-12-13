@@ -7,28 +7,28 @@ function isMobileBrowser() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-function openPhantomDeeplink() {
-  const redirect = `${window.location.origin}/phantom-callback`;
-
-  const params = new URLSearchParams({
-    cluster: "devnet",
-    app_url: window.location.origin,
-    redirect_link: redirect,
-  });
-
-  window.location.href = `https://phantom.app/ul/v1/connect?${params.toString()}`;
-}
-
 export default function WalletButton() {
-  // Desktop OR Phantom In-App Browser
+  // Desktop یا Phantom In-App Browser
   if (!isMobileBrowser()) {
     return <WalletMultiButton />;
   }
 
-  // Mobile browser (Safari / Chrome)
+  const connectMobile = () => {
+    const params = new URLSearchParams({
+      cluster: "devnet",
+      app_url: window.location.origin,
+      redirect_link: `${window.location.origin}/phantom-callback`,
+    });
+
+    // مهم: same tab
+    window.location.assign(
+      `https://phantom.app/ul/v1/connect?${params.toString()}`
+    );
+  };
+
   return (
     <button
-      onClick={openPhantomDeeplink}
+      onClick={connectMobile}
       className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition shadow-md"
     >
       Connect Wallet
