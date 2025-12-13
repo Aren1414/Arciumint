@@ -2,44 +2,27 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@solana/wallet-adapter-react";
 
-export default function PhantomCallback() {
+export default function PhantomCallbackPage() {
   const router = useRouter();
-  const wallet = useWallet();
 
   useEffect(() => {
-    // Phantom بعد از deeplink کاربر رو با query params برمی‌گردونه
-    const url = new URL(window.location.href);
-    const errorCode = url.searchParams.get("errorCode");
-    const errorMessage = url.searchParams.get("errorMessage");
+    const params = new URLSearchParams(window.location.search);
 
-    // اگر کاربر Reject کرده
+    const errorCode = params.get("errorCode");
+    const errorMessage = params.get("errorMessage");
+
     if (errorCode) {
-      console.error("Phantom error:", errorCode, errorMessage);
-      router.replace("/");
-      return;
+      console.error("Phantom rejected:", errorCode, errorMessage);
     }
 
-    /**
-     * در حالت Mobile Deeplink:
-     * Phantom اپلیکیشن رو trusted می‌کنه
-     * wallet-adapter بعد از reload خودش connect میشه
-     * فقط باید برگردیم به صفحه اصلی
-     */
-    const timeout = setTimeout(() => {
-      router.replace("/");
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [router, wallet]);
+    
+    router.replace("/");
+  }, [router]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white gap-4">
-      <div className="text-lg font-semibold">Connecting to Phantom…</div>
-      <div className="text-white/60 text-sm">
-        Please approve the connection in Phantom
-      </div>
+    <div className="min-h-screen flex items-center justify-center text-white">
+      Returning from Phantom…
     </div>
   );
-    }
+}
