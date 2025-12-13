@@ -10,23 +10,14 @@ export default function SolanaProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const endpoint = useMemo(
-    () => "https://api.devnet.solana.com",
-    []
-  );
+  const endpoint = useMemo(() => "https://api.devnet.solana.com", []);
 
-  const wallets = useMemo(
-    () => [new PhantomWalletAdapter()],
-    []
-  );
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      {/* 🔴 autoConnect MUST be false on mobile */}
       <WalletProvider wallets={wallets} autoConnect={false}>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
