@@ -11,6 +11,7 @@ export default function SolanaProvider({
   children: React.ReactNode;
 }) {
   const endpoint = useMemo(() => "https://api.devnet.solana.com", []);
+  // PhantomWalletAdapter را نگه می‌داریم تا Deep Link بازگشتی بتواند سشن را مدیریت کند.
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   return (
