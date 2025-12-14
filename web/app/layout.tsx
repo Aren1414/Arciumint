@@ -1,6 +1,5 @@
 import "./globals.css";
 import PhantomWrapper from "@/components/PhantomWrapper";
-import WalletComponent from "@/components/WalletComponent";
 
 export const metadata = {
   title: "Arciumint",
@@ -13,7 +12,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <PhantomWrapper>
           {children}
-          <WalletComponent />
         </PhantomWrapper>
       </body>
     </html>
