@@ -8,7 +8,6 @@ export default function PhantomCallback() {
 
   useEffect(() => {
     console.log("Returned from Phantom Connect");
-    
     router.replace("/"); 
   }, [router]);
 
