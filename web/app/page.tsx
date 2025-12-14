@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactElement } from "react";
-import WalletButton from "@/components/WalletButton";
+import WalletComponent from "@/components/WalletComponent"; 
 
 export default function Home(): ReactElement {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -57,8 +57,7 @@ export default function Home(): ReactElement {
               Faucet (Devnet)
             </button>
 
-            
-            <WalletButton />
+            <WalletComponent /> 
 
             {/* Mobile menu toggle */}
             <button
@@ -86,16 +85,16 @@ export default function Home(): ReactElement {
         )}
 
         {/* BANNER VIDEO */}
-<section className="relative w-full bg-transparent">
-  <video
-    src="https://dl.dropboxusercontent.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8"
-    autoPlay
-    loop
-    muted
-    playsInline
-    className="w-full h-auto block"
-  />
-</section>
+        <section className="relative w-full bg-transparent">
+          <video
+            src="https://dl.dropboxusercontent.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-auto block"
+          />
+        </section>
 
         {/* CONTENT */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
@@ -133,4 +132,4 @@ export default function Home(): ReactElement {
       </main>
     </>
   );
-  }
+}
