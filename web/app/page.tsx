@@ -44,9 +44,7 @@ export default function Home(): ReactElement {
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
-          {/* ACTIONS (Desktop + Mobile unified) */}
           <div className="flex items-center gap-3">
-            {/* Desktop only */}
             <Link href="/tests" className="hidden sm:block">
               <button className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition shadow-md">
                 Start Assessment
@@ -57,9 +55,9 @@ export default function Home(): ReactElement {
               Faucet (Devnet)
             </button>
 
+            {/* Wallet Button فقط یک بار */}
             <WalletComponent /> 
 
-            {/* Mobile menu toggle */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="sm:hidden px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
