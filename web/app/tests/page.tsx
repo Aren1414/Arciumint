@@ -34,9 +34,17 @@ export default function TestsPage() {
       {/* Neon background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
 
-      <h1 className="text-3xl lg:text-4xl font-semibold mb-10">
+      <h1 className="text-3xl lg:text-4xl font-semibold mb-6">
         Assessments
       </h1>
+
+      {/* Back button */}
+      <button
+        onClick={() => router.push("/")}
+        className="mb-8 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition"
+      >
+        ← Back to Home
+      </button>
 
       <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {tests.map((test) => {
