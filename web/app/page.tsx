@@ -4,20 +4,22 @@ import Link from "next/link";
 import { useState } from "react";
 import type { ReactElement } from "react";
 import WalletComponent from "@/components/WalletComponent";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { usePhantom } from "@phantom/react-sdk";
 
 export default function Home(): ReactElement {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { publicKey } = useWallet();
+  const { isConnected, user } = usePhantom();
 
   const handleFaucet = async () => {
-    if (!publicKey) {
+    if (!isConnected || !user?.addresses?.length) {
       setMessage("Please connect your wallet first.");
       return;
     }
+
+    const walletAddress = user.addresses[0].address;
 
     try {
       setLoading(true);
@@ -27,7 +29,7 @@ export default function Home(): ReactElement {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          address: publicKey.toBase58(),
+          walletAddress,
         }),
       });
 
@@ -180,4 +182,4 @@ export default function Home(): ReactElement {
       </main>
     </>
   );
-  }
+}
