@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useConnect, usePhantom, useIsExtensionInstalled } from "@phantom/react-sdk";
-import isMobileDevice from "@/utils/isMobileDevice"; 
+import { useConnect, useIsExtensionInstalled } from "@phantom/react-sdk";
+import isMobileDevice from "@/utils/isMobileDevice";
 
 export default function WalletComponent() {
-  const { connect, isConnecting, error } = useConnect();
-  const { isConnected, user } = usePhantom();
+  const { connect, isConnecting } = useConnect();
   const { isInstalled, isLoading: extensionLoading } = useIsExtensionInstalled();
   const [mobile, setMobile] = useState<boolean>(false);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
 
   useEffect(() => {
     setMobile(isMobileDevice());
@@ -16,16 +16,21 @@ export default function WalletComponent() {
 
   const handleConnect = async () => {
     try {
+      let result;
       if (mobile) {
-        
-        await connect({ provider: "deeplink" });
+        result = await connect({ provider: "deeplink" });
       } else {
-        
         if (isInstalled) {
-          await connect({ provider: "injected" });
+          result = await connect({ provider: "injected" });
         } else {
           alert("Phantom extension not found. Please install it from https://phantom.app/download");
+          return;
         }
+      }
+
+      
+      if (result && result.publicKey) {
+        setPublicKey(result.publicKey.toString());
       }
     } catch (err) {
       console.error("Failed to connect:", err);
@@ -34,8 +39,8 @@ export default function WalletComponent() {
 
   if (extensionLoading) return <div>Checking Phantom extension...</div>;
 
-  if (isConnected && user?.publicKey) {
-    const shortKey = user.publicKey.toString().slice(0, 6) + "...";
+  if (publicKey) {
+    const shortKey = publicKey.slice(0, 6) + "...";
     return (
       <div className="px-4 py-2 bg-green-600 rounded-lg shadow-md">
         Connected: {shortKey}
