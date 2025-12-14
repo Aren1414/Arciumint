@@ -19,7 +19,7 @@ export default function Home(): ReactElement {
       return;
     }
 
-    const walletAddress = user.addresses[0].address;
+    const address = user.addresses[0].address;
 
     try {
       setLoading(true);
@@ -28,9 +28,7 @@ export default function Home(): ReactElement {
       const res = await fetch("/api/faucet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress,
-        }),
+        body: JSON.stringify({ address }),
       });
 
       const data = await res.json();
@@ -79,7 +77,6 @@ export default function Home(): ReactElement {
       `}</style>
 
       <main className="relative min-h-[100dvh] flex flex-col text-white overflow-x-hidden">
-        {/* HEADER */}
         <header className="w-full border-b border-white/10 py-3 px-4 flex items-center justify-between z-20">
           <h1 className="text-lg font-semibold lg:text-2xl">Arciumint</h1>
 
@@ -109,7 +106,6 @@ export default function Home(): ReactElement {
           </div>
         </header>
 
-        {/* MOBILE MENU */}
         {menuOpen && (
           <div className="sm:hidden w-full bg-white/10 backdrop-blur-md border-b border-white/20 flex flex-col p-4 gap-3 z-30">
             <Link href="/tests">
@@ -134,7 +130,6 @@ export default function Home(): ReactElement {
           </div>
         )}
 
-        {/* BANNER VIDEO */}
         <section className="relative w-full bg-transparent">
           <video
             src="https://dl.dropboxusercontent.com/scl/fi/5qrrcy8i6rqnn3fb4ghlq/banner.mp4?rlkey=qpyz4o17sqf85mtisqfx0unjq&st=llqa82u8"
@@ -146,7 +141,6 @@ export default function Home(): ReactElement {
           />
         </section>
 
-        {/* CONTENT */}
         <section className="flex-1 max-w-3xl mx-auto px-6 py-10 lg:py-20 space-y-6">
           <h3 className="text-2xl font-semibold lg:text-5xl">About the Project</h3>
 
@@ -175,7 +169,6 @@ export default function Home(): ReactElement {
           </p>
         </section>
 
-        {/* FOOTER */}
         <footer className="py-6 text-center text-white/50 border-t border-white/10 lg:text-lg">
           © 2025 Arciumint — Devnet Demo
         </footer>
