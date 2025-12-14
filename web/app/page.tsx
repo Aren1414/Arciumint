@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
 import WalletComponent from "@/components/WalletComponent";
 import { usePhantom } from "@phantom/react-sdk";
@@ -13,9 +13,19 @@ export default function Home(): ReactElement {
 
   const { isConnected, user } = usePhantom();
 
+  useEffect(() => {
+    if (!message) return;
+
+    const timer = setTimeout(() => {
+      setMessage(null);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [message]);
+
   const handleFaucet = async () => {
     if (!isConnected || !user?.addresses?.length) {
-      setMessage("Please connect your wallet first.");
+      setMessage("Please connect your wallet first");
       return;
     }
 
@@ -37,7 +47,7 @@ export default function Home(): ReactElement {
         throw new Error(data.error || "Faucet request failed");
       }
 
-      setMessage("0.2 SOL (Devnet) sent successfully.");
+      setMessage("0.2 SOL (Devnet) sent successfully");
     } catch (err: any) {
       setMessage(err.message || "Unexpected error");
     } finally {
