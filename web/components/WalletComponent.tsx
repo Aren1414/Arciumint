@@ -32,15 +32,16 @@ export default function WalletComponent() {
     }
   };
 
-  if (isConnected) {
+  if (extensionLoading) return <div>Checking Phantom extension...</div>;
+
+  if (isConnected && user?.publicKey) {
+    const shortKey = user.publicKey.toString().slice(0, 6) + "...";
     return (
       <div className="px-4 py-2 bg-green-600 rounded-lg shadow-md">
-        Connected: {user?.name || user?.publicKey?.toString().slice(0, 6) + "..."}
+        Connected: {shortKey}
       </div>
     );
   }
-
-  if (extensionLoading) return <div>Checking Phantom extension...</div>;
 
   return (
     <button
