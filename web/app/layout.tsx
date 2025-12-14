@@ -1,5 +1,4 @@
 import "./globals.css";
-import "@phantom/react-sdk/dist/styles.css"; 
 import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
 import WalletComponent from "@/components/WalletComponent";
 
