@@ -1,5 +1,6 @@
 import "./globals.css";
-import { PhantomProvider, darkTheme, AddressType } from "@phantom/react-sdk";
+import "@phantom/react-sdk/dist/styles.css"; 
+import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
 import WalletComponent from "@/components/WalletComponent";
 
 export const metadata = {
@@ -13,9 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <PhantomProvider
           config={{
-            providers: ["google", "apple", "injected"],
+            providers: ["injected"], 
             appId: "e26969a5-9c5d-4e09-bf78-aa4a525a5d7f",
-            addressTypes: ["Ethereum", "Solana", "BitcoinSegwit", "Sui"],
+            addressTypes: ["Solana"], 
             authOptions: {
               redirectUrl: "https://www.arciumint.xyz/phantom-callback",
             },
