@@ -10,26 +10,24 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-// Supabase (server-side)
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-// Solana
 const connection = new Connection(
   process.env.SOLANA_RPC_URL as string,
   "confirmed"
 );
 
-// Faucet wallet
 const faucetKeypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(process.env.FAUCET_PRIVATE_KEY as string))
 );
 
 export async function POST(req: Request) {
   try {
-    const { address } = await req.json();
+    const body = await req.json();
+    const address = body.address;
 
     if (!address) {
       return NextResponse.json(
@@ -40,7 +38,6 @@ export async function POST(req: Request) {
 
     const userPubkey = new PublicKey(address);
 
-    // 1️⃣ already claimed?
     const { data: existing } = await supabase
       .from("faucet_claims")
       .select("id")
@@ -54,7 +51,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ send 0.2 SOL
     const tx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: faucetKeypair.publicKey,
@@ -67,7 +63,6 @@ export async function POST(req: Request) {
       faucetKeypair,
     ]);
 
-    // 3️⃣ save to DB
     await supabase.from("faucet_claims").insert({
       wallet_address: address,
       amount: 0.2,
@@ -75,7 +70,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, signature });
   } catch (err) {
-    console.error(err);
     return NextResponse.json(
       { error: "Faucet failed" },
       { status: 500 }
