@@ -1,5 +1,6 @@
 import "./globals.css";
 import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
+import { AddressType } from "@phantom/browser-sdk";
 import WalletComponent from "@/components/WalletComponent";
 
 export const metadata = {
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           config={{
             providers: ["injected"], 
             appId: "e26969a5-9c5d-4e09-bf78-aa4a525a5d7f",
-            addressTypes: ["Solana"], 
+            addressTypes: [AddressType.solana], 
             authOptions: {
               redirectUrl: "https://www.arciumint.xyz/phantom-callback",
             },
