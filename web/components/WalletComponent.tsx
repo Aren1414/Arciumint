@@ -12,7 +12,7 @@ export default function WalletComponent() {
     return (
       <button
         onClick={open}
-        className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md text-white"
+        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition rounded-lg shadow-md text-white text-sm sm:text-base"
       >
         Connect Wallet
       </button>
@@ -22,19 +22,22 @@ export default function WalletComponent() {
   
   if (user?.addresses?.length) {
     const address = user.addresses[0].address;
-    const short = address.slice(0, 6) + "…" + address.slice(-4);
+    const short = `${address.slice(0, 4)}…${address.slice(-4)}`;
 
     return (
-      <div className="flex items-center gap-3">
-        <div className="px-4 py-2 bg-green-600 rounded-lg shadow-md text-white">
+      <div className="flex items-center gap-2">
+        {/* Address badge */}
+        <div className="px-3 py-1.5 bg-green-600/90 rounded-full text-xs sm:text-sm text-white shadow">
           {short}
         </div>
 
+        {/* Disconnect (small icon-like button) */}
         <button
           onClick={disconnect}
-          className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition"
+          title="Disconnect"
+          className="px-2 py-1.5 bg-red-600/80 hover:bg-red-700 rounded-full text-xs text-white transition"
         >
-          Disconnect
+          ✕
         </button>
       </div>
     );
