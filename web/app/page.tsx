@@ -3,10 +3,47 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactElement } from "react";
-import WalletComponent from "@/components/WalletComponent"; 
+import WalletComponent from "@/components/WalletComponent";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function Home(): ReactElement {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const { publicKey } = useWallet();
+
+  const handleFaucet = async () => {
+    if (!publicKey) {
+      setMessage("Please connect your wallet first.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMessage(null);
+
+      const res = await fetch("/api/faucet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: publicKey.toBase58(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Faucet request failed");
+      }
+
+      setMessage("0.2 SOL (Devnet) sent successfully.");
+    } catch (err: any) {
+      setMessage(err.message || "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -51,12 +88,15 @@ export default function Home(): ReactElement {
               </button>
             </Link>
 
-            <button className="hidden sm:block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
-              Faucet (Devnet)
+            <button
+              onClick={handleFaucet}
+              disabled={loading}
+              className="hidden sm:block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-md"
+            >
+              {loading ? "Sending..." : "Faucet (Devnet)"}
             </button>
 
-            {/* Wallet Button فقط یک بار */}
-            <WalletComponent /> 
+            <WalletComponent />
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -76,9 +116,19 @@ export default function Home(): ReactElement {
               </button>
             </Link>
 
-            <button className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-md">
-              Faucet (Devnet)
+            <button
+              onClick={handleFaucet}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-md"
+            >
+              {loading ? "Sending..." : "Faucet (Devnet)"}
             </button>
+          </div>
+        )}
+
+        {message && (
+          <div className="mx-auto mt-4 px-4 py-2 bg-black/40 rounded-lg text-sm">
+            {message}
           </div>
         )}
 
@@ -130,4 +180,4 @@ export default function Home(): ReactElement {
       </main>
     </>
   );
-}
+  }
