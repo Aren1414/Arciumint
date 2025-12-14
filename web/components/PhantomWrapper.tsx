@@ -1,9 +1,10 @@
 "use client";
 
 import { PhantomProvider, darkTheme } from "@phantom/react-sdk";
+import { ReactNode } from "react";
 import { AddressType } from "@phantom/browser-sdk";
 
-export default function PhantomWrapper({ children }: { children: React.ReactNode }) {
+export default function PhantomWrapper({ children }: { children: ReactNode }) {
   return (
     <PhantomProvider
       config={{
