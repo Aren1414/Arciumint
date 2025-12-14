@@ -6,10 +6,10 @@ export default function WalletComponent() {
   const { open } = useModal();
   const { isConnected, user } = usePhantom();
 
-  if (isConnected) {
+  if (isConnected && user?.addresses?.length) {
     return (
       <div className="px-4 py-2 bg-green-600 rounded-lg text-white">
-        Connected: {user?.address}
+        Connected: {user.addresses[0].address}
       </div>
     );
   }
