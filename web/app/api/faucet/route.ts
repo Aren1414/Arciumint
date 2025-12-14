@@ -10,39 +10,42 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-// Supabase
+// Supabase (server-side)
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
 );
 
 // Solana
-const connection = new Connection(process.env.SOLANA_RPC_URL!, "confirmed");
+const connection = new Connection(
+  process.env.SOLANA_RPC_URL as string,
+  "confirmed"
+);
 
 // Faucet wallet
 const faucetKeypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.FAUCET_PRIVATE_KEY!))
+  Uint8Array.from(JSON.parse(process.env.FAUCET_PRIVATE_KEY as string))
 );
 
 export async function POST(req: Request) {
   try {
-    const { walletAddress } = await req.json();
+    const { address } = await req.json();
 
-    if (!walletAddress) {
+    if (!address) {
       return NextResponse.json(
         { error: "Wallet address is required" },
         { status: 400 }
       );
     }
 
-    const userPubkey = new PublicKey(walletAddress);
+    const userPubkey = new PublicKey(address);
 
-    // 1️⃣ check if already claimed
+    // 1️⃣ already claimed?
     const { data: existing } = await supabase
       .from("faucet_claims")
       .select("id")
-      .eq("wallet_address", walletAddress)
-      .single();
+      .eq("wallet_address", address)
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -64,17 +67,14 @@ export async function POST(req: Request) {
       faucetKeypair,
     ]);
 
-    // 3️⃣ store in DB
+    // 3️⃣ save to DB
     await supabase.from("faucet_claims").insert({
-      wallet_address: walletAddress,
+      wallet_address: address,
       amount: 0.2,
     });
 
-    return NextResponse.json({
-      success: true,
-      signature,
-    });
-  } catch (err: any) {
+    return NextResponse.json({ success: true, signature });
+  } catch (err) {
     console.error(err);
     return NextResponse.json(
       { error: "Faucet failed" },
