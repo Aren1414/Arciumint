@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       # -----------------------------
-      # Install Solana CLI
+      # Install Solana CLI ONLY
       # -----------------------------
       - name: Install Solana CLI
         shell: bash
@@ -30,21 +30,7 @@ jobs:
           solana --version
 
       # -----------------------------
-      # Install Anchor (AVM)
-      # -----------------------------
-      - name: Install Anchor
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install latest
-          avm use latest
-
-          anchor --version
-
-      # -----------------------------
-      # Install Arcium Tooling (official)
+      # Install Arcium Tooling (this ALSO checks Anchor)
       # -----------------------------
       - name: Install Arcium tooling
         shell: bash
@@ -53,12 +39,14 @@ jobs:
 
           export PATH="$HOME/.cargo/bin:$PATH"
 
+          # Official Arcium installer (handles Anchor check internally)
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
 
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.cargo/bin:$PATH"
 
           arcium --version
+          anchor --version
 
       # -----------------------------
       # Initialize Arcium MPC Project
@@ -75,16 +63,16 @@ jobs:
           arcium init disc-mpc
 
       # -----------------------------
-      # FIX client version + install deps
+      # Fix SDK version + install deps
       # -----------------------------
-      - name: Fix Arcium client version and install deps
+      - name: Fix client version and install deps
         shell: bash
         run: |
           set -euo pipefail
 
           cd arcium/disc-mpc
 
-          # FIX WRONG TEMPLATE VERSION
+          # Force correct published SDK version
           sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
 
           yarn install
