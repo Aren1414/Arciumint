@@ -3,94 +3,101 @@ name: Init Arcium MXE
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   init-arcium:
     runs-on: ubuntu-latest
 
     steps:
-      # -----------------------------
-      # Checkout
-      # -----------------------------
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # -----------------------------
-      # Solana CLI (official, stable)
-      # -----------------------------
+      # (Optional but recommended) make sure Rust is present (GitHub runner usually has it)
+      - name: Show Rust
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustc -V
+          cargo -V
+
+      # Install Solana + Anchor (you were already doing this successfully)
       - name: Install Solana CLI
         shell: bash
         run: |
-          set -e
-          curl -sSfL https://solana-install.solana.workers.dev | bash
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
 
-      # -----------------------------
-      # Anchor (PINNED 0.32.1 — no "latest")
-      # -----------------------------
-      - name: Install Anchor
+      - name: Install Anchor (AVM) pinned
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install 0.32.1
+          # pin to avoid "latest" GitHub API timeouts
+          avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
 
-      # -----------------------------
-      # Install arcup (OFFICIAL BINARY)
-      # -----------------------------
-      - name: Install arcup
+      # Install Arcium tooling via official installer (installs arcup + arcium)
+      - name: Install Arcium tooling
         shell: bash
         run: |
-          set -e
-          curl -sSfL https://bin.arcium.com/download/arcup_x86_64_linux_0.6.0-alpha \
-            -o arcup
-          chmod +x arcup
-          sudo mv arcup /usr/local/bin/arcup
-          arcup --version
-
-      # -----------------------------
-      # Install Arcium CLI ONLY (no node, no surfpool)
-      # -----------------------------
-      - name: Install Arcium CLI
-        shell: bash
-        run: |
-          set -e
-          arcup install 0.6.0-alpha
+          set -euo pipefail
+          export PATH="$HOME/.cargo/bin:$PATH"
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
           arcium --version
 
-      # -----------------------------
-      # Init MPC project (this creates files)
-      # -----------------------------
-      - name: Initialize MPC project
+      # Initialize project, then fix npm package version if template points to a non-published version
+      - name: Init MPC project (and fix client version if needed)
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
+          export PATH="$HOME/.cargo/bin:$PATH"
+
           mkdir -p arcium
           cd arcium
+
+          # arcium init creates: disc_mpc  (underscore) as your log shows
+          set +e
           arcium init disc-mpc
-
-      # -----------------------------
-      # Fix client version to PUBLISHED SDK
-      # -----------------------------
-      - name: Fix Arcium client dependency
-        shell: bash
-        run: |
+          INIT_EXIT=$?
           set -e
-          cd arcium/disc-mpc
-          sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
-          yarn install
 
-      # -----------------------------
-      # Commit generated files
-      # -----------------------------
-      - name: Commit changes
+          # If init failed because yarn couldn't find @arcium-hq/client version,
+          # patch to a published version and install deps.
+          if [ -d "disc_mpc" ]; then
+            cd disc_mpc
+
+            if [ $INIT_EXIT -ne 0 ]; then
+              echo "Init step failed (likely yarn). Patching @arcium-hq/client to ^0.5.2 and retrying yarn..."
+              if [ -f package.json ]; then
+                # replace any @arcium-hq/client version with ^0.5.2
+                sed -i 's/"@arcium-hq\/client":[[:space:]]*"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
+              fi
+              yarn install
+            fi
+
+            cd ..
+          else
+            echo "Expected folder arcium/disc_mpc was not created."
+            exit 1
+          fi
+
+          cd ..
+
+      - name: Commit and push generated project
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git add arcium
-          git commit -m "init arcium MPC project" || true
+          git commit -m "init arcium MPC project" || echo "Nothing to commit"
           git push
