@@ -13,15 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Solana
+      # -----------------------------
+      # Solana CLI (NO installer side-effects)
+      # -----------------------------
       - name: Install Solana CLI
         run: |
           set -e
           curl -sSfL https://solana-install.solana.workers.dev | bash
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
-      # Anchor (pinned per docs)
+      # -----------------------------
+      # Anchor (PINNED – per docs)
+      # -----------------------------
       - name: Install Anchor
         run: |
           set -e
@@ -30,15 +35,21 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      # Arcium CLI
+      # -----------------------------
+      # Install Arcium CLI ONLY (no installer)
+      # -----------------------------
       - name: Install Arcium CLI
         run: |
           set -e
-          curl -sSfL https://install.arcium.com/ | bash
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha \
+            -o arcium
+          chmod +x arcium
+          sudo mv arcium /usr/local/bin/arcium
           arcium --version
 
-      # Build only (NO init, NO localnet)
+      # -----------------------------
+      # Build MPC (ONLY)
+      # -----------------------------
       - name: Build Arcium MPC
         run: |
           set -e
