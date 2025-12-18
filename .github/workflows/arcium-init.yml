@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Arcium CLI
         run: |
-          cargo install arcium-cli
+          cargo install --git https://github.com/arciumxyz/arcium-cli
 
       - name: Init Arcium MXE
         run: |
