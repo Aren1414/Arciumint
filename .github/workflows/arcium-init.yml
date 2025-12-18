@@ -11,23 +11,26 @@ jobs:
       # -----------------------------
       # Checkout
       # -----------------------------
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       # -----------------------------
-      # Solana CLI (manual, stable)
+      # Solana CLI (official, stable)
       # -----------------------------
-      - name: Install Solana
+      - name: Install Solana CLI
+        shell: bash
         run: |
           set -e
           curl -sSfL https://solana-install.solana.workers.dev | bash
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
           solana --version
 
       # -----------------------------
-      # Anchor (PINNED)
+      # Anchor (PINNED 0.32.1 — no "latest")
       # -----------------------------
       - name: Install Anchor
+        shell: bash
         run: |
           set -e
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
@@ -36,30 +39,33 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Install arcup ONLY (no installer)
+      # Install arcup (OFFICIAL BINARY)
       # -----------------------------
       - name: Install arcup
+        shell: bash
         run: |
           set -e
-          curl -L https://bin.arcium.com/download/arcup_x86_64_linux_0.6.0-alpha \
+          curl -sSfL https://bin.arcium.com/download/arcup_x86_64_linux_0.6.0-alpha \
             -o arcup
           chmod +x arcup
-          mv arcup /usr/local/bin/arcup
+          sudo mv arcup /usr/local/bin/arcup
           arcup --version
 
       # -----------------------------
-      # Install arcium CLI ONLY
+      # Install Arcium CLI ONLY (no node, no surfpool)
       # -----------------------------
-      - name: Install arcium CLI
+      - name: Install Arcium CLI
+        shell: bash
         run: |
           set -e
-          arcup install --cli-only
+          arcup install 0.6.0-alpha
           arcium --version
 
       # -----------------------------
-      # Init MPC project
+      # Init MPC project (this creates files)
       # -----------------------------
-      - name: Init MPC
+      - name: Initialize MPC project
+        shell: bash
         run: |
           set -e
           mkdir -p arcium
@@ -67,18 +73,21 @@ jobs:
           arcium init disc-mpc
 
       # -----------------------------
-      # Fix client version (documented)
+      # Fix client version to PUBLISHED SDK
       # -----------------------------
-      - name: Fix client
+      - name: Fix Arcium client dependency
+        shell: bash
         run: |
+          set -e
           cd arcium/disc-mpc
           sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
           yarn install
 
       # -----------------------------
-      # Commit
+      # Commit generated files
       # -----------------------------
-      - name: Commit
+      - name: Commit changes
+        shell: bash
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
