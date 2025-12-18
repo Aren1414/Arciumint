@@ -72,11 +72,22 @@ jobs:
           mkdir -p arcium
           cd arcium
 
-          # IMPORTANT:
-          # This actually CREATES the MPC project files
           arcium init disc-mpc
 
-          cd ..
+      # -----------------------------
+      # FIX client version + install deps
+      # -----------------------------
+      - name: Fix Arcium client version and install deps
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd arcium/disc-mpc
+
+          # FIX WRONG TEMPLATE VERSION
+          sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
+
+          yarn install
 
       # -----------------------------
       # Commit generated files
