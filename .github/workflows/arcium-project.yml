@@ -8,19 +8,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Setup Arcium CLI
+      - name: Install Arcium Tooling
         shell: bash
         run: |
           set -euo pipefail
+
+          # Install Arcium (official installer)
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+
+          # Ensure binaries are in PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           export PATH="$HOME/.cargo/bin:$PATH"
+
+          # Verify install
           arcium --version
 
-      - name: Init Arcium MPC Project
+      - name: Initialize Arcium DISC MPC Project
         shell: bash
         run: |
           set -euo pipefail
+
           mkdir -p arcium
           cd arcium
+
+          # create MPC project
           arcium init disc-mpc
+
+      - name: Commit Arcium project
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add arcium
+          git commit -m "init arcium DISC MPC project" || echo "Nothing to commit"
+          git push
