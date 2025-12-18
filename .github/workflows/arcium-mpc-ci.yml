@@ -11,47 +11,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       # -----------------------------
-      # Solana CLI (NO installer side-effects)
+      # Install Solana CLI (clean, explicit PATH)
       # -----------------------------
       - name: Install Solana CLI
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           curl -sSfL https://solana-install.solana.workers.dev | bash
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       # -----------------------------
-      # Anchor (PINNED – per docs)
+      # Install Anchor (AVM pinned – per docs)
       # -----------------------------
       - name: Install Anchor
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install 0.32.1
           avm use 0.32.1
           anchor --version
 
       # -----------------------------
-      # Install Arcium CLI ONLY (no installer)
+      # Install Arcium CLI (binary only, NO installer)
       # -----------------------------
       - name: Install Arcium CLI
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha \
-            -o arcium
-          chmod +x arcium
-          sudo mv arcium /usr/local/bin/arcium
+            -o arcium-cli
+          chmod +x arcium-cli
+          sudo mv arcium-cli /usr/local/bin/arcium
           arcium --version
 
       # -----------------------------
-      # Build MPC (ONLY)
+      # Build MPC (NO init, NO localnet)
       # -----------------------------
       - name: Build Arcium MPC
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           cd arcium/disc_mpc
           arcium build
