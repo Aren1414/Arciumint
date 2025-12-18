@@ -15,64 +15,53 @@ jobs:
         uses: actions/checkout@v4
 
       # -----------------------------
-      # Install Solana CLI ONLY
+      # Install Solana CLI
       # -----------------------------
       - name: Install Solana CLI
         shell: bash
         run: |
           set -euo pipefail
-
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-
           solana --version
 
       # -----------------------------
-      # Install Arcium Tooling (this ALSO checks Anchor)
+      # Install Arcium Tooling (official)
       # -----------------------------
       - name: Install Arcium tooling
         shell: bash
         run: |
           set -euo pipefail
-
           export PATH="$HOME/.cargo/bin:$PATH"
-
-          # Official Arcium installer (handles Anchor check internally)
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
-
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.cargo/bin:$PATH"
-
           arcium --version
           anchor --version
 
       # -----------------------------
-      # Initialize Arcium MPC Project
+      # Initialize Arcium MPC Project (ALLOW FAILURE)
       # -----------------------------
       - name: Initialize Arcium DISC MPC Project
         shell: bash
         run: |
           set -euo pipefail
-          export PATH="$HOME/.cargo/bin:$PATH"
-
           mkdir -p arcium
           cd arcium
 
-          arcium init disc-mpc
+          # IMPORTANT:
+          # arcium init FAILS because of client version
+          # but it DOES create the project files
+          arcium init disc-mpc || true
 
       # -----------------------------
-      # Fix SDK version + install deps
+      # Fix client version + install deps manually
       # -----------------------------
-      - name: Fix client version and install deps
+      - name: Fix Arcium client version
         shell: bash
         run: |
           set -euo pipefail
-
           cd arcium/disc-mpc
 
-          # Force correct published SDK version
           sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
 
           yarn install
