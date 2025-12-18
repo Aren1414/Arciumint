@@ -26,13 +26,15 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install Solana CLI
+      - name: Install Solana CLI (bash required)
+        shell: bash
         run: |
-          sh -c "$(curl -sSfL https://solana-install.solana.workers.dev)"
+          curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       - name: Install Anchor (AVM)
+        shell: bash
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install latest
@@ -40,6 +42,7 @@ jobs:
           anchor --version
 
       - name: Install Arcium Tooling (official)
+        shell: bash
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
