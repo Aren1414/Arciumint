@@ -1,0 +1,46 @@
+name: Arcium MPC CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "arcium/**"
+
+jobs:
+  arcium-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Solana CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
+
+      - name: Install Arcium CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.cargo/bin:$PATH"
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          arcium --version
+
+      - name: Build Arcium MPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd arcium/disc-mpc
+          arcium build
