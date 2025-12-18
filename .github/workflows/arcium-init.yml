@@ -11,19 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # (Optional but recommended) make sure Rust is present (GitHub runner usually has it)
-      - name: Show Rust
-        shell: bash
-        run: |
-          set -euo pipefail
-          rustc -V
-          cargo -V
-
-      # Install Solana + Anchor (you were already doing this successfully)
-      - name: Install Solana CLI
+      # -----------------------------
+      # Install Solana CLI
+      # -----------------------------
+      - name: Install Solana
         shell: bash
         run: |
           set -euo pipefail
@@ -32,18 +25,22 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
 
-      - name: Install Anchor (AVM) pinned
+      # -----------------------------
+      # Install Anchor (PINNED)
+      # -----------------------------
+      - name: Install Anchor
         shell: bash
         run: |
           set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          # pin to avoid "latest" GitHub API timeouts
           avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
 
-      # Install Arcium tooling via official installer (installs arcup + arcium)
-      - name: Install Arcium tooling
+      # -----------------------------
+      # Install Arcium tooling (official)
+      # -----------------------------
+      - name: Install Arcium
         shell: bash
         run: |
           set -euo pipefail
@@ -53,51 +50,39 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           arcium --version
 
-      # Initialize project, then fix npm package version if template points to a non-published version
-      - name: Init MPC project (and fix client version if needed)
+      # -----------------------------
+      # Init MPC project
+      # -----------------------------
+      - name: Init MPC project
         shell: bash
         run: |
           set -euo pipefail
-          export PATH="$HOME/.cargo/bin:$PATH"
-
           mkdir -p arcium
           cd arcium
 
-          # arcium init creates: disc_mpc  (underscore) as your log shows
-          set +e
-          arcium init disc-mpc
-          INIT_EXIT=$?
-          set -e
+          arcium init disc-mpc || true
 
-          # If init failed because yarn couldn't find @arcium-hq/client version,
-          # patch to a published version and install deps.
-          if [ -d "disc_mpc" ]; then
-            cd disc_mpc
+          cd disc_mpc
 
-            if [ $INIT_EXIT -ne 0 ]; then
-              echo "Init step failed (likely yarn). Patching @arcium-hq/client to ^0.5.2 and retrying yarn..."
-              if [ -f package.json ]; then
-                # replace any @arcium-hq/client version with ^0.5.2
-                sed -i 's/"@arcium-hq\/client":[[:space:]]*"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
-              fi
-              yarn install
-            fi
+          # Fix published client version (documented & real)
+          sed -i 's/"@arcium-hq\/client":[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
+          yarn install
 
-            cd ..
-          else
-            echo "Expected folder arcium/disc_mpc was not created."
-            exit 1
-          fi
+          cd ../..
 
-          cd ..
+          # 🔥 CRITICAL FIX
+          # Remove nested git repo created by arcium init
+          rm -rf arcium/disc_mpc/.git
 
-      - name: Commit and push generated project
+      # -----------------------------
+      # Commit
+      # -----------------------------
+      - name: Commit
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-
           git add arcium
-          git commit -m "init arcium MPC project" || echo "Nothing to commit"
+          git commit -m "init arcium MPC project" || true
           git push
