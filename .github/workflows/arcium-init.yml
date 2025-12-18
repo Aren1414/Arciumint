@@ -26,35 +26,49 @@ jobs:
           solana --version
 
       # -----------------------------
-      # Install Arcium Tooling (official)
+      # Install Anchor (FIXED VERSION – no "latest")
       # -----------------------------
-      - name: Install Arcium tooling
+      - name: Install Anchor
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install 0.32.1
+          avm use 0.32.1
+          anchor --version
+
+      # -----------------------------
+      # Install Arcium CLI (SKIP SURFPOOL)
+      # -----------------------------
+      - name: Install Arcium CLI
         shell: bash
         run: |
           set -euo pipefail
           export PATH="$HOME/.cargo/bin:$PATH"
+
+          # Prevent surfpool check
+          export ARCIUM_SKIP_SURFPOOL=1
+
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           arcium --version
-          anchor --version
 
       # -----------------------------
-      # Initialize Arcium MPC Project (ALLOW FAILURE)
+      # Init MPC project (ALLOW CLIENT FAIL)
       # -----------------------------
-      - name: Initialize Arcium DISC MPC Project
+      - name: Init Arcium MPC
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p arcium
           cd arcium
 
-          # IMPORTANT:
-          # arcium init FAILS because of client version
-          # but it DOES create the project files
+          # client version bug – ignore failure
           arcium init disc-mpc || true
 
       # -----------------------------
-      # Fix client version + install deps manually
+      # Fix client version manually
       # -----------------------------
       - name: Fix Arcium client version
         shell: bash
@@ -63,7 +77,6 @@ jobs:
           cd arcium/disc-mpc
 
           sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
-
           yarn install
 
       # -----------------------------
