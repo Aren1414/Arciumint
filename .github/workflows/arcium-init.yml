@@ -11,10 +11,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install prerequisites
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config build-essential libudev-dev libssl-dev
+          sudo apt-get install -y \
+            pkg-config \
+            build-essential \
+            libudev-dev \
+            libssl-dev
 
       - name: Install Rust (stable)
         uses: actions-rs/toolchain@v1
@@ -22,7 +26,20 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install Arcium tooling via official installer
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://solana-install.solana.workers.dev)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana --version
+
+      - name: Install Anchor (AVM)
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
+          anchor --version
+
+      - name: Install Arcium Tooling (official)
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
