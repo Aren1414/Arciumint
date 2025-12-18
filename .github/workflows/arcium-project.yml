@@ -11,21 +11,47 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Arcium Tooling
+      # -----------------------------
+      # Install Solana CLI
+      # -----------------------------
+      - name: Install Solana CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # -----------------------------
+      # Install Anchor (AVM)
+      # -----------------------------
+      - name: Install Anchor
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install latest
+          avm use latest
+
+      # -----------------------------
+      # Install Arcium Tooling
+      # -----------------------------
+      - name: Install Arcium
         shell: bash
         run: |
           set -euo pipefail
 
-          # Install Arcium (official installer)
+          export PATH="$HOME/.cargo/bin:$PATH"
+
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
 
-          # Ensure binaries are in PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           export PATH="$HOME/.cargo/bin:$PATH"
 
-          # Verify install
           arcium --version
 
+      # -----------------------------
+      # Init Arcium MPC Project
+      # -----------------------------
       - name: Initialize Arcium DISC MPC Project
         shell: bash
         run: |
@@ -34,9 +60,11 @@ jobs:
           mkdir -p arcium
           cd arcium
 
-          # create MPC project
           arcium init disc-mpc
 
+      # -----------------------------
+      # Commit generated files
+      # -----------------------------
       - name: Commit Arcium project
         run: |
           git config user.name "github-actions"
