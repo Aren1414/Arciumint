@@ -11,9 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------
+      # Checkout
+      # -----------------------------
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # -----------------------------
+      # Install Solana CLI (official)
+      # -----------------------------
       - name: Install Solana CLI
         shell: bash
         run: |
@@ -21,14 +27,21 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor
+      # -----------------------------
+      # Install Anchor (PINNED – per docs)
+      # -----------------------------
+      - name: Install Anchor (AVM pinned)
         shell: bash
         run: |
           set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install latest
-          avm use latest
+          avm install 0.32.1
+          avm use 0.32.1
+          anchor --version
 
+      # -----------------------------
+      # Install Arcium CLI (official installer)
+      # -----------------------------
       - name: Install Arcium CLI
         shell: bash
         run: |
@@ -38,6 +51,9 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           arcium --version
 
+      # -----------------------------
+      # Build MPC Circuits
+      # -----------------------------
       - name: Build Arcium MPC
         shell: bash
         run: |
