@@ -9,85 +9,79 @@ jobs:
 
     steps:
       # -----------------------------
-      # Checkout repository
+      # Checkout
       # -----------------------------
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       # -----------------------------
-      # Install Solana CLI
+      # Solana CLI (manual, stable)
       # -----------------------------
-      - name: Install Solana CLI
-        shell: bash
+      - name: Install Solana
         run: |
-          set -euo pipefail
-          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          set -e
+          curl -sSfL https://solana-install.solana.workers.dev | bash
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       # -----------------------------
-      # Install Anchor (FIXED VERSION – no "latest")
+      # Anchor (PINNED)
       # -----------------------------
       - name: Install Anchor
-        shell: bash
         run: |
-          set -euo pipefail
+          set -e
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install 0.32.1
           avm use 0.32.1
           anchor --version
 
       # -----------------------------
-      # Install Arcium CLI (SKIP SURFPOOL)
+      # Install arcup ONLY (no installer)
       # -----------------------------
-      - name: Install Arcium CLI
-        shell: bash
+      - name: Install arcup
         run: |
-          set -euo pipefail
-          export PATH="$HOME/.cargo/bin:$PATH"
+          set -e
+          curl -L https://bin.arcium.com/download/arcup_x86_64_linux_0.6.0-alpha \
+            -o arcup
+          chmod +x arcup
+          mv arcup /usr/local/bin/arcup
+          arcup --version
 
-          # Prevent surfpool check
-          export ARCIUM_SKIP_SURFPOOL=1
-
-          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
-
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      # -----------------------------
+      # Install arcium CLI ONLY
+      # -----------------------------
+      - name: Install arcium CLI
+        run: |
+          set -e
+          arcup install --cli-only
           arcium --version
 
       # -----------------------------
-      # Init MPC project (ALLOW CLIENT FAIL)
+      # Init MPC project
       # -----------------------------
-      - name: Init Arcium MPC
-        shell: bash
+      - name: Init MPC
         run: |
-          set -euo pipefail
+          set -e
           mkdir -p arcium
           cd arcium
-
-          # client version bug – ignore failure
-          arcium init disc-mpc || true
+          arcium init disc-mpc
 
       # -----------------------------
-      # Fix client version manually
+      # Fix client version (documented)
       # -----------------------------
-      - name: Fix Arcium client version
-        shell: bash
+      - name: Fix client
         run: |
-          set -euo pipefail
           cd arcium/disc-mpc
-
           sed -i 's/"@arcium-hq\/client": *"[^"]*"/"@arcium-hq\/client": "^0.5.2"/' package.json
           yarn install
 
       # -----------------------------
-      # Commit generated files
+      # Commit
       # -----------------------------
-      - name: Commit Arcium project
-        shell: bash
+      - name: Commit
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-
           git add arcium
-          git commit -m "init arcium DISC MPC project" || echo "Nothing to commit"
+          git commit -m "init arcium MPC project" || true
           git push
