@@ -10,22 +10,38 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-);
-
-const connection = new Connection(
-  process.env.SOLANA_RPC_URL as string,
-  "confirmed"
-);
-
-const faucetKeypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.FAUCET_PRIVATE_KEY as string))
-);
-
 export async function POST(req: Request) {
   try {
+    const {
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY,
+      SOLANA_RPC_URL,
+      FAUCET_PRIVATE_KEY,
+    } = process.env;
+
+    if (
+      !SUPABASE_URL ||
+      !SUPABASE_SERVICE_ROLE_KEY ||
+      !SOLANA_RPC_URL ||
+      !FAUCET_PRIVATE_KEY
+    ) {
+      return NextResponse.json(
+        { error: "Server not configured" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+
+    const faucetKeypair = Keypair.fromSecretKey(
+      Uint8Array.from(JSON.parse(FAUCET_PRIVATE_KEY))
+    );
+
     const body = await req.json();
     const address = body.address;
 
@@ -69,7 +85,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, signature });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: "Faucet failed" },
       { status: 500 }
