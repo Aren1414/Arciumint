@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
 import { submitDiscMpc } from "@/lib/discMpc";
-import { setDiscResult } from "@/lib/discStore";
 
 export default function DiscTestPage() {
   const router = useRouter();
@@ -15,7 +14,14 @@ export default function DiscTestPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  if (!isConnected || !user) {
+  const [mpcRawResult, setMpcRawResult] = useState<any>(null);
+
+  const address = useMemo(() => {
+    const a = user?.addresses?.[0]?.address;
+    return typeof a === "string" ? a : null;
+  }, [user]);
+
+  if (!isConnected || !user || !address) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -42,19 +48,29 @@ export default function DiscTestPage() {
   const submit = async () => {
     try {
       setSubmitting(true);
+      setMpcRawResult(null);
 
       if (Object.keys(answers).length !== total) {
         alert("Please answer all questions");
         return;
       }
 
-      const res = await submitDiscMpc({
-        wallet: user,
+      const provider: any = (window as any)?.solana;
+      if (!provider) {
+        alert("Phantom injected provider not found");
+        return;
+      }
+
+      if (!provider.isConnected && provider.connect) {
+        await provider.connect();
+      }
+
+      const result = await submitDiscMpc({
+        wallet: provider,
         answers,
       });
 
-      setDiscResult(res);
-      router.push("/tests/disc/result");
+      setMpcRawResult(result);
     } catch (err) {
       console.error(err);
       alert("MPC computation failed");
@@ -62,6 +78,44 @@ export default function DiscTestPage() {
       setSubmitting(false);
     }
   };
+
+  if (mpcRawResult) {
+    return (
+      <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
+
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-semibold mb-6">DISC Result</h1>
+
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
+            <pre className="whitespace-pre-wrap break-words text-sm">
+              {JSON.stringify(mpcRawResult, null, 2)}
+            </pre>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => {
+                setMpcRawResult(null);
+                setCurrentIndex(0);
+                setAnswers({});
+              }}
+              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+            >
+              Retake
+            </button>
+
+            <button
+              onClick={() => router.push("/tests")}
+              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+            >
+              Back to Assessments
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
@@ -141,4 +195,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-}
+  }
