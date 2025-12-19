@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 
-// rename: add_together -> compute_disc
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM");
@@ -10,18 +9,45 @@ declare_id!("A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM");
 pub mod disc_mpc {
     use super::*;
 
-    // rename
     pub fn init_compute_disc_comp_def(ctx: Context<InitComputeDiscCompDef>) -> Result<()> {
         init_comp_def(ctx.accounts, None, None)?;
         Ok(())
     }
 
-    // rename
     pub fn compute_disc(
         ctx: Context<ComputeDisc>,
         computation_offset: u64,
+
+        // 28 encrypted answers (each is encrypted u8 => [u8;32])
         ciphertext_0: [u8; 32],
         ciphertext_1: [u8; 32],
+        ciphertext_2: [u8; 32],
+        ciphertext_3: [u8; 32],
+        ciphertext_4: [u8; 32],
+        ciphertext_5: [u8; 32],
+        ciphertext_6: [u8; 32],
+        ciphertext_7: [u8; 32],
+        ciphertext_8: [u8; 32],
+        ciphertext_9: [u8; 32],
+        ciphertext_10: [u8; 32],
+        ciphertext_11: [u8; 32],
+        ciphertext_12: [u8; 32],
+        ciphertext_13: [u8; 32],
+        ciphertext_14: [u8; 32],
+        ciphertext_15: [u8; 32],
+        ciphertext_16: [u8; 32],
+        ciphertext_17: [u8; 32],
+        ciphertext_18: [u8; 32],
+        ciphertext_19: [u8; 32],
+        ciphertext_20: [u8; 32],
+        ciphertext_21: [u8; 32],
+        ciphertext_22: [u8; 32],
+        ciphertext_23: [u8; 32],
+        ciphertext_24: [u8; 32],
+        ciphertext_25: [u8; 32],
+        ciphertext_26: [u8; 32],
+        ciphertext_27: [u8; 32],
+
         pubkey: [u8; 32],
         nonce: u128,
     ) -> Result<()> {
@@ -32,6 +58,32 @@ pub mod disc_mpc {
             .plaintext_u128(nonce)
             .encrypted_u8(ciphertext_0)
             .encrypted_u8(ciphertext_1)
+            .encrypted_u8(ciphertext_2)
+            .encrypted_u8(ciphertext_3)
+            .encrypted_u8(ciphertext_4)
+            .encrypted_u8(ciphertext_5)
+            .encrypted_u8(ciphertext_6)
+            .encrypted_u8(ciphertext_7)
+            .encrypted_u8(ciphertext_8)
+            .encrypted_u8(ciphertext_9)
+            .encrypted_u8(ciphertext_10)
+            .encrypted_u8(ciphertext_11)
+            .encrypted_u8(ciphertext_12)
+            .encrypted_u8(ciphertext_13)
+            .encrypted_u8(ciphertext_14)
+            .encrypted_u8(ciphertext_15)
+            .encrypted_u8(ciphertext_16)
+            .encrypted_u8(ciphertext_17)
+            .encrypted_u8(ciphertext_18)
+            .encrypted_u8(ciphertext_19)
+            .encrypted_u8(ciphertext_20)
+            .encrypted_u8(ciphertext_21)
+            .encrypted_u8(ciphertext_22)
+            .encrypted_u8(ciphertext_23)
+            .encrypted_u8(ciphertext_24)
+            .encrypted_u8(ciphertext_25)
+            .encrypted_u8(ciphertext_26)
+            .encrypted_u8(ciphertext_27)
             .build();
 
         queue_computation(
@@ -50,7 +102,6 @@ pub mod disc_mpc {
         Ok(())
     }
 
-    // rename + encrypted_ix
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
         ctx: Context<ComputeDiscCallback>,
@@ -64,15 +115,19 @@ pub mod disc_mpc {
             Err(_) => return Err(ErrorCode::AbortedComputation.into()),
         };
 
-        emit!(SumEvent {
-            sum: o.ciphertexts[0],
+        
+        emit!(DiscScoresEvent {
+            d_score_cipher: o.ciphertexts[0],
+            i_score_cipher: o.ciphertexts[1],
+            s_score_cipher: o.ciphertexts[2],
+            c_score_cipher: o.ciphertexts[3],
             nonce: o.nonce.to_le_bytes(),
         });
+
         Ok(())
     }
 }
 
-// rename
 #[queue_computation_accounts("compute_disc", payer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
@@ -97,21 +152,21 @@ pub struct ComputeDisc<'info> {
         mut,
         address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
-    /// CHECK
+    /// CHECK: checked by arcium program.
     pub mempool_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
         address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
-    /// CHECK
+    /// CHECK: checked by arcium program.
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(
         mut,
         address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet)
     )]
-    /// CHECK
+    /// CHECK: checked by arcium program.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
@@ -133,7 +188,6 @@ pub struct ComputeDisc<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-// rename
 #[callback_accounts("compute_disc")]
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
@@ -145,7 +199,7 @@ pub struct ComputeDiscCallback<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK
+    /// CHECK: checked by arcium program via callback constraints.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(
@@ -154,11 +208,10 @@ pub struct ComputeDiscCallback<'info> {
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
-    /// CHECK
+    /// CHECK: checked by account constraint
     pub instructions_sysvar: AccountInfo<'info>,
 }
 
-// rename
 #[init_computation_definition_accounts("compute_disc", payer)]
 #[derive(Accounts)]
 pub struct InitComputeDiscCompDef<'info> {
@@ -169,7 +222,7 @@ pub struct InitComputeDiscCompDef<'info> {
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
     #[account(mut)]
-    /// CHECK
+    /// CHECK: checked by arcium program; not initialized yet.
     pub comp_def_account: UncheckedAccount<'info>,
 
     pub arcium_program: Program<'info, Arcium>,
@@ -177,8 +230,11 @@ pub struct InitComputeDiscCompDef<'info> {
 }
 
 #[event]
-pub struct SumEvent {
-    pub sum: [u8; 32],
+pub struct DiscScoresEvent {
+    pub d_score_cipher: [u8; 32],
+    pub i_score_cipher: [u8; 32],
+    pub s_score_cipher: [u8; 32],
+    pub c_score_cipher: [u8; 32],
     pub nonce: [u8; 16],
 }
 
@@ -188,4 +244,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-}
+        }
