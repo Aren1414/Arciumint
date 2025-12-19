@@ -4,10 +4,8 @@ use arcis::*;
 mod circuits {
     use arcis::*;
 
-    // 28 answers, each in range 0..3
-    // 0 = D, 1 = I, 2 = S, 3 = C
     pub struct DiscInput {
-        pub answers: [u8; 28],
+        pub answers: [u8; 28], // 0=D, 1=I, 2=S, 3=C
     }
 
     pub struct DiscOutput {
@@ -29,18 +27,14 @@ mod circuits {
         let mut s: u8 = 0;
         let mut c: u8 = 0;
 
-        // MPC-safe loop
+        // MPC-safe counting (NO match, NO branching)
         for idx in 0..28 {
             let v = input.answers[idx];
 
-            // match is MPC-safe in Arcis
-            match v {
-                0 => d += 1, // Dominance
-                1 => i += 1, // Influence
-                2 => s += 1, // Steadiness
-                3 => c += 1, // Conscientiousness
-                _ => {}
-            }
+            d += (v == 0) as u8;
+            i += (v == 1) as u8;
+            s += (v == 2) as u8;
+            c += (v == 3) as u8;
         }
 
         let output = DiscOutput {
