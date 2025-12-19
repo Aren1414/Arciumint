@@ -1,44 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
 import { submitDiscMpc } from "@/lib/discMpc";
 
-// Minimal Phantom provider type (no external dependency)
-type PhantomSolanaProvider = {
-  isPhantom?: boolean;
-  publicKey?: { toString(): string };
-  signTransaction?: (tx: any) => Promise<any>;
-  signAllTransactions?: (txs: any[]) => Promise<any[]>;
-};
-
 export default function DiscTestPage() {
   const router = useRouter();
   const { isConnected, user } = usePhantom();
 
-  const [provider, setProvider] = useState<PhantomSolanaProvider | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // ----------------------------------
-  // Resolve Phantom provider safely
-  // ----------------------------------
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const solana = (window as any).solana as PhantomSolanaProvider | undefined;
-      if (solana?.isPhantom) {
-        setProvider(solana);
-      }
-    }
-  }, []);
-
-  // ----------------------------------
+  // ----------------------------
   // Wallet guard (SDK-correct)
-  // ----------------------------------
-  if (!isConnected || !user?.addresses?.length || !provider) {
+  // ----------------------------
+  if (!isConnected || !user) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -54,11 +33,10 @@ export default function DiscTestPage() {
 
   const question = discQuestions[currentIndex];
   const total = discQuestions.length;
-  const address = user.addresses[0].address;
 
-  // ----------------------------------
+  // ----------------------------
   // Select answer
-  // ----------------------------------
+  // ----------------------------
   const selectOption = (optionId: string) => {
     setAnswers((prev) => ({
       ...prev,
@@ -66,9 +44,9 @@ export default function DiscTestPage() {
     }));
   };
 
-  // ----------------------------------
+  // ----------------------------
   // Submit MPC
-  // ----------------------------------
+  // ----------------------------
   const submit = async () => {
     try {
       setSubmitting(true);
@@ -79,8 +57,7 @@ export default function DiscTestPage() {
       }
 
       const tx = await submitDiscMpc({
-        provider, // window.solana
-        address,  // from Phantom SDK
+        wallet: user, 
         answers,
       });
 
@@ -94,9 +71,9 @@ export default function DiscTestPage() {
     }
   };
 
-  // ----------------------------------
+  // ----------------------------
   // UI
-  // ----------------------------------
+  // ----------------------------
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
