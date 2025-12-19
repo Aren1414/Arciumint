@@ -13,18 +13,24 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          curl -sSfL https://release.solana.com/stable/install | sh
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Verify Solana installation
+        run: |
+          solana --version
+          solana-keygen --version
 
       - name: Generate solana id.json
         run: |
           mkdir -p ~/.config/solana
-          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana-keygen new --no-bip39-passphrase --silent \
+            -o ~/.config/solana/id.json
 
       - name: Generate disc_mpc program keypair
         run: |
           mkdir -p arcium/disc_mpc/target/deploy
-          solana-keygen new --no-bip39-passphrase \
+          solana-keygen new --no-bip39-passphrase --silent \
             -o arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
       - name: Upload keypairs (PRIVATE)
