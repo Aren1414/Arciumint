@@ -18,10 +18,7 @@ mod circuits {
     }
 
     #[instruction]
-    pub fn compute_disc(
-        input_ctxt: Enc<Shared, DiscInput>
-    ) -> Enc<Shared, DiscOutput> {
-
+    pub fn compute_disc(input_ctxt: Enc<Shared, DiscInput>) -> Enc<Shared, DiscOutput> {
         let input = input_ctxt.to_arcis();
 
         let mut d: u8 = 0;
@@ -35,7 +32,6 @@ mod circuits {
         // - bool -> u8 cast is supported
         for idx in 0..28 {
             let v = input.answers[idx];
-
             d += (v == 0) as u8;
             i += (v == 1) as u8;
             s += (v == 2) as u8;
