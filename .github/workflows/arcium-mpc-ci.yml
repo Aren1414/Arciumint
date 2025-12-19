@@ -59,4 +59,4 @@ jobs:
         run: |
           set -euo pipefail
           cd arcium/disc_mpc
-          arcium build
+          arcium build --skip-keys-sync
