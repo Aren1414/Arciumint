@@ -9,16 +9,18 @@ import { submitDiscMpc } from "@/lib/discMpc";
 export default function DiscTestPage() {
   const router = useRouter();
   const phantom = usePhantom();
-  const { isConnected, wallet } = phantom;
+
+  const isConnected = phantom.isConnected;
+  const solana = phantom.solana; 
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // ----------------------------
-  // Wallet guard
+  // Wallet guard (FINAL)
   // ----------------------------
-  if (!isConnected || !wallet) {
+  if (!isConnected || !solana) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -46,26 +48,24 @@ export default function DiscTestPage() {
   };
 
   // ----------------------------
-  // Submit MPC
+  // Submit MPC (FINAL)
   // ----------------------------
   const submit = async () => {
     try {
       setSubmitting(true);
 
-      // sanity check
       if (Object.keys(answers).length !== total) {
         alert("Please answer all questions");
         return;
       }
 
       const tx = await submitDiscMpc({
-        wallet,
+        wallet: solana, 
         answers,
       });
 
       console.log("DISC MPC submitted:", tx);
 
-      
       router.push("/tests");
     } catch (err) {
       console.error(err);
@@ -80,11 +80,9 @@ export default function DiscTestPage() {
   // ----------------------------
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
 
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">
             DISC Personality Assessment
@@ -94,7 +92,6 @@ export default function DiscTestPage() {
           </span>
         </div>
 
-        {/* Question Card */}
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
           <h2 className="text-lg font-medium mb-6">
             {question.text}
@@ -124,7 +121,6 @@ export default function DiscTestPage() {
           </div>
         </div>
 
-        {/* Navigation */}
         <div className="flex justify-between items-center mt-8">
           <button
             onClick={() => router.push("/tests")}
