@@ -1,10 +1,12 @@
 use arcis::*;
+use arcis_compiler::traits::Select;
 
 #[encrypted]
 mod circuits {
-    use arcis::*;
+    use super::*;
+    use arcis_compiler::traits::Select;
 
-    // 28 answers
+    // 28 answers, each in range 0..=3
     // 0 = D, 1 = I, 2 = S, 3 = C
     pub struct DiscInput {
         pub answers: [u8; 28],
@@ -18,9 +20,7 @@ mod circuits {
     }
 
     #[instruction]
-    pub fn compute_disc(
-        input_ctxt: Enc<Shared, DiscInput>,
-    ) -> Enc<Shared, DiscOutput> {
+    pub fn compute_disc(input_ctxt: Enc<Shared, DiscInput>) -> Enc<Shared, DiscOutput> {
         let input = input_ctxt.to_arcis();
 
         let mut d: u8 = 0;
@@ -28,17 +28,15 @@ mod circuits {
         let mut s: u8 = 0;
         let mut c: u8 = 0;
 
-        // MPC-safe loop
+        // MPC-safe counting (no match)
         for idx in 0..28 {
             let v = input.answers[idx];
 
-            // MPC-safe equality checks
-            let is_d = v.eq(&0u8);
-            let is_i = v.eq(&1u8);
-            let is_s = v.eq(&2u8);
-            let is_c = v.eq(&3u8);
+            let is_d: bool = v == 0;
+            let is_i: bool = v == 1;
+            let is_s: bool = v == 2;
+            let is_c: bool = v == 3;
 
-            // MPC-safe accumulation (NO branching, NO casting)
             d = d + is_d.select(1u8, 0u8);
             i = i + is_i.select(1u8, 0u8);
             s = s + is_s.select(1u8, 0u8);
