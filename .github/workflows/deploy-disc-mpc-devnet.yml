@@ -11,22 +11,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Solana CLI (binary)
+      - name: Install Solana CLI (official installer)
         run: |
-          SOLANA_VERSION=1.18.26
-          curl -L https://github.com/solana-labs/solana/releases/download/v$SOLANA_VERSION/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
-          tar -xjf solana.tar.bz2
-          sudo mv solana-release/bin/* /usr/local/bin/
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
           solana-keygen --version
 
-      - name: Install Rust toolchain compatible with Solana 1.18
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.75.0
-          components: rustfmt, clippy
-
-      - name: Restore Solana wallet from secret + set devnet
+      - name: Restore Solana wallet + set devnet
         run: |
           mkdir -p ~/.config/solana
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
@@ -35,7 +27,7 @@ jobs:
           solana address
           solana balance
 
-      - name: Airdrop devnet SOL (for deploy fees)
+      - name: Airdrop devnet SOL
         run: |
           solana airdrop 2 || solana airdrop 1 || true
           solana balance
@@ -43,13 +35,12 @@ jobs:
       - name: Restore program keypair
         run: |
           mkdir -p arcium/disc_mpc/target/deploy
-          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' \
+            > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
-      - name: Regenerate Cargo.lock in compatible format
-        working-directory: arcium/disc_mpc
+      - name: Remove Cargo.lock (CRITICAL)
         run: |
-          rm -f Cargo.lock
-          cargo generate-lockfile
+          rm -f arcium/disc_mpc/Cargo.lock
 
       - name: Build DISC MPC program (SBF)
         working-directory: arcium/disc_mpc
