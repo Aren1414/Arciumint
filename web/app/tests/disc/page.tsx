@@ -8,7 +8,7 @@ import { submitDiscMpc } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
-  const { isConnected, user, provider } = usePhantom();
+  const { isConnected, user } = usePhantom();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -20,7 +20,7 @@ export default function DiscTestPage() {
     return typeof a === "string" ? a : null;
   }, [user]);
 
-  if (!isConnected || !user || !address || !provider) {
+  if (!isConnected || !user || !address) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -44,6 +44,11 @@ export default function DiscTestPage() {
     }));
   };
 
+  const getSolanaProvider = () => {
+    if (typeof window === "undefined") return null;
+    return (window as any).phantom?.solana ?? null;
+  };
+
   const submit = async () => {
     try {
       setSubmitting(true);
@@ -52,6 +57,16 @@ export default function DiscTestPage() {
       if (Object.keys(answers).length !== total) {
         alert("Answer all questions");
         return;
+      }
+
+      const provider = getSolanaProvider();
+      if (!provider) {
+        alert("Wallet not available");
+        return;
+      }
+
+      if (!provider.isConnected) {
+        await provider.connect();
       }
 
       const result = await submitDiscMpc({
@@ -185,4 +200,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-  }
+}
