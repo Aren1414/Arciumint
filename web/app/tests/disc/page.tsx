@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
@@ -8,17 +8,27 @@ import { submitDiscMpc } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
-  const { isConnected } = usePhantom();
+  const { isConnected, user } = usePhantom();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<any>(null);
 
-  if (!isConnected) {
+  const address = useMemo(() => {
+    const a = user?.addresses?.[0]?.address;
+    return typeof a === "string" ? a : null;
+  }, [user]);
+
+  if (!isConnected || !user || !address) {
     return (
-      <main className="min-h-screen flex items-center justify-center text-white">
-        Wallet not connected
+      <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
+        <h2 className="text-xl mb-4">Wallet not connected</h2>
+        <button
+          onClick={() => router.push("/tests")}
+          className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+        >
+          Back to Assessments
+        </button>
       </main>
     );
   }
@@ -26,22 +36,29 @@ export default function DiscTestPage() {
   const question = discQuestions[currentIndex];
   const total = discQuestions.length;
 
-  const selectOption = (id: string) => {
-    setAnswers((p) => ({ ...p, [question.id]: id }));
+  const selectOption = (optionId: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [question.id]: optionId,
+    }));
   };
+
+  const allAnswered = discQuestions.every(
+    (q) => typeof answers[q.id] === "string"
+  );
 
   const submit = async () => {
     try {
       setSubmitting(true);
 
-      if (Object.keys(answers).length !== total) {
+      if (!allAnswered) {
         alert("Answer all questions");
         return;
       }
 
-      const provider = (window as any).solana;
-      if (!provider?.isPhantom) {
-        alert("Phantom wallet not found");
+      const provider: any = (window as any)?.solana;
+      if (!provider || !provider.isPhantom) {
+        alert("Wallet not available");
         return;
       }
 
@@ -49,102 +66,98 @@ export default function DiscTestPage() {
         await provider.connect();
       }
 
-      const res = await submitDiscMpc({
+      await submitDiscMpc({
         wallet: provider,
         answers,
       });
 
-      setResult(res);
-    } catch (e) {
-      console.error(e);
-      alert("MPC failed");
+      router.push("/tests/disc/result");
+    } catch (err) {
+      console.error(err);
+      alert("MPC computation failed");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (result) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-white">
-        <h1 className="text-2xl mb-4">DISC Result (Private)</h1>
-        <pre className="text-sm bg-black/40 p-4 rounded max-w-xl overflow-auto">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-        <button
-          className="mt-6 px-4 py-2 bg-blue-600 rounded"
-          onClick={() => {
-            setResult(null);
-            setAnswers({});
-            setCurrentIndex(0);
-          }}
-        >
-          Retake
-        </button>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen px-6 py-10 text-white bg-[#0b0018]">
+    <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
+
       <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between mb-6">
-          <h1 className="text-xl font-semibold">DISC Personality Test</h1>
-          <span>{currentIndex + 1} / {total}</span>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold">
+            DISC Personality Assessment
+          </h1>
+          <span className="text-white/70">
+            {currentIndex + 1} / {total}
+          </span>
         </div>
 
-        <div className="bg-white/10 p-6 rounded-xl">
-          <h2 className="text-lg mb-6">{question.text}</h2>
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
+          <h2 className="text-lg font-medium mb-6">
+            {question.text}
+          </h2>
 
           <div className="space-y-3">
-            {question.options.map((o) => {
-              const selected = answers[question.id] === o.id;
+            {question.options.map((option) => {
+              const selected = answers[question.id] === option.id;
 
               return (
                 <button
-                  key={o.id}
-                  onClick={() => selectOption(o.id)}
+                  key={option.id}
+                  onClick={() => selectOption(option.id)}
                   className={`
-                    w-full text-left px-4 py-3 rounded-lg border
-                    transition
-                    ${selected
-                      ? "bg-purple-600 border-purple-400 text-white"
-                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                    w-full text-left px-4 py-3 rounded-lg border transition
+                    ${
+                      selected
+                        ? "bg-purple-600/60 border-purple-400"
+                        : "bg-white/5 border-white/10 hover:bg-white/10"
                     }
                   `}
                 >
-                  {o.text}
+                  {option.text}
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between items-center mt-8">
           <button
-            disabled={currentIndex === 0}
-            onClick={() => setCurrentIndex((i) => i - 1)}
-            className="px-4 py-2 bg-white/10 rounded disabled:opacity-40"
+            onClick={() => router.push("/tests")}
+            className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
           >
-            Previous
+            ← Back
           </button>
 
-          {currentIndex < total - 1 ? (
+          <div className="flex gap-3">
             <button
-              disabled={!answers[question.id]}
-              onClick={() => setCurrentIndex((i) => i + 1)}
-              className="px-4 py-2 bg-purple-600 rounded disabled:opacity-40"
+              disabled={currentIndex === 0 || submitting}
+              onClick={() => setCurrentIndex((i) => i - 1)}
+              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 disabled:opacity-40 transition"
             >
-              Next
+              Previous
             </button>
-          ) : (
-            <button
-              onClick={submit}
-              disabled={submitting}
-              className="px-4 py-2 bg-green-600 rounded"
-            >
-              {submitting ? "Submitting..." : "Finish"}
-            </button>
-          )}
+
+            {currentIndex < total - 1 ? (
+              <button
+                disabled={!answers[question.id] || submitting}
+                onClick={() => setCurrentIndex((i) => i + 1)}
+                className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-40 transition"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                disabled={!allAnswered || submitting}
+                onClick={submit}
+                className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 transition"
+              >
+                {submitting ? "Submitting..." : "Finish"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </main>
