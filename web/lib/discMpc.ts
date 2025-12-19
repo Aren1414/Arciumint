@@ -22,16 +22,11 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
-  const { createClient, encryptU8 } = await import("@arcium-hq/client");
+  const arcium: any = await import("@arcium-hq/client");
 
   const PROGRAM_ID = new PublicKey(
     "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
   );
-
-  const client = createClient({
-    programId: PROGRAM_ID,
-    cluster: "devnet",
-  });
 
   const mapped = mapAnswers(answers);
 
@@ -39,12 +34,15 @@ export async function submitDiscMpc({
     throw new Error("DISC requires exactly 28 answers");
   }
 
-  const encryptedAnswers = encryptU8(mapped);
+  const encryptedAnswers = arcium.encryptU8(mapped);
 
-  const tx = await client.queueComputation({
+  const tx = await arcium.queueComputation({
     wallet,
+    programId: PROGRAM_ID,
     computation: "compute_disc",
-    args: [encryptedAnswers],
+    args: {
+      answers: encryptedAnswers,
+    },
   });
 
   return tx;
