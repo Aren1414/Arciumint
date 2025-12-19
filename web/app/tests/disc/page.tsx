@@ -14,9 +14,6 @@ export default function DiscTestPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // ----------------------------
-  // Wallet guard (SDK-correct)
-  // ----------------------------
   if (!isConnected || !user) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
@@ -34,9 +31,6 @@ export default function DiscTestPage() {
   const question = discQuestions[currentIndex];
   const total = discQuestions.length;
 
-  // ----------------------------
-  // Select answer
-  // ----------------------------
   const selectOption = (optionId: string) => {
     setAnswers((prev) => ({
       ...prev,
@@ -44,9 +38,6 @@ export default function DiscTestPage() {
     }));
   };
 
-  // ----------------------------
-  // Submit MPC
-  // ----------------------------
   const submit = async () => {
     try {
       setSubmitting(true);
@@ -57,7 +48,7 @@ export default function DiscTestPage() {
       }
 
       const tx = await submitDiscMpc({
-        wallet: user, 
+        wallet: user,
         answers,
       });
 
@@ -71,9 +62,6 @@ export default function DiscTestPage() {
     }
   };
 
-  // ----------------------------
-  // UI
-  // ----------------------------
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
