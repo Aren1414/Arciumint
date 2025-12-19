@@ -1,0 +1,48 @@
+name: Deploy DISC MPC Program (Devnet)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Solana CLI
+        run: |
+          SOLANA_VERSION=1.18.26
+          curl -L https://github.com/solana-labs/solana/releases/download/v$SOLANA_VERSION/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
+          tar -xjf solana.tar.bz2
+          sudo mv solana-release/bin/* /usr/local/bin/
+          solana --version
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Solana wallet from secret
+        run: |
+          mkdir -p ~/.config/solana
+          echo '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
+          solana config set --keypair ~/.config/solana/id.json
+          solana config set --url https://api.devnet.solana.com
+          solana balance
+
+      - name: Restore program keypair
+        run: |
+          mkdir -p arcium/disc_mpc/target/deploy
+          echo '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+      - name: Build DISC MPC program
+        working-directory: arcium/disc_mpc
+        run: |
+          cargo build-bpf
+
+      - name: Deploy DISC MPC program to devnet
+        working-directory: arcium/disc_mpc
+        run: |
+          solana program deploy \
+            target/deploy/disc_mpc.so \
+            --program-id target/deploy/disc_mpc-keypair.json
