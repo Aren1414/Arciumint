@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
 import { submitDiscMpc } from "@/lib/discMpc";
+import { setDiscResult } from "@/lib/discStore";
 
 export default function DiscTestPage() {
   const router = useRouter();
@@ -47,11 +48,12 @@ export default function DiscTestPage() {
         return;
       }
 
-      await submitDiscMpc({
+      const res = await submitDiscMpc({
         wallet: user,
         answers,
       });
 
+      setDiscResult(res);
       router.push("/tests/disc/result");
     } catch (err) {
       console.error(err);
@@ -67,18 +69,14 @@ export default function DiscTestPage() {
 
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">
-            DISC Personality Assessment
-          </h1>
+          <h1 className="text-2xl font-semibold">DISC Personality Assessment</h1>
           <span className="text-white/70">
             {currentIndex + 1} / {total}
           </span>
         </div>
 
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-medium mb-6">
-            {question.text}
-          </h2>
+          <h2 className="text-lg font-medium mb-6">{question.text}</h2>
 
           <div className="space-y-3">
             {question.options.map((option) => {
@@ -131,9 +129,7 @@ export default function DiscTestPage() {
               </button>
             ) : (
               <button
-                disabled={
-                  Object.keys(answers).length !== total || submitting
-                }
+                disabled={Object.keys(answers).length !== total || submitting}
                 onClick={submit}
                 className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 transition"
               >
