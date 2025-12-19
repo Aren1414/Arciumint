@@ -7,49 +7,51 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      SOLANA_VERSION: 1.18.26
+      SOLANA_RPC_URL: https://api.devnet.solana.com
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Solana CLI (official installer)
+      # --- Install Solana CLI (SAFE WAY) ---
+      - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          curl -L https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
+          tar -xjf solana.tar.bz2
+          sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
           solana-keygen --version
 
-      - name: Restore Solana wallet + set devnet
+      # --- Restore wallet keypair ---
+      - name: Restore Solana wallet
         run: |
           mkdir -p ~/.config/solana
-          printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
+          echo "${SOLANA_WALLET_KEYPAIR}" > ~/.config/solana/id.json
           solana config set --keypair ~/.config/solana/id.json
-          solana config set --url https://api.devnet.solana.com
-          solana address
-          solana balance
+          solana config set --url ${SOLANA_RPC_URL}
+        env:
+          SOLANA_WALLET_KEYPAIR: ${{ secrets.SOLANA_WALLET_KEYPAIR }}
 
-      - name: Airdrop devnet SOL
+      # --- Airdrop (Devnet only) ---
+      - name: Airdrop SOL (best effort)
         run: |
           solana airdrop 2 || solana airdrop 1 || true
           solana balance
 
+      # --- Restore program keypair ---
       - name: Restore program keypair
         run: |
           mkdir -p arcium/disc_mpc/target/deploy
-          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' \
-            > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+          echo "${DISC_MPC_PROGRAM_KEYPAIR}" > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+        env:
+          DISC_MPC_PROGRAM_KEYPAIR: ${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}
 
-      - name: Remove Cargo.lock (CRITICAL)
-        run: |
-          rm -f arcium/disc_mpc/Cargo.lock
-
-      - name: Build DISC MPC program (SBF)
+      # --- Build & Deploy ---
+      - name: Build & Deploy program
         working-directory: arcium/disc_mpc
         run: |
+          rm -f Cargo.lock
           cargo build-bpf
-
-      - name: Deploy DISC MPC program to devnet
-        working-directory: arcium/disc_mpc
-        run: |
-          solana program deploy \
-            target/deploy/disc_mpc.so \
-            --program-id target/deploy/disc_mpc-keypair.json
+          solana program deploy target/deploy/disc_mpc.so
