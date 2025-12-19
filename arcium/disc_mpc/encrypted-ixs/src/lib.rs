@@ -4,8 +4,10 @@ use arcis::*;
 mod circuits {
     use arcis::*;
 
+    // 28 answers
+    // 0 = D, 1 = I, 2 = S, 3 = C
     pub struct DiscInput {
-        pub answers: [u8; 28], // 0=D, 1=I, 2=S, 3=C
+        pub answers: [u8; 28],
     }
 
     pub struct DiscOutput {
@@ -17,9 +19,8 @@ mod circuits {
 
     #[instruction]
     pub fn compute_disc(
-        input_ctxt: Enc<Shared, DiscInput>
+        input_ctxt: Enc<Shared, DiscInput>,
     ) -> Enc<Shared, DiscOutput> {
-
         let input = input_ctxt.to_arcis();
 
         let mut d: u8 = 0;
@@ -27,14 +28,21 @@ mod circuits {
         let mut s: u8 = 0;
         let mut c: u8 = 0;
 
-        // MPC-safe counting (NO match, NO branching)
+        // MPC-safe loop
         for idx in 0..28 {
             let v = input.answers[idx];
 
-            d += (v == 0) as u8;
-            i += (v == 1) as u8;
-            s += (v == 2) as u8;
-            c += (v == 3) as u8;
+            // MPC-safe equality checks
+            let is_d = v.eq(&0u8);
+            let is_i = v.eq(&1u8);
+            let is_s = v.eq(&2u8);
+            let is_c = v.eq(&3u8);
+
+            // MPC-safe accumulation (NO branching, NO casting)
+            d = d + is_d.select(1u8, 0u8);
+            i = i + is_i.select(1u8, 0u8);
+            s = s + is_s.select(1u8, 0u8);
+            c = c + is_c.select(1u8, 0u8);
         }
 
         let output = DiscOutput {
