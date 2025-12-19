@@ -2,26 +2,17 @@
 
 import { PublicKey } from "@solana/web3.js";
 
-/**
- * DISC answers mapping:
- * a -> 0 (D)
- * b -> 1 (I)
- * c -> 2 (S)
- * d -> 3 (C)
- */
-function mapAnswers(
-  answers: Record<number, string>
-): number[] {
-  return Object.keys(answers)
-    .sort((a, b) => Number(a) - Number(b))
-    .map((k) => {
-      const v = answers[Number(k)];
-      if (v === "a") return 0;
-      if (v === "b") return 1;
-      if (v === "c") return 2;
-      if (v === "d") return 3;
-      throw new Error("Invalid DISC option");
-    });
+function mapAnswers(answers: Record<number, string>): number[] {
+  const out: number[] = [];
+  for (let i = 1; i <= 28; i++) {
+    const v = answers[i];
+    if (v === "a") out.push(0);
+    else if (v === "b") out.push(1);
+    else if (v === "c") out.push(2);
+    else if (v === "d") out.push(3);
+    else throw new Error("Invalid DISC option");
+  }
+  return out;
 }
 
 export async function submitDiscMpc({
@@ -31,39 +22,29 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
-  // ⬇️ dynamic import (CRITICAL)
-  const {
-    ArciumClient,
-    encryptU8,
-  } = await import("@arcium-hq/client");
+  const { createClient, encryptU8 } = await import("@arcium-hq/client");
 
   const PROGRAM_ID = new PublicKey(
     "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
   );
 
-  const client = new ArciumClient({
-    wallet,
+  const client = createClient({
     programId: PROGRAM_ID,
+    cluster: "devnet",
   });
 
-  // map answers -> [u8;28]
   const mapped = mapAnswers(answers);
 
   if (mapped.length !== 28) {
     throw new Error("DISC requires exactly 28 answers");
   }
 
-  // encrypt answers (u8[])
-  const encryptedAnswers = await Promise.all(
-    mapped.map((v) => encryptU8(v))
-  );
+  const encryptedAnswers = encryptU8(mapped);
 
-  // queue MPC computation
   const tx = await client.queueComputation({
-    instruction: "compute_disc",
-    inputs: {
-      answers: encryptedAnswers,
-    },
+    wallet,
+    computation: "compute_disc",
+    args: [encryptedAnswers],
   });
 
   return tx;
