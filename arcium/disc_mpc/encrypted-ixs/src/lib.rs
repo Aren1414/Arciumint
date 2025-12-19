@@ -4,8 +4,10 @@ use arcis::*;
 mod circuits {
     use arcis::*;
 
+    // 28 answers, each in range 0..3
+    // 0 = D, 1 = I, 2 = S, 3 = C
     pub struct DiscInput {
-        pub answers: [u8; 28], // 0=a, 1=b, 2=c, 3=d
+        pub answers: [u8; 28],
     }
 
     pub struct DiscOutput {
@@ -17,28 +19,37 @@ mod circuits {
 
     #[instruction]
     pub fn compute_disc(
-        ctx: Enc<Shared, DiscInput>,
+        input_ctxt: Enc<Shared, DiscInput>
     ) -> Enc<Shared, DiscOutput> {
-        let input = ctx.to_arcis();
+
+        let input = input_ctxt.to_arcis();
 
         let mut d: u8 = 0;
         let mut i: u8 = 0;
         let mut s: u8 = 0;
         let mut c: u8 = 0;
 
+        // MPC-safe loop
         for idx in 0..28 {
             let v = input.answers[idx];
-            if v == 0 { d += 1; }
-            else if v == 1 { i += 1; }
-            else if v == 2 { s += 1; }
-            else if v == 3 { c += 1; }
+
+            // match is MPC-safe in Arcis
+            match v {
+                0 => d += 1, // Dominance
+                1 => i += 1, // Influence
+                2 => s += 1, // Steadiness
+                3 => c += 1, // Conscientiousness
+                _ => {}
+            }
         }
 
-        ctx.owner.from_arcis(DiscOutput {
+        let output = DiscOutput {
             d_score: d,
             i_score: i,
             s_score: s,
             c_score: c,
-        })
+        };
+
+        input_ctxt.owner.from_arcis(output)
     }
 }
