@@ -15,49 +15,6 @@ function mapAnswers(answers: Record<number, string>): number[] {
   return out;
 }
 
-function pickOutput(raw: any) {
-  const candidates = [
-    raw?.output,
-    raw?.outputs,
-    raw?.result,
-    raw?.data,
-    raw,
-  ];
-  for (const c of candidates) {
-    if (!c) continue;
-    if (
-      typeof c?.d_score !== "undefined" ||
-      typeof c?.i_score !== "undefined" ||
-      typeof c?.s_score !== "undefined" ||
-      typeof c?.c_score !== "undefined"
-    ) {
-      return c;
-    }
-    if (
-      typeof c?.d !== "undefined" ||
-      typeof c?.i !== "undefined" ||
-      typeof c?.s !== "undefined" ||
-      typeof c?.c !== "undefined"
-    ) {
-      return c;
-    }
-    if (c?.field_0) return c.field_0;
-  }
-  return null;
-}
-
-async function toU8(arcium: any, v: any): Promise<number> {
-  if (typeof v === "number") return v;
-  if (typeof v === "bigint") return Number(v);
-  if (v == null) throw new Error("Missing output field");
-  if (typeof arcium.decryptU8 === "function") {
-    const r = await arcium.decryptU8(v);
-    if (typeof r === "number") return r;
-    if (Array.isArray(r) && typeof r[0] === "number") return r[0];
-  }
-  throw new Error("Unable to decode MPC output");
-}
-
 export async function submitDiscMpc({
   wallet,
   answers,
@@ -67,12 +24,15 @@ export async function submitDiscMpc({
 }) {
   const arcium: any = await import("@arcium-hq/client");
 
+  if (!wallet || !wallet.publicKey || !wallet.signTransaction) {
+    throw new Error("Wallet provider not available");
+  }
+
   const PROGRAM_ID = new PublicKey(
     "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
   );
 
   const mapped = mapAnswers(answers);
-
   if (mapped.length !== 28) {
     throw new Error("DISC requires exactly 28 answers");
   }
@@ -81,7 +41,7 @@ export async function submitDiscMpc({
     mapped.map((v) => arcium.encryptU8(v))
   );
 
-  const raw = await arcium.queueComputation({
+  const result = await arcium.queueComputation({
     wallet,
     programId: PROGRAM_ID,
     computation: "compute_disc",
@@ -90,15 +50,5 @@ export async function submitDiscMpc({
     },
   });
 
-  const out = pickOutput(raw);
-  if (!out) {
-    throw new Error("MPC output missing");
-  }
-
-  const d = await toU8(arcium, out.d_score ?? out.d);
-  const i = await toU8(arcium, out.i_score ?? out.i);
-  const s = await toU8(arcium, out.s_score ?? out.s);
-  const c = await toU8(arcium, out.c_score ?? out.c);
-
-  return { d, i, s, c, raw };
-    }
+  return result;
+}
