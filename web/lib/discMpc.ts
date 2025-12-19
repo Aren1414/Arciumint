@@ -1,34 +1,27 @@
-import {
-  ArciumClient,
-  encryptU8,
-  decryptU8,
-} from "@arcium/client";
+"use client";
+
 import { PublicKey } from "@solana/web3.js";
 
-const PROGRAM_ID = new PublicKey(
-  "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
-);
-
 /**
- * DISC option mapping
+ * DISC answers mapping:
  * a -> 0 (D)
  * b -> 1 (I)
  * c -> 2 (S)
  * d -> 3 (C)
  */
-export function mapDiscOption(option: string): number {
-  switch (option) {
-    case "a":
-      return 0;
-    case "b":
-      return 1;
-    case "c":
-      return 2;
-    case "d":
-      return 3;
-    default:
+function mapAnswers(
+  answers: Record<number, string>
+): number[] {
+  return Object.keys(answers)
+    .sort((a, b) => Number(a) - Number(b))
+    .map((k) => {
+      const v = answers[Number(k)];
+      if (v === "a") return 0;
+      if (v === "b") return 1;
+      if (v === "c") return 2;
+      if (v === "d") return 3;
       throw new Error("Invalid DISC option");
-  }
+    });
 }
 
 export async function submitDiscMpc({
@@ -38,26 +31,39 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
+  // ⬇️ dynamic import (CRITICAL)
+  const {
+    ArciumClient,
+    encryptU8,
+  } = await import("@arcium-hq/client");
 
-  const ordered = Array.from({ length: 28 }).map((_, i) => {
-    const v = answers[i + 1];
-    if (!v) throw new Error("Incomplete answers");
-    return mapDiscOption(v);
-  });
-
-  
-  const arcium = await ArciumClient.fromWallet(wallet);
-
-  
-  const encryptedAnswers = await Promise.all(
-    ordered.map((v) => encryptU8(arcium, v))
+  const PROGRAM_ID = new PublicKey(
+    "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
   );
 
-  
-  const tx = await arcium.invoke("compute_disc", {
-    ciphertext_0: encryptedAnswers[0],
-    ciphertext_1: encryptedAnswers[1],
-    
+  const client = new ArciumClient({
+    wallet,
+    programId: PROGRAM_ID,
+  });
+
+  // map answers -> [u8;28]
+  const mapped = mapAnswers(answers);
+
+  if (mapped.length !== 28) {
+    throw new Error("DISC requires exactly 28 answers");
+  }
+
+  // encrypt answers (u8[])
+  const encryptedAnswers = await Promise.all(
+    mapped.map((v) => encryptU8(v))
+  );
+
+  // queue MPC computation
+  const tx = await client.queueComputation({
+    instruction: "compute_disc",
+    inputs: {
+      answers: encryptedAnswers,
+    },
   });
 
   return tx;
