@@ -1,0 +1,36 @@
+name: Generate Solana Keypairs (ONE TIME)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Generate solana id.json
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+
+      - name: Generate disc_mpc program keypair
+        run: |
+          mkdir -p arcium/disc_mpc/target/deploy
+          solana-keygen new --no-bip39-passphrase \
+            -o arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+      - name: Upload keypairs (PRIVATE)
+        uses: actions/upload-artifact@v4
+        with:
+          name: solana-keypairs
+          path: |
+            ~/.config/solana/id.json
+            arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
