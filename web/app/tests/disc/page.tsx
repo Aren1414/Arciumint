@@ -6,23 +6,29 @@ import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
 import { submitDiscMpc } from "@/lib/discMpc";
 
-import type { PhantomProvider } from "@/types/phantom";
+// Minimal Phantom provider type (no external dependency)
+type PhantomSolanaProvider = {
+  isPhantom?: boolean;
+  publicKey?: { toString(): string };
+  signTransaction?: (tx: any) => Promise<any>;
+  signAllTransactions?: (txs: any[]) => Promise<any[]>;
+};
 
 export default function DiscTestPage() {
   const router = useRouter();
   const { isConnected, user } = usePhantom();
 
-  const [provider, setProvider] = useState<PhantomProvider | null>(null);
+  const [provider, setProvider] = useState<PhantomSolanaProvider | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // ----------------------------------
-  // Resolve Phantom provider (canonical)
+  // Resolve Phantom provider safely
   // ----------------------------------
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const solana = (window as any).solana;
+      const solana = (window as any).solana as PhantomSolanaProvider | undefined;
       if (solana?.isPhantom) {
         setProvider(solana);
       }
@@ -61,7 +67,7 @@ export default function DiscTestPage() {
   };
 
   // ----------------------------------
-  // Submit MPC (Arcium-ready)
+  // Submit MPC
   // ----------------------------------
   const submit = async () => {
     try {
@@ -73,8 +79,8 @@ export default function DiscTestPage() {
       }
 
       const tx = await submitDiscMpc({
-        provider,      // window.solana
-        address,       // from Phantom SDK
+        provider, // window.solana
+        address,  // from Phantom SDK
         answers,
       });
 
