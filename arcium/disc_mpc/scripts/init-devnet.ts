@@ -10,8 +10,7 @@ async function main() {
     .initComputeDiscCompDef()
     .rpc({ commitment: "confirmed" });
 
-  
-  console.log(tx);
+  console.log("init_compute_disc_comp_def tx:", tx);
 }
 
 main().catch((e) => {
