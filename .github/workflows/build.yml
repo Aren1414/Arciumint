@@ -18,9 +18,12 @@ jobs:
         with:
           node-version: 18
           cache: npm
+          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
+        working-directory: web
         run: npm install
 
       - name: Build
+        working-directory: web
         run: npm run build
