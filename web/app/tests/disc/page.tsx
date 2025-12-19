@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
@@ -13,15 +13,9 @@ export default function DiscTestPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
-
   const [mpcRawResult, setMpcRawResult] = useState<any>(null);
 
-  const address = useMemo(() => {
-    const a = user?.addresses?.[0]?.address;
-    return typeof a === "string" ? a : null;
-  }, [user]);
-
-  if (!isConnected || !user || !address) {
+  if (!isConnected || !user) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -55,18 +49,15 @@ export default function DiscTestPage() {
         return;
       }
 
-      const provider: any = (window as any)?.solana;
-      if (!provider) {
-        alert("Phantom injected provider not found");
+      
+      const wallet = user.wallet;
+      if (!wallet) {
+        alert("Wallet not available");
         return;
       }
 
-      if (!provider.isConnected && provider.connect) {
-        await provider.connect();
-      }
-
       const result = await submitDiscMpc({
-        wallet: provider,
+        wallet,
         answers,
       });
 
@@ -79,13 +70,16 @@ export default function DiscTestPage() {
     }
   };
 
+  // -----------------------------
+  // RESULT VIEW (ephemeral)
+  // -----------------------------
   if (mpcRawResult) {
     return (
       <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
 
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6">DISC Result</h1>
+          <h1 className="text-2xl font-semibold mb-6">DISC Result (Private)</h1>
 
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
             <pre className="whitespace-pre-wrap break-words text-sm">
@@ -117,13 +111,18 @@ export default function DiscTestPage() {
     );
   }
 
+  // -----------------------------
+  // QUESTION FLOW
+  // -----------------------------
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
 
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">DISC Personality Assessment</h1>
+          <h1 className="text-2xl font-semibold">
+            DISC Personality Assessment
+          </h1>
           <span className="text-white/70">
             {currentIndex + 1} / {total}
           </span>
@@ -195,4 +194,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-  }
+}
