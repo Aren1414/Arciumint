@@ -8,7 +8,7 @@ import { submitDiscMpc } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
-  const { isConnected, user } = usePhantom();
+  const { isConnected, user, provider } = usePhantom();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -20,7 +20,7 @@ export default function DiscTestPage() {
     return typeof a === "string" ? a : null;
   }, [user]);
 
-  if (!isConnected || !user || !address) {
+  if (!isConnected || !user || !address || !provider) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -44,11 +44,6 @@ export default function DiscTestPage() {
     }));
   };
 
-  const getPhantomProvider = () => {
-    const w = window as any;
-    return w?.phantom?.solana ?? null;
-  };
-
   const submit = async () => {
     try {
       setSubmitting(true);
@@ -57,16 +52,6 @@ export default function DiscTestPage() {
       if (Object.keys(answers).length !== total) {
         alert("Answer all questions");
         return;
-      }
-
-      const provider = getPhantomProvider();
-      if (!provider) {
-        alert("Wallet not available");
-        return;
-      }
-
-      if (!provider.isConnected && provider.connect) {
-        await provider.connect();
       }
 
       const result = await submitDiscMpc({
