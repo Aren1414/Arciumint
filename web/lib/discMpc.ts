@@ -22,22 +22,20 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
-  const arcium: any = await import("@arcium-hq/client");
+  if (!wallet) throw new Error("Wallet not available");
 
-  if (!wallet?.publicKey || !wallet?.signTransaction) {
-    throw new Error("Invalid wallet provider");
-  }
+  const arcium: any = await import("@arcium-hq/client");
 
   const PROGRAM_ID = new PublicKey(
     "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
   );
 
   const mapped = mapAnswers(answers);
+
   if (mapped.length !== 28) {
     throw new Error("DISC requires exactly 28 answers");
   }
 
-  
   const result = await arcium.queueComputation({
     wallet,
     programId: PROGRAM_ID,
