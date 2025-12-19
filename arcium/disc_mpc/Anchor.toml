@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 disc_mpc = "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
 
+[programs.devnet]
+disc_mpc = "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
