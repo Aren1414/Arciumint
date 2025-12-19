@@ -8,22 +8,22 @@ import { submitDiscMpc } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
-  const { isConnected, user } = usePhantom();
+  const { isConnected } = usePhantom();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [mpcRawResult, setMpcRawResult] = useState<any>(null);
 
-  if (!isConnected || !user) {
+  if (!isConnected) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
         <button
           onClick={() => router.push("/tests")}
-          className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+          className="px-4 py-2 bg-blue-600 rounded-lg"
         >
-          Back to Assessments
+          Back
         </button>
       </main>
     );
@@ -33,10 +33,7 @@ export default function DiscTestPage() {
   const total = discQuestions.length;
 
   const selectOption = (optionId: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [question.id]: optionId,
-    }));
+    setAnswers((prev) => ({ ...prev, [question.id]: optionId }));
   };
 
   const submit = async () => {
@@ -45,151 +42,100 @@ export default function DiscTestPage() {
       setMpcRawResult(null);
 
       if (Object.keys(answers).length !== total) {
-        alert("Please answer all questions");
+        alert("Answer all questions");
         return;
       }
 
-      
-      const wallet = user.wallet;
-      if (!wallet) {
-        alert("Wallet not available");
+      // ✅ ONLY injected Solana provider
+      const provider = (window as any).solana;
+      if (!provider || !provider.isPhantom) {
+        alert("Phantom wallet not found");
         return;
+      }
+
+      if (!provider.isConnected) {
+        await provider.connect();
       }
 
       const result = await submitDiscMpc({
-        wallet,
+        wallet: provider,
         answers,
       });
 
       setMpcRawResult(result);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       alert("MPC computation failed");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // -----------------------------
-  // RESULT VIEW (ephemeral)
-  // -----------------------------
   if (mpcRawResult) {
     return (
-      <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
-
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6">DISC Result (Private)</h1>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-            <pre className="whitespace-pre-wrap break-words text-sm">
-              {JSON.stringify(mpcRawResult, null, 2)}
-            </pre>
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => {
-                setMpcRawResult(null);
-                setCurrentIndex(0);
-                setAnswers({});
-              }}
-              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
-            >
-              Retake
-            </button>
-
-            <button
-              onClick={() => router.push("/tests")}
-              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-            >
-              Back to Assessments
-            </button>
-          </div>
-        </div>
+      <main className="min-h-screen flex flex-col items-center justify-center text-white">
+        <h1 className="text-2xl mb-4">DISC Result (Private)</h1>
+        <pre className="text-sm max-w-xl whitespace-pre-wrap">
+          {JSON.stringify(mpcRawResult, null, 2)}
+        </pre>
+        <button
+          className="mt-6 px-4 py-2 bg-blue-600 rounded"
+          onClick={() => {
+            setMpcRawResult(null);
+            setAnswers({});
+            setCurrentIndex(0);
+          }}
+        >
+          Retake
+        </button>
       </main>
     );
   }
 
-  // -----------------------------
-  // QUESTION FLOW
-  // -----------------------------
   return (
-    <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
-
+    <main className="min-h-screen px-6 py-10 text-white">
       <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">
-            DISC Personality Assessment
-          </h1>
-          <span className="text-white/70">
-            {currentIndex + 1} / {total}
-          </span>
+        <div className="flex justify-between mb-6">
+          <h1>DISC Test</h1>
+          <span>{currentIndex + 1}/{total}</span>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-medium mb-6">{question.text}</h2>
-
-          <div className="space-y-3">
-            {question.options.map((option) => {
-              const selected = answers[question.id] === option.id;
-
-              return (
-                <button
-                  key={option.id}
-                  onClick={() => selectOption(option.id)}
-                  className={`
-                    w-full text-left px-4 py-3 rounded-lg border transition
-                    ${
-                      selected
-                        ? "bg-purple-600/60 border-purple-400"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
-                    }
-                  `}
-                >
-                  {option.text}
-                </button>
-              );
-            })}
-          </div>
+        <div className="p-6 bg-white/10 rounded-xl">
+          <h2 className="mb-4">{question.text}</h2>
+          {question.options.map((o) => (
+            <button
+              key={o.id}
+              onClick={() => selectOption(o.id)}
+              className="block w-full text-left p-3 mb-2 bg-white/5 rounded"
+            >
+              {o.text}
+            </button>
+          ))}
         </div>
 
-        <div className="flex justify-between items-center mt-8">
+        <div className="mt-6 flex justify-between">
           <button
-            onClick={() => router.push("/tests")}
-            className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+            disabled={currentIndex === 0}
+            onClick={() => setCurrentIndex((i) => i - 1)}
           >
-            ← Back
+            Previous
           </button>
 
-          <div className="flex gap-3">
+          {currentIndex < total - 1 ? (
             <button
-              disabled={currentIndex === 0 || submitting}
-              onClick={() => setCurrentIndex((i) => i - 1)}
-              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 disabled:opacity-40 transition"
+              disabled={!answers[question.id]}
+              onClick={() => setCurrentIndex((i) => i + 1)}
             >
-              Previous
+              Next
             </button>
-
-            {currentIndex < total - 1 ? (
-              <button
-                disabled={!answers[question.id] || submitting}
-                onClick={() => setCurrentIndex((i) => i + 1)}
-                className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-40 transition"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                disabled={Object.keys(answers).length !== total || submitting}
-                onClick={submit}
-                className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 transition"
-              >
-                {submitting ? "Submitting..." : "Finish"}
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              disabled={submitting}
+              onClick={submit}
+            >
+              {submitting ? "Submitting..." : "Finish"}
+            </button>
+          )}
         </div>
       </div>
     </main>
