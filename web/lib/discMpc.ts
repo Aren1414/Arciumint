@@ -24,8 +24,8 @@ export async function submitDiscMpc({
 }) {
   const arcium: any = await import("@arcium-hq/client");
 
-  if (!wallet || !wallet.publicKey || !wallet.signTransaction) {
-    throw new Error("Wallet provider not available");
+  if (!wallet?.publicKey || !wallet?.signTransaction) {
+    throw new Error("Invalid wallet provider");
   }
 
   const PROGRAM_ID = new PublicKey(
@@ -37,16 +37,13 @@ export async function submitDiscMpc({
     throw new Error("DISC requires exactly 28 answers");
   }
 
-  const encryptedAnswers = await Promise.all(
-    mapped.map((v) => arcium.encryptU8(v))
-  );
-
+  
   const result = await arcium.queueComputation({
     wallet,
     programId: PROGRAM_ID,
     computation: "compute_disc",
     args: {
-      answers: encryptedAnswers,
+      answers: mapped,
     },
   });
 
