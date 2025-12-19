@@ -13,6 +13,7 @@ export default function DiscTestPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [mpcRawResult, setMpcRawResult] = useState<any>(null);
 
   const address = useMemo(() => {
     const a = user?.addresses?.[0]?.address;
@@ -43,35 +44,37 @@ export default function DiscTestPage() {
     }));
   };
 
-  const allAnswered = discQuestions.every(
-    (q) => typeof answers[q.id] === "string"
-  );
+  const getPhantomProvider = () => {
+    const w = window as any;
+    return w?.phantom?.solana ?? null;
+  };
 
   const submit = async () => {
     try {
       setSubmitting(true);
+      setMpcRawResult(null);
 
-      if (!allAnswered) {
+      if (Object.keys(answers).length !== total) {
         alert("Answer all questions");
         return;
       }
 
-      const provider: any = (window as any)?.solana;
-      if (!provider || !provider.isPhantom) {
+      const provider = getPhantomProvider();
+      if (!provider) {
         alert("Wallet not available");
         return;
       }
 
-      if (!provider.isConnected) {
+      if (!provider.isConnected && provider.connect) {
         await provider.connect();
       }
 
-      await submitDiscMpc({
+      const result = await submitDiscMpc({
         wallet: provider,
         answers,
       });
 
-      router.push("/tests/disc/result");
+      setMpcRawResult(result);
     } catch (err) {
       console.error(err);
       alert("MPC computation failed");
@@ -80,24 +83,59 @@ export default function DiscTestPage() {
     }
   };
 
+  if (mpcRawResult) {
+    return (
+      <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
+
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-semibold">DISC Result</h1>
+            <button
+              onClick={() => {
+                setMpcRawResult(null);
+                setCurrentIndex(0);
+                setAnswers({});
+              }}
+              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+            >
+              Retake
+            </button>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
+            <pre className="whitespace-pre-wrap break-words text-sm">
+              {JSON.stringify(mpcRawResult, null, 2)}
+            </pre>
+          </div>
+
+          <div className="mt-6">
+            <button
+              onClick={() => router.push("/tests")}
+              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+            >
+              Back to Assessments
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
 
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">
-            DISC Personality Assessment
-          </h1>
+          <h1 className="text-2xl font-semibold">DISC Personality Assessment</h1>
           <span className="text-white/70">
             {currentIndex + 1} / {total}
           </span>
         </div>
 
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-          <h2 className="text-lg font-medium mb-6">
-            {question.text}
-          </h2>
+          <h2 className="text-lg font-medium mb-6">{question.text}</h2>
 
           <div className="space-y-3">
             {question.options.map((option) => {
@@ -150,7 +188,7 @@ export default function DiscTestPage() {
               </button>
             ) : (
               <button
-                disabled={!allAnswered || submitting}
+                disabled={Object.keys(answers).length !== total || submitting}
                 onClick={submit}
                 className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 transition"
               >
@@ -162,4 +200,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-}
+  }
