@@ -4,11 +4,15 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
+  Connection,
 } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey(
   "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
 );
+
+
+const RPC_URL = "https://api.devnet.solana.com";
 
 /**
  * DISC:
@@ -36,11 +40,13 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
-  if (!wallet?.publicKey) {
+  if (!wallet?.publicKey || !wallet?.signTransaction) {
     throw new Error("Wallet not connected");
   }
 
-  const data = mapAnswers(answers);
+  const connection = new Connection(RPC_URL, "confirmed");
+
+  const data = Buffer.from(mapAnswers(answers));
 
   const ix = new TransactionInstruction({
     programId: PROGRAM_ID,
@@ -57,15 +63,14 @@ export async function submitDiscMpc({
   const tx = new Transaction().add(ix);
   tx.feePayer = wallet.publicKey;
 
-  const { blockhash } =
-    await wallet.connection.getLatestBlockhash();
-
+  const { blockhash } = await connection.getLatestBlockhash("confirmed");
   tx.recentBlockhash = blockhash;
 
-  const signed = await wallet.signTransaction(tx);
-  const sig = await wallet.connection.sendRawTransaction(
-    signed.serialize()
+  const signedTx = await wallet.signTransaction(tx);
+  const signature = await connection.sendRawTransaction(
+    signedTx.serialize(),
+    { skipPreflight: false }
   );
 
-  return { signature: sig };
+  return { signature };
 }
