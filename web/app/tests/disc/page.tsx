@@ -4,15 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
+import { submitDiscMpc } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
-  const { isConnected } = usePhantom();
+  const phantom = usePhantom();
+  const { isConnected, wallet } = phantom;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  if (!isConnected) {
+  // ----------------------------
+  // Wallet guard
+  // ----------------------------
+  if (!isConnected || !wallet) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-white px-6">
         <h2 className="text-xl mb-4">Wallet not connected</h2>
@@ -29,6 +35,9 @@ export default function DiscTestPage() {
   const question = discQuestions[currentIndex];
   const total = discQuestions.length;
 
+  // ----------------------------
+  // Select answer
+  // ----------------------------
   const selectOption = (optionId: string) => {
     setAnswers((prev) => ({
       ...prev,
@@ -36,6 +45,39 @@ export default function DiscTestPage() {
     }));
   };
 
+  // ----------------------------
+  // Submit MPC
+  // ----------------------------
+  const submit = async () => {
+    try {
+      setSubmitting(true);
+
+      // sanity check
+      if (Object.keys(answers).length !== total) {
+        alert("Please answer all questions");
+        return;
+      }
+
+      const tx = await submitDiscMpc({
+        wallet,
+        answers,
+      });
+
+      console.log("DISC MPC submitted:", tx);
+
+      
+      router.push("/tests");
+    } catch (err) {
+      console.error(err);
+      alert("MPC computation failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ----------------------------
+  // UI
+  // ----------------------------
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
       {/* Background */}
@@ -93,7 +135,7 @@ export default function DiscTestPage() {
 
           <div className="flex gap-3">
             <button
-              disabled={currentIndex === 0}
+              disabled={currentIndex === 0 || submitting}
               onClick={() => setCurrentIndex((i) => i - 1)}
               className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 disabled:opacity-40 transition"
             >
@@ -102,7 +144,7 @@ export default function DiscTestPage() {
 
             {currentIndex < total - 1 ? (
               <button
-                disabled={!answers[question.id]}
+                disabled={!answers[question.id] || submitting}
                 onClick={() => setCurrentIndex((i) => i + 1)}
                 className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-40 transition"
               >
@@ -110,14 +152,13 @@ export default function DiscTestPage() {
               </button>
             ) : (
               <button
-                disabled={Object.keys(answers).length !== total}
-                onClick={() => {
-                  console.log("DISC Answers:", answers);
-                  router.push("/tests");
-                }}
+                disabled={
+                  Object.keys(answers).length !== total || submitting
+                }
+                onClick={submit}
                 className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-40 transition"
               >
-                Finish
+                {submitting ? "Submitting..." : "Finish"}
               </button>
             )}
           </div>
