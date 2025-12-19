@@ -34,9 +34,11 @@ export async function submitDiscMpc({
     throw new Error("DISC requires exactly 28 answers");
   }
 
-  const encryptedAnswers = arcium.encryptU8(mapped);
+  const encryptedAnswers = await Promise.all(
+    mapped.map((v) => arcium.encryptU8(v))
+  );
 
-  const tx = await arcium.queueComputation({
+  const result = await arcium.queueComputation({
     wallet,
     programId: PROGRAM_ID,
     computation: "compute_disc",
@@ -45,5 +47,5 @@ export async function submitDiscMpc({
     },
   });
 
-  return tx;
-}
+  return result;
+    }
