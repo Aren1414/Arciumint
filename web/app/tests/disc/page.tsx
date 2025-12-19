@@ -47,13 +47,12 @@ export default function DiscTestPage() {
         return;
       }
 
-      const tx = await submitDiscMpc({
+      await submitDiscMpc({
         wallet: user,
         answers,
       });
 
-      console.log("DISC MPC submitted:", tx);
-      router.push("/tests");
+      router.push("/tests/disc/result");
     } catch (err) {
       console.error(err);
       alert("MPC computation failed");
