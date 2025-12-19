@@ -1,17 +1,31 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 
-function mapAnswers(answers: Record<number, string>): number[] {
-  const out: number[] = [];
+const PROGRAM_ID = new PublicKey(
+  "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
+);
+
+/**
+ * DISC:
+ * a=0, b=1, c=2, d=3
+ */
+function mapAnswers(answers: Record<number, string>): Uint8Array {
+  const out = new Uint8Array(28);
+
   for (let i = 1; i <= 28; i++) {
     const v = answers[i];
-    if (v === "a") out.push(0);
-    else if (v === "b") out.push(1);
-    else if (v === "c") out.push(2);
-    else if (v === "d") out.push(3);
-    else throw new Error("Invalid DISC option");
+    if (v === "a") out[i - 1] = 0;
+    else if (v === "b") out[i - 1] = 1;
+    else if (v === "c") out[i - 1] = 2;
+    else if (v === "d") out[i - 1] = 3;
+    else throw new Error(`Invalid answer at ${i}`);
   }
+
   return out;
 }
 
@@ -22,28 +36,36 @@ export async function submitDiscMpc({
   wallet: any;
   answers: Record<number, string>;
 }) {
-  if (!wallet) throw new Error("Wallet not available");
-
-  const arcium: any = await import("@arcium-hq/client");
-
-  const PROGRAM_ID = new PublicKey(
-    "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
-  );
-
-  const mapped = mapAnswers(answers);
-
-  if (mapped.length !== 28) {
-    throw new Error("DISC requires exactly 28 answers");
+  if (!wallet?.publicKey) {
+    throw new Error("Wallet not connected");
   }
 
-  const result = await arcium.queueComputation({
-    wallet,
+  const data = mapAnswers(answers);
+
+  const ix = new TransactionInstruction({
     programId: PROGRAM_ID,
-    computation: "compute_disc",
-    args: {
-      answers: mapped,
-    },
+    keys: [
+      {
+        pubkey: wallet.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+    ],
+    data,
   });
 
-  return result;
+  const tx = new Transaction().add(ix);
+  tx.feePayer = wallet.publicKey;
+
+  const { blockhash } =
+    await wallet.connection.getLatestBlockhash();
+
+  tx.recentBlockhash = blockhash;
+
+  const signed = await wallet.signTransaction(tx);
+  const sig = await wallet.connection.sendRawTransaction(
+    signed.serialize()
+  );
+
+  return { signature: sig };
 }
