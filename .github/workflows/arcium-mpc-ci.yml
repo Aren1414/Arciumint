@@ -15,7 +15,32 @@ jobs:
         uses: actions/checkout@v4
 
       # -----------------------------
-      # Install Solana CLI (clean, explicit PATH)
+      # Install system deps
+      # -----------------------------
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libudev-dev
+
+      # -----------------------------
+      # Install Rust toolchains
+      # stable = compiler
+      # nightly = Cargo (edition2024 support)
+      # -----------------------------
+      - name: Install Rust toolchains
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable
+          rustup toolchain install nightly
+          rustup default stable
+          rustc --version
+          cargo +nightly --version
+
+      # -----------------------------
+      # Install Solana CLI
       # -----------------------------
       - name: Install Solana CLI
         shell: bash
@@ -27,7 +52,7 @@ jobs:
           solana --version
 
       # -----------------------------
-      # Install Anchor (AVM pinned – per docs)
+      # Install Anchor (AVM pinned)
       # -----------------------------
       - name: Install Anchor
         shell: bash
@@ -39,7 +64,7 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Install Arcium CLI (binary only, NO installer)
+      # Install Arcium CLI (binary)
       # -----------------------------
       - name: Install Arcium CLI
         shell: bash
@@ -52,11 +77,11 @@ jobs:
           arcium --version
 
       # -----------------------------
-      # Build MPC (NO init, NO localnet)
+      # Build MPC (Cargo = nightly)
       # -----------------------------
       - name: Build Arcium MPC
         shell: bash
         run: |
           set -euo pipefail
           cd arcium/disc_mpc
-          arcium build --skip-keys-sync
+          CARGO="cargo +nightly" arcium build --skip-keys-sync
