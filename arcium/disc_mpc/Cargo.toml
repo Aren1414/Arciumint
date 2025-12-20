@@ -1,6 +1,10 @@
 [workspace]
-members = ["programs/*"]
+members = ["programs/*", "encrypted-ixs"]
 resolver = "2"
+
+[patch.crates-io]
+borsh = { git = "https://github.com/near/borsh-rs", tag = "borsh-v1.5.0" }
+borsh-derive = { git = "https://github.com/near/borsh-rs", tag = "borsh-derive-v1.5.0" }
 
 [profile.release]
 overflow-checks = true
@@ -11,10 +15,3 @@ codegen-units = 1
 opt-level = 3
 incremental = false
 codegen-units = 1
-
-# IMPORTANT:
-# Patch must be at the WORKSPACE ROOT and must point to a DIFFERENT source (git/path),
-# not crates.io itself. These tags exist in near/borsh-rs. 
-[patch.crates-io]
-borsh = { git = "https://github.com/near/borsh-rs", tag = "borsh-v1.5.0" }
-borsh-derive = { git = "https://github.com/near/borsh-rs", tag = "borsh-derive-v1.5.0" }
