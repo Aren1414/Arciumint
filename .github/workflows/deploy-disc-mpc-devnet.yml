@@ -27,16 +27,19 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust (PINNED)
+      # Rust toolchains
+      # rustc = stable (Anchor/Solana)
+      # cargo = nightly (deps resolver)
       # -----------------------------
-      - name: Install Rust 1.83.0 (Anchor/Solana compatible)
+      - name: Install Rust toolchains
         shell: bash
         run: |
           set -euo pipefail
           rustup toolchain install 1.83.0
+          rustup toolchain install nightly
           rustup default 1.83.0
           rustc --version
-          cargo --version
+          cargo +nightly --version
 
       # -----------------------------
       # Solana CLI
@@ -96,9 +99,9 @@ jobs:
           yarn --version
 
       # -----------------------------
-      # Anchor via AVM (CORRECT WAY)
+      # Anchor via AVM (pinned)
       # -----------------------------
-      - name: Install Anchor (AVM pinned 0.32.1)
+      - name: Install Anchor (AVM 0.32.1)
         shell: bash
         run: |
           set -euo pipefail
@@ -108,7 +111,7 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Build & Deploy
+      # Build & Deploy (Cargo = nightly)
       # -----------------------------
       - name: Build & Deploy (Anchor)
         shell: bash
@@ -116,11 +119,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          # JS deps
           yarn install
 
-          # IMPORTANT: avoid broken / v4 lockfiles
-          rm -f Cargo.lock
+          # use nightly cargo for dependency resolution
+          export CARGO="cargo +nightly"
 
           anchor build --skip-lint
           anchor deploy --provider.cluster devnet
