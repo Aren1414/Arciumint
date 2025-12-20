@@ -12,19 +12,17 @@ jobs:
       SOLANA_RPC_URL: https://api.devnet.solana.com
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # --- Install Solana CLI (SAFE WAY) ---
+      # --- Install Solana CLI (stable & safe) ---
       - name: Install Solana CLI
         run: |
           curl -L https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
-          solana-keygen --version
 
-      # --- Restore wallet keypair ---
+      # --- Restore wallet ---
       - name: Restore Solana wallet
         run: |
           mkdir -p ~/.config/solana
@@ -34,8 +32,8 @@ jobs:
         env:
           SOLANA_WALLET_KEYPAIR: ${{ secrets.SOLANA_WALLET_KEYPAIR }}
 
-      # --- Airdrop (Devnet only) ---
-      - name: Airdrop SOL (best effort)
+      # --- Airdrop ---
+      - name: Airdrop SOL
         run: |
           solana airdrop 2 || solana airdrop 1 || true
           solana balance
@@ -48,10 +46,15 @@ jobs:
         env:
           DISC_MPC_PROGRAM_KEYPAIR: ${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}
 
+      # --- HARD FIX: kill Cargo.lock everywhere ---
+      - name: Remove Cargo.lock
+        run: |
+          find . -name Cargo.lock -delete
+
       # --- Build & Deploy ---
       - name: Build & Deploy program
         working-directory: arcium/disc_mpc
         run: |
-          rm -f Cargo.lock
+          cargo clean
           cargo build-bpf
           solana program deploy target/deploy/disc_mpc.so
