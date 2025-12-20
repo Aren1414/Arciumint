@@ -1,8 +1,12 @@
 [workspace]
-members = ["programs/*", "encrypted-ixs"]
+
+members = ["programs/*"]
 resolver = "2"
 
 [patch.crates-io]
+
+const-oid = "=0.9.6"
+
 borsh = { git = "https://github.com/near/borsh-rs", tag = "borsh-v1.5.0" }
 borsh-derive = { git = "https://github.com/near/borsh-rs", tag = "borsh-derive-v1.5.0" }
 
