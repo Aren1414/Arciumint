@@ -23,7 +23,7 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust nightly (for lockfile generation + resolver)
+      # Rust nightly (ONLY)
       # -----------------------------
       - name: Install Rust nightly
         shell: bash
@@ -33,7 +33,6 @@ jobs:
           rustup default nightly
           rustc --version
           cargo --version
-          cargo -Vv
 
       # -----------------------------
       # Solana CLI
@@ -72,7 +71,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          solana airdrop 2 || solana airdrop 1 || true
+          solana airdrop 2 || true
           solana balance || true
 
       # -----------------------------
@@ -102,7 +101,7 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Build & Deploy
+      # Build & Deploy (LOCKED)
       # -----------------------------
       - name: Build & Deploy (Anchor)
         shell: bash
@@ -112,21 +111,10 @@ jobs:
 
           yarn install
 
-          echo ">>> Generate TEMP Cargo.lock (do NOT commit)"
-          # مهم: پاک نکن. بساز.
+          echo ">>> Generate Cargo.lock dynamically"
           cargo generate-lockfile
 
-          echo ">>> Force deps compatible with Solana SBF toolchain"
-          # این دو تا دقیقاً همان خطای borsh 1.6 / rustc 1.75 را می‌بندد
-          cargo update -p borsh --precise 1.5.0
-          cargo update -p borsh-derive --precise 1.5.0
-
-          echo ">>> Sanity check locked versions"
-          grep -n 'name = "borsh"' Cargo.lock || true
-          grep -n 'name = "base64ct"' Cargo.lock || true
-
-          echo ">>> Anchor build (LOCKED; uses generated Cargo.lock)"
-          # کلید کار: -- --locked
+          echo ">>> Anchor build (LOCKED)"
           anchor build --skip-lint -- --locked
 
           echo ">>> Anchor deploy"
