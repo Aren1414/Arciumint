@@ -11,7 +11,8 @@ jobs:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
       CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-      RUSTUP_TOOLCHAIN: nightly   # <<< حیاتی
+      RUSTUP_TOOLCHAIN: nightly
+      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "1"   # <<< حیاتی
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust (NIGHTLY ONLY – DO NOT MIX)
+      # Rust (nightly ONLY)
       # -----------------------------
       - name: Install Rust nightly
         run: |
