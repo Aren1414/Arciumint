@@ -91,21 +91,18 @@ jobs:
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
-      - name: Prepare deps and Cargo.lock
-        shell: bash
-        working-directory: arcium/disc_mpc
-        run: |
-          set -e
-          yarn install --frozen-lockfile || yarn install
-          find . -name Cargo.lock -print -delete
-          cargo generate-lockfile
-          head -n 5 Cargo.lock || true
-
       - name: Build & Deploy (Anchor)
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
           set -e
+          yarn install --frozen-lockfile || yarn install
+
+          rm -f Cargo.lock
+          cargo generate-lockfile
+          sed -i 's/^version = 4$/version = 3/' Cargo.lock
+          head -n 5 Cargo.lock || true
+
           anchor build
           anchor deploy --provider.cluster devnet
 
