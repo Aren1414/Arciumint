@@ -25,5 +25,11 @@ arcium-client = { version = "0.6.0-alpha", default-features = false }
 arcium-macros = "0.6.0-alpha"
 arcium-anchor = "0.6.0-alpha"
 
+# --- FIX CRITICAL BUILD BREAK (edition2024) ---
+# const-oid >= 0.10.x requires Cargo with edition2024 support
+# Anchor + Solana SBF do NOT support that yet
+[patch.crates-io]
+const-oid = "=0.9.6"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
