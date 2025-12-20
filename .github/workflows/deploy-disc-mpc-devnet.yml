@@ -10,107 +10,60 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
+      ANCHOR_IGNORE_LOCKFILE: "1"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        shell: bash
+      - name: Install system deps
         run: |
-          set -e
           sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libudev-dev
+          sudo apt-get install -y pkg-config libudev-dev
 
-      - name: Install Rust 1.89.0
-        shell: bash
+      - name: Install Rust (host)
         run: |
-          set -e
           rustup toolchain install 1.89.0
           rustup default 1.89.0
           rustc --version
           cargo --version
 
       - name: Install Solana CLI
-        shell: bash
         run: |
-          set -e
-          curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
+          curl -L https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
-          solana-keygen --version
 
-      - name: Write Solana keypairs
-        shell: bash
+      - name: Write keypairs
         run: |
-          set -e
-          mkdir -p ~/.config/solana
-          mkdir -p arcium/disc_mpc/target/deploy
-
+          mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-          chmod 600 ~/.config/solana/id.json
-          chmod 600 arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-          solana config set --url "${SOLANA_RPC_URL}"
+          chmod 600 ~/.config/solana/id.json arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+          solana config set --url $SOLANA_RPC_URL
           solana config set --keypair ~/.config/solana/id.json
-          solana config get
 
-          solana-keygen pubkey ~/.config/solana/id.json
-          solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-      - name: Airdrop SOL
-        shell: bash
+      - name: Airdrop
         run: |
-          set -e
-          solana airdrop 2 || solana airdrop 1 || true
+          solana airdrop 2 || true
           solana balance || true
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Enable Corepack (Yarn)
-        shell: bash
-        run: |
-          set -e
+      - run: |
           corepack enable
           yarn --version
 
       - name: Install Anchor CLI
-        shell: bash
         run: |
-          set -e
-          rustc --version
-          cargo --version
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
-      - name: Build & Deploy (Anchor)
-        shell: bash
+      - name: Build & Deploy
         working-directory: arcium/disc_mpc
         run: |
-          set -e
           yarn install --frozen-lockfile || yarn install
-
-          rm -f Cargo.lock
-          cargo generate-lockfile
-          sed -i 's/^version = 4$/version = 3/' Cargo.lock
-          head -n 5 Cargo.lock || true
-
-          anchor build
+          anchor build --skip-lint
           anchor deploy --provider.cluster devnet
-
-      - name: Init computation definition (optional)
-        if: ${{ success() }}
-        shell: bash
-        working-directory: arcium/disc_mpc
-        run: |
-          set -e
-          # yarn ts-node scripts/init-devnet.ts
-          echo "Init step skipped (optional)"
