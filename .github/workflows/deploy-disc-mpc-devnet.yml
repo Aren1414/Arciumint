@@ -6,53 +6,87 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     env:
-      SOLANA_VERSION: v1.18.26
-      SOLANA_RPC_URL: https://api.devnet.solana.com
+      SOLANA_VERSION: "1.18.26"
+      SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # --- Install Solana (OFFICIAL way) ---
-      - name: Install Solana Toolchain
+      # 1) Install Solana CLI via GitHub release tarball (stable, avoids SSL issues)
+      - name: Install Solana CLI
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/${SOLANA_VERSION}/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          set -e
+          curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
+          tar -xjf solana.tar.bz2
+          sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
+          solana-keygen --version
 
-      # --- Restore wallet ---
-      - name: Restore Solana wallet
+      # 2) Restore keypairs from GitHub Secrets (NEVER echo secrets)
+      - name: Write keypairs (authority + program id)
+        shell: bash
         run: |
+          set -e
           mkdir -p ~/.config/solana
-          echo "${SOLANA_WALLET_KEYPAIR}" > ~/.config/solana/id.json
-          solana config set --keypair ~/.config/solana/id.json
-          solana config set --url ${SOLANA_RPC_URL}
-        env:
-          SOLANA_WALLET_KEYPAIR: ${{ secrets.SOLANA_WALLET_KEYPAIR }}
-
-      # --- Airdrop ---
-      - name: Airdrop SOL
-        run: |
-          solana airdrop 2 || solana airdrop 1 || true
-          solana balance
-
-      # --- Restore program keypair ---
-      - name: Restore program keypair
-        run: |
           mkdir -p arcium/disc_mpc/target/deploy
-          echo "${DISC_MPC_PROGRAM_KEYPAIR}" > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-        env:
-          DISC_MPC_PROGRAM_KEYPAIR: ${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}
 
-      # --- Build BPF (THIS IS THE ONLY VALID WAY) ---
-      - name: Build BPF program
+          echo '${{ secrets.SOLANA_AUTHORITY_KEYPAIR }}' > ~/.config/solana/id.json
+          echo '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+          chmod 600 ~/.config/solana/id.json
+          chmod 600 arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+          solana config set --url "${SOLANA_RPC_URL}"
+          solana config set --keypair ~/.config/solana/id.json
+          solana config get
+
+      # 3) Fund authority (devnet airdrop - rate limited sometimes)
+      - name: Airdrop SOL (best effort)
+        run: |
+          set -e
+          solana airdrop 2 || solana airdrop 1 || true
+          solana balance || true
+
+      # 4) Install Rust + Anchor CLI compatible with Solana/Anchor
+      - name: Install Rust toolchain (stable for anchor)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.75.0"
+          components: rustfmt, clippy
+
+      - name: Install Node (for yarn)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack (yarn)
+        run: |
+          corepack enable
+          yarn --version
+
+      - name: Install Anchor CLI
+        run: |
+          set -e
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli --locked
+          anchor --version
+
+      # 5) Build + Deploy via Anchor (uses Anchor.toml provider cluster=devnet)
+      - name: Build & Deploy program (Anchor)
         working-directory: arcium/disc_mpc
         run: |
-          cargo build-bpf
+          set -e
+          yarn install --frozen-lockfile || yarn install
+          anchor build
+          anchor deploy --provider.cluster devnet
 
-      # --- Deploy ---
-      - name: Deploy program
+      # 6) OPTIONAL: init computation definition on devnet (must run once)
+      # If you have a script that initializes compute_disc comp def, run it here.
+      - name: Init computation definition (one-time)
         working-directory: arcium/disc_mpc
         run: |
-          solana program deploy target/deploy/disc_mpc.so
+          set -e
+          # If you have scripts/init-devnet.ts already:
+          # yarn ts-node scripts/init-devnet.ts
+          echo "If you have init-devnet script, uncomment the line above."
