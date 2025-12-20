@@ -31,7 +31,7 @@ jobs:
             libudev-dev
 
       # --------------------------------------------------
-      # 3) Install Solana CLI (from GitHub release tarball)
+      # 3) Install Solana CLI
       # --------------------------------------------------
       - name: Install Solana CLI
         shell: bash
@@ -50,13 +50,8 @@ jobs:
         shell: bash
         run: |
           set -e
-
           mkdir -p ~/.config/solana
           mkdir -p arcium/disc_mpc/target/deploy
-
-          # REQUIRED SECRETS:
-          # - SOLANA_WALLET_KEYPAIR
-          # - DISC_MPC_PROGRAM_KEYPAIR
 
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
@@ -68,22 +63,20 @@ jobs:
           solana config set --keypair ~/.config/solana/id.json
           solana config get
 
-          # sanity check (NO secret leakage)
           solana-keygen pubkey ~/.config/solana/id.json
           solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
       # --------------------------------------------------
-      # 5) Airdrop SOL (best effort – devnet rate limits)
+      # 5) Airdrop SOL (best effort)
       # --------------------------------------------------
       - name: Airdrop SOL
         shell: bash
         run: |
-          set -e
           solana airdrop 2 || solana airdrop 1 || true
           solana balance || true
 
       # --------------------------------------------------
-      # 6) Install Rust toolchain (MATCHES rust-toolchain.toml)
+      # 6) Install Rust toolchain (MATCH rust-toolchain.toml)
       # --------------------------------------------------
       - name: Install Rust 1.89.0
         uses: dtolnay/rust-toolchain@stable
@@ -106,7 +99,7 @@ jobs:
           yarn --version
 
       # --------------------------------------------------
-      # 8) Install Anchor CLI (NOW WILL WORK)
+      # 8) Install Anchor CLI
       # --------------------------------------------------
       - name: Install Anchor CLI
         shell: bash
@@ -116,25 +109,26 @@ jobs:
           anchor --version
 
       # --------------------------------------------------
-      # 9) Build & Deploy DISC MPC program
+      # 9) Build & Deploy DISC MPC program (FIXED)
       # --------------------------------------------------
       - name: Build & Deploy (Anchor)
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
           set -e
+
+          echo ">>> REMOVE Cargo.lock (Anchor incompatibility fix)"
+          find . -name Cargo.lock -delete
+
           yarn install --frozen-lockfile || yarn install
           anchor build
           anchor deploy --provider.cluster devnet
 
       # --------------------------------------------------
-      # 10) OPTIONAL – init computation definition (run once)
+      # 10) OPTIONAL – init computation definition (ONCE)
       # --------------------------------------------------
       - name: Init computation definition (optional)
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
-          set -e
-          # Uncomment ONLY once if needed:
-          # yarn ts-node scripts/init-devnet.ts
-          echo "Init step skipped (optional)"
+          echo "Init step skipped"
