@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   
+  contents: write
 
 jobs:
   deploy:
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: true   
+          persist-credentials: true
 
       # -----------------------------
       # System deps
@@ -29,11 +29,12 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust nightly
+      # Rust toolchains (BOTH)
       # -----------------------------
-      - name: Install Rust nightly
+      - name: Install Rust stable + nightly
         run: |
-          rustup toolchain install nightly --profile minimal
+          rustup toolchain install 1.83.0
+          rustup toolchain install nightly
           rustup default nightly
           rustc --version
           cargo --version
@@ -82,12 +83,12 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Generate Cargo.lock (CI only)
+      # Generate Cargo.lock (STABLE ONLY)
       # -----------------------------
-      - name: Generate Cargo.lock
+      - name: Generate Cargo.lock (stable)
         working-directory: arcium/disc_mpc
         run: |
-          cargo generate-lockfile
+          cargo +1.83.0 generate-lockfile
 
       # -----------------------------
       # Commit Cargo.lock
@@ -99,7 +100,7 @@ jobs:
             git config user.name "github-actions"
             git config user.email "github-actions@github.com"
             git add Cargo.lock
-            git commit -m "ci: update Cargo.lock (anchor/solana compatible)"
+            git commit -m "ci: update Cargo.lock (stable v3, anchor compatible)"
             git push
           else
             echo "Cargo.lock unchanged"
