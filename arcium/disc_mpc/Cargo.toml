@@ -5,6 +5,16 @@ members = [
 ]
 resolver = "2"
 
+[patch.crates-io]
+base64ct = "=1.6.0"
+const-oid = "=0.9.6"
+digest = "=0.10.7"
+crypto-common = "=0.1.7"
+elliptic-curve = "=0.13.8"
+spki = "=0.7.3"
+pkcs8 = "=0.10.2"
+sec1 = "=0.7.3"
+
 [profile.release]
 overflow-checks = true
 lto = "fat"
