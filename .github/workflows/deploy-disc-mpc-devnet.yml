@@ -10,23 +10,18 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
-      ANCHOR_IGNORE_LOCKFILE: "1"
+      CARGO_IGNORE_LOCKFILE: "1"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install system dependencies
-        shell: bash
         run: |
           set -e
           sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libudev-dev
+          sudo apt-get install -y pkg-config libudev-dev
 
       - name: Install Rust 1.89.0
-        shell: bash
         run: |
           set -e
           rustup toolchain install 1.89.0
@@ -35,7 +30,6 @@ jobs:
           cargo --version
 
       - name: Install Solana CLI
-        shell: bash
         run: |
           set -e
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
@@ -45,7 +39,6 @@ jobs:
           solana-keygen --version
 
       - name: Write Solana keypairs
-        shell: bash
         run: |
           set -e
           mkdir -p ~/.config/solana
@@ -59,53 +52,40 @@ jobs:
 
           solana config set --url "${SOLANA_RPC_URL}"
           solana config set --keypair ~/.config/solana/id.json
-          solana config get
-
           solana-keygen pubkey ~/.config/solana/id.json
           solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
       - name: Airdrop SOL
-        shell: bash
         run: |
-          set -e
           solana airdrop 2 || solana airdrop 1 || true
           solana balance || true
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Enable Corepack (Yarn)
-        shell: bash
+      - name: Enable Yarn
         run: |
-          set -e
           corepack enable
           yarn --version
 
       - name: Install Anchor CLI
-        shell: bash
         run: |
           set -e
-          rustc --version
-          cargo --version
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
       - name: Build & Deploy (Anchor)
-        shell: bash
         working-directory: arcium/disc_mpc
         run: |
           set -e
-          yarn install --frozen-lockfile || yarn install
+          yarn install
+          find . -name Cargo.lock -delete
           anchor build --skip-lint
           anchor deploy --provider.cluster devnet
 
       - name: Init computation definition (optional)
         if: ${{ success() }}
-        shell: bash
         working-directory: arcium/disc_mpc
         run: |
-          set -e
-          # yarn ts-node scripts/init-devnet.ts
-          echo "Init step skipped (optional)"
+          echo "Init step skipped"
