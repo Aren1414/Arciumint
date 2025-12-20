@@ -10,30 +10,25 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
-      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-      ANCHOR_PROVIDER_URL: "https://api.devnet.solana.com"
-      ANCHOR_WALLET: "/home/runner/.config/solana/id.json"
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # -----------------------------
       # System deps
       # -----------------------------
       - name: Install system dependencies
-        shell: bash
         run: |
-          set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust nightly ONLY
+      # Rust (nightly required by deps)
       # -----------------------------
       - name: Install Rust nightly
-        shell: bash
         run: |
-          set -euo pipefail
           rustup toolchain install nightly --profile minimal
           rustup default nightly
           rustc --version
@@ -43,87 +38,78 @@ jobs:
       # Solana CLI
       # -----------------------------
       - name: Install Solana CLI
-        shell: bash
         run: |
-          set -euo pipefail
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
-          solana --version
           solana config set --url "${SOLANA_RPC_URL}"
+          solana --version
 
       # -----------------------------
-      # Wallet & Program keypairs
+      # Wallets
       # -----------------------------
       - name: Write Solana keypairs
-        shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p ~/.config/solana
-          mkdir -p arcium/disc_mpc/target/deploy
-
+          mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-          chmod 600 ~/.config/solana/id.json
-          chmod 600 arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
+          chmod 600 ~/.config/solana/id.json arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
           solana config set --keypair ~/.config/solana/id.json
-          solana address
-          solana balance || true
 
       # -----------------------------
-      # Airdrop (best-effort)
-      # -----------------------------
-      - name: Airdrop SOL
-        shell: bash
-        run: |
-          set -euo pipefail
-          solana airdrop 2 || true
-          solana balance || true
-
-      # -----------------------------
-      # Node + Yarn
+      # Node / Yarn
       # -----------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Enable Yarn
-        shell: bash
-        run: |
-          set -euo pipefail
+      - run: |
           corepack enable
           yarn --version
 
       # -----------------------------
-      # Anchor via AVM (pinned)
+      # Anchor (AVM pinned)
       # -----------------------------
-      - name: Install Anchor (AVM 0.32.1)
-        shell: bash
+      - name: Install Anchor
         run: |
-          set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
 
       # -----------------------------
-      # Build & Deploy (LOCKED, صحیح)
+      # Generate Cargo.lock via CI (ONLY PLACE)
       # -----------------------------
-      - name: Build & Deploy (Anchor)
-        shell: bash
+      - name: Generate Cargo.lock (CI owned)
         working-directory: arcium/disc_mpc
         run: |
-          set -euo pipefail
-
-          yarn install
-
-          echo ">>> Generate Cargo.lock dynamically"
           cargo generate-lockfile
 
-          echo ">>> Anchor build (LOCKED)"
-          anchor build --skip-lint -- --locked
+      # -----------------------------
+      # Commit Cargo.lock if changed
+      # -----------------------------
+      - name: Commit Cargo.lock if changed
+        working-directory: arcium/disc_mpc
+        run: |
+          if git status --porcelain | grep Cargo.lock; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add Cargo.lock
+            git commit -m "ci: update Cargo.lock (anchor/solana compatible)"
+            git push
+          else
+            echo "Cargo.lock unchanged"
+          fi
 
-          echo ">>> Anchor deploy"
+      # -----------------------------
+      # Build & Deploy
+      # -----------------------------
+      - name: Build & Deploy
+        working-directory: arcium/disc_mpc
+        env:
+          ANCHOR_PROVIDER_URL: https://api.devnet.solana.com
+          ANCHOR_WALLET: /home/runner/.config/solana/id.json
+        run: |
+          yarn install
+          anchor build --skip-lint
           anchor deploy --provider.cluster devnet
