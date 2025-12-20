@@ -13,25 +13,23 @@ jobs:
 
     steps:
       # --------------------------------------------------
-      # 1) Checkout repo
+      # 1) Checkout
       # --------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # 2) Install system dependencies (REQUIRED for Anchor)
+      # 2) System deps (required for Anchor / hidapi)
       # --------------------------------------------------
       - name: Install system dependencies
         shell: bash
         run: |
           set -e
           sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libudev-dev
+          sudo apt-get install -y pkg-config libudev-dev
 
       # --------------------------------------------------
-      # 3) Install Solana CLI
+      # 3) Solana CLI
       # --------------------------------------------------
       - name: Install Solana CLI
         shell: bash
@@ -44,7 +42,7 @@ jobs:
           solana-keygen --version
 
       # --------------------------------------------------
-      # 4) Write keypairs from GitHub Secrets
+      # 4) Restore keypairs from secrets
       # --------------------------------------------------
       - name: Write Solana keypairs
         shell: bash
@@ -67,7 +65,7 @@ jobs:
           solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
       # --------------------------------------------------
-      # 5) Airdrop SOL (best effort)
+      # 5) Airdrop (best effort)
       # --------------------------------------------------
       - name: Airdrop SOL
         shell: bash
@@ -76,7 +74,7 @@ jobs:
           solana balance || true
 
       # --------------------------------------------------
-      # 6) Install Rust toolchain (MATCH rust-toolchain.toml)
+      # 6) Rust toolchain (EXACT project version)
       # --------------------------------------------------
       - name: Install Rust 1.89.0
         uses: dtolnay/rust-toolchain@stable
@@ -85,21 +83,21 @@ jobs:
           components: rustfmt, clippy
 
       # --------------------------------------------------
-      # 7) Install Node + Yarn
+      # 7) Node + Yarn
       # --------------------------------------------------
-      - name: Install Node.js
+      - name: Install Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Enable Corepack (Yarn)
+      - name: Enable Corepack
         shell: bash
         run: |
           corepack enable
           yarn --version
 
       # --------------------------------------------------
-      # 8) Install Anchor CLI
+      # 8) Anchor CLI
       # --------------------------------------------------
       - name: Install Anchor CLI
         shell: bash
@@ -109,26 +107,28 @@ jobs:
           anchor --version
 
       # --------------------------------------------------
-      # 9) Build & Deploy DISC MPC program (FIXED)
+      # 9) Build & Deploy (FINAL FIX)
       # --------------------------------------------------
-      - name: Build & Deploy (Anchor)
+      - name: Build & Deploy DISC MPC
         shell: bash
         working-directory: arcium/disc_mpc
+        env:
+          CARGO_IGNORE_LOCKFILE: "1"
         run: |
           set -e
 
-          echo ">>> REMOVE Cargo.lock (Anchor incompatibility fix)"
+          echo ">>> Disable Cargo.lock entirely"
           find . -name Cargo.lock -delete
 
-          yarn install --frozen-lockfile || yarn install
+          yarn install
           anchor build
           anchor deploy --provider.cluster devnet
 
       # --------------------------------------------------
-      # 10) OPTIONAL – init computation definition (ONCE)
+      # 10) Optional init (run once)
       # --------------------------------------------------
       - name: Init computation definition (optional)
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
-          echo "Init step skipped"
+          echo "Init skipped"
