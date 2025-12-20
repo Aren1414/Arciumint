@@ -9,40 +9,44 @@ jobs:
 
     env:
       SOLANA_VERSION: "1.18.26"
-      SOLANA_RPC_URL: https://api.devnet.solana.com
-      RUSTUP_TOOLCHAIN: "1.77.0"
+      SOLANA_RPC_URL: "https://api.devnet.solana.com"
 
     steps:
-      # --------------------------------------------------
-      # 1) Checkout
-      # --------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2) System deps (required by Anchor/hidapi)
-      # --------------------------------------------------
       - name: Install system dependencies
+        shell: bash
         run: |
+          set -e
           sudo apt-get update
-          sudo apt-get install -y pkg-config libudev-dev
+          sudo apt-get install -y \
+            pkg-config \
+            libudev-dev
 
-      # --------------------------------------------------
-      # 3) Solana CLI
-      # --------------------------------------------------
-      - name: Install Solana CLI
+      - name: Install Rust 1.89.0
+        shell: bash
         run: |
+          set -e
+          rustup toolchain install 1.89.0
+          rustup default 1.89.0
+          rustc --version
+          cargo --version
+
+      - name: Install Solana CLI
+        shell: bash
+        run: |
+          set -e
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
           solana-keygen --version
 
-      # --------------------------------------------------
-      # 4) Restore keypairs from Secrets
-      # --------------------------------------------------
       - name: Write Solana keypairs
+        shell: bash
         run: |
+          set -e
           mkdir -p ~/.config/solana
           mkdir -p arcium/disc_mpc/target/deploy
 
@@ -54,65 +58,53 @@ jobs:
 
           solana config set --url "${SOLANA_RPC_URL}"
           solana config set --keypair ~/.config/solana/id.json
+          solana config get
+
+          solana-keygen pubkey ~/.config/solana/id.json
+          solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+      - name: Airdrop SOL
+        shell: bash
+        run: |
+          set -e
+          solana airdrop 2 || solana airdrop 1 || true
           solana balance || true
 
-      # --------------------------------------------------
-      # 5) Airdrop (best effort)
-      # --------------------------------------------------
-      - name: Airdrop SOL
-        run: |
-          solana airdrop 2 || solana airdrop 1 || true
-
-      # --------------------------------------------------
-      # 6) Install Rust (>=1.77 required by borsh@1.6.0)
-      # --------------------------------------------------
-      - name: Install Rust 1.77.0
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.77.0"
-          components: rustfmt, clippy
-
-      # --------------------------------------------------
-      # 7) Node + Yarn
-      # --------------------------------------------------
-      - name: Install Node
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Enable Corepack
+      - name: Enable Corepack (Yarn)
+        shell: bash
         run: |
+          set -e
           corepack enable
           yarn --version
 
-      # --------------------------------------------------
-      # 8) Install Anchor CLI (with same Rust)
-      # --------------------------------------------------
       - name: Install Anchor CLI
+        shell: bash
         run: |
+          set -e
+          rustc --version
+          cargo --version
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
-      # --------------------------------------------------
-      # 9) Build & Deploy (FINAL)
-      # --------------------------------------------------
-      - name: Build & Deploy DISC MPC
+      - name: Build & Deploy (Anchor)
+        shell: bash
         working-directory: arcium/disc_mpc
         run: |
-          # Neutralize project rust-toolchain only in CI
-          mv rust-toolchain.toml rust-toolchain.toml.bak || true
-
-          # Ensure lockfile is regenerated with Rust 1.77
-          find . -name Cargo.lock -delete
-
-          yarn install
+          set -e
+          rm -f Cargo.lock
+          yarn install --frozen-lockfile || yarn install
           anchor build
           anchor deploy --provider.cluster devnet
 
-      # --------------------------------------------------
-      # 10) Optional init (once)
-      # --------------------------------------------------
       - name: Init computation definition (optional)
+        if: ${{ success() }}
+        shell: bash
         working-directory: arcium/disc_mpc
         run: |
-          echo "Init skipped"
+          set -e
+          echo "Init step skipped (optional)"
