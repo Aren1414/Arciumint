@@ -1,10 +1,9 @@
 [workspace]
-members = ["programs/*"]
+members = [
+  "programs/*",
+  "encrypted-ixs"
+]
 resolver = "2"
-
-[patch.crates-io]
-borsh = { git = "https://github.com/near/borsh-rs", tag = "borsh-v1.5.0" }
-borsh-derive = { git = "https://github.com/near/borsh-rs", tag = "borsh-derive-v1.5.0" }
 
 [profile.release]
 overflow-checks = true
