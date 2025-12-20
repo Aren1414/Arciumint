@@ -96,8 +96,8 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           set -e
-          rm -f Cargo.lock
           yarn install --frozen-lockfile || yarn install
+          find . -name Cargo.lock -print -exec sed -i 's/^version = 4$/version = 3/' {} \; || true
           anchor build
           anchor deploy --provider.cluster devnet
 
