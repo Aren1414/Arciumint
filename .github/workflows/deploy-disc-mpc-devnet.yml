@@ -20,21 +20,13 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y pkg-config libudev-dev
+          sudo apt-get install -y pkg-config libudev-dev jq
 
-      # اگر هنوز توی ریشه repo rust-toolchain داری، همین باعث lock v4 می‌شود.
-      - name: Remove repo-level rust-toolchain overrides (if any)
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -f rust-toolchain rust-toolchain.toml || true
-
-      - name: Install Rust toolchains (host + lockfile)
+      - name: Install Rust (stable – compatible with Anchor/Solana)
         shell: bash
         run: |
           set -euo pipefail
           rustup toolchain install 1.83.0
-          rustup toolchain install 1.75.0
           rustup default 1.83.0
           rustc --version
           cargo --version
@@ -84,7 +76,6 @@ jobs:
           corepack enable
           yarn --version
 
-      # به جای cargo install anchor-cli از سورس (که msrv می‌ترکاند)، avm نصب کن
       - name: Install Anchor via AVM (0.32.1)
         shell: bash
         run: |
@@ -93,17 +84,6 @@ jobs:
           avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
-
-      # نکته کلیدی: lockfile را با cargo قدیمی تولید کن تا Solana cargo-build-sbf بتواند بخواند
-      - name: Generate compatible Cargo.lock (v3) for Solana tooling
-        shell: bash
-        working-directory: arcium/disc_mpc
-        run: |
-          set -euo pipefail
-          rm -f Cargo.lock
-          cargo +1.75.0 generate-lockfile
-          # sanity check:
-          grep -n "^version" Cargo.lock | head -n 1 || true
 
       - name: Build & Deploy (Anchor)
         shell: bash
