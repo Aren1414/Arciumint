@@ -20,10 +20,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev
 
-      - name: Install Rust (>=1.82 required by Anchor 0.32.1)
+      - name: Install Rust (Anchor 0.32.1 deps now require >= 1.83)
         run: |
-          rustup toolchain install 1.82.0
-          rustup default 1.82.0
+          rustup toolchain install 1.83.0
+          rustup default 1.83.0
           rustc --version
           cargo --version
 
@@ -62,9 +62,9 @@ jobs:
           corepack enable
           yarn --version
 
-      - name: Install Anchor CLI
+      - name: Install Anchor CLI (locked deps)
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
+          cargo install --locked --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
       - name: Build & Deploy (Anchor)
