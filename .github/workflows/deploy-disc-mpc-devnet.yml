@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # --- Install Solana CLI (stable & safe) ---
+      # --- Install Solana CLI ---
       - name: Install Solana CLI
         run: |
           curl -L https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
@@ -46,15 +46,14 @@ jobs:
         env:
           DISC_MPC_PROGRAM_KEYPAIR: ${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}
 
-      # --- HARD FIX: kill Cargo.lock everywhere ---
-      - name: Remove Cargo.lock
-        run: |
-          find . -name Cargo.lock -delete
-
-      # --- Build & Deploy ---
-      - name: Build & Deploy program
+      # --- Build with Solana toolchain (NO cargo build-bpf) ---
+      - name: Build program
         working-directory: arcium/disc_mpc
         run: |
-          cargo clean
-          cargo build-bpf
+          solana program build
+
+      # --- Deploy ---
+      - name: Deploy program
+        working-directory: arcium/disc_mpc
+        run: |
           solana program deploy target/deploy/disc_mpc.so
