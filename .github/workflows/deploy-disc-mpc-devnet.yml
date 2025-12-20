@@ -11,7 +11,7 @@ jobs:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
       RUSTUP_TOOLCHAIN: nightly
-      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "1"
+      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: true
 
     steps:
       - uses: actions/checkout@v4
