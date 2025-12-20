@@ -29,7 +29,7 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust toolchains (BOTH)
+      # Rust toolchains
       # -----------------------------
       - name: Install Rust stable + nightly
         run: |
@@ -83,28 +83,25 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Generate Cargo.lock (STABLE ONLY)
+      # HARD RESET Cargo.lock (CRITICAL)
       # -----------------------------
-      - name: Generate Cargo.lock (stable)
+      - name: Recreate Cargo.lock with STABLE
         working-directory: arcium/disc_mpc
         run: |
+          rm -f Cargo.lock
           cargo +1.83.0 generate-lockfile
 
       # -----------------------------
       # Commit Cargo.lock
       # -----------------------------
-      - name: Commit Cargo.lock if changed
+      - name: Commit Cargo.lock
         working-directory: arcium/disc_mpc
         run: |
-          if git status --porcelain | grep Cargo.lock; then
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
-            git add Cargo.lock
-            git commit -m "ci: update Cargo.lock (stable v3, anchor compatible)"
-            git push
-          else
-            echo "Cargo.lock unchanged"
-          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add Cargo.lock
+          git commit -m "ci: regenerate Cargo.lock with stable (v3)"
+          git push
 
       # -----------------------------
       # Build & Deploy
