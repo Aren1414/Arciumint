@@ -10,7 +10,7 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: https://api.devnet.solana.com
-      RUSTUP_TOOLCHAIN: "1.75.0"
+      RUSTUP_TOOLCHAIN: "1.77.0"
 
     steps:
       # --------------------------------------------------
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       # --------------------------------------------------
-      # 2) System deps (required for Anchor / hidapi)
+      # 2) System deps (required by Anchor/hidapi)
       # --------------------------------------------------
       - name: Install system dependencies
         run: |
@@ -36,9 +36,10 @@ jobs:
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
+          solana-keygen --version
 
       # --------------------------------------------------
-      # 4) Restore keypairs
+      # 4) Restore keypairs from Secrets
       # --------------------------------------------------
       - name: Write Solana keypairs
         run: |
@@ -63,12 +64,12 @@ jobs:
           solana airdrop 2 || solana airdrop 1 || true
 
       # --------------------------------------------------
-      # 6) Install Rust EXACT version Anchor supports
+      # 6) Install Rust (>=1.77 required by borsh@1.6.0)
       # --------------------------------------------------
-      - name: Install Rust 1.75.0
+      - name: Install Rust 1.77.0
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.75.0"
+          toolchain: "1.77.0"
           components: rustfmt, clippy
 
       # --------------------------------------------------
@@ -85,7 +86,7 @@ jobs:
           yarn --version
 
       # --------------------------------------------------
-      # 8) Install Anchor CLI
+      # 8) Install Anchor CLI (with same Rust)
       # --------------------------------------------------
       - name: Install Anchor CLI
         run: |
@@ -93,14 +94,15 @@ jobs:
           anchor --version
 
       # --------------------------------------------------
-      # 9) Build & Deploy (FINAL – WORKS)
+      # 9) Build & Deploy (FINAL)
       # --------------------------------------------------
       - name: Build & Deploy DISC MPC
         working-directory: arcium/disc_mpc
         run: |
-          echo ">>> Neutralize rust-toolchain.toml for CI"
+          # Neutralize project rust-toolchain only in CI
           mv rust-toolchain.toml rust-toolchain.toml.bak || true
 
+          # Ensure lockfile is regenerated with Rust 1.77
           find . -name Cargo.lock -delete
 
           yarn install
@@ -108,7 +110,7 @@ jobs:
           anchor deploy --provider.cluster devnet
 
       # --------------------------------------------------
-      # 10) Optional init
+      # 10) Optional init (once)
       # --------------------------------------------------
       - name: Init computation definition (optional)
         working-directory: arcium/disc_mpc
