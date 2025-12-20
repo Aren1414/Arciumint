@@ -10,6 +10,8 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
+      RUSTUP_TOOLCHAIN: nightly
+      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -19,17 +21,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev
 
-      - name: Install Rust 1.89.0 (default)
+      - name: Install Rust nightly
         run: |
-          set -e
-          rustup toolchain install 1.89.0
-          rustup default 1.89.0
+          rustup toolchain install nightly
+          rustup default nightly
           rustc --version
           cargo --version
 
       - name: Install Solana CLI
         run: |
-          set -e
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
@@ -38,7 +38,6 @@ jobs:
 
       - name: Write Solana keypairs
         run: |
-          set -e
           mkdir -p ~/.config/solana
           mkdir -p arcium/disc_mpc/target/deploy
 
@@ -50,14 +49,9 @@ jobs:
 
           solana config set --url "${SOLANA_RPC_URL}"
           solana config set --keypair ~/.config/solana/id.json
-          solana config get
 
-          solana-keygen pubkey ~/.config/solana/id.json
-          solana-keygen pubkey arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-      - name: Airdrop SOL (best effort)
+      - name: Airdrop SOL
         run: |
-          set -e
           solana airdrop 2 || solana airdrop 1 || true
           solana balance || true
 
@@ -70,28 +64,15 @@ jobs:
           corepack enable
           yarn --version
 
-      - name: Install Anchor CLI (with Rust 1.89)
-        env:
-          RUSTUP_TOOLCHAIN: "1.89.0"
+      - name: Install Anchor CLI
         run: |
-          set -e
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli
           anchor --version
 
-      - name: Build & Deploy (Anchor, Rust 1.89, ignore lockfiles)
+      - name: Build & Deploy (Anchor)
         working-directory: arcium/disc_mpc
-        env:
-          RUSTUP_TOOLCHAIN: "1.89.0"
-          ANCHOR_IGNORE_LOCKFILE: "1"
-          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
-          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
         run: |
-          set -e
-          # JS deps
-          yarn install || yarn install
-          # پاک کردن لاک‌فایل‌های Rust تا با 1.89 ساخته شوند
-          find . -name Cargo.lock -delete || true
-          # بیلد و دیپلوی
+          yarn install
           anchor build --skip-lint
           anchor deploy --provider.cluster devnet
 
@@ -99,4 +80,4 @@ jobs:
         if: ${{ success() }}
         working-directory: arcium/disc_mpc
         run: |
-          echo "Init step skipped (optional)"
+          echo "Init step skipped"
