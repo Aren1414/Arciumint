@@ -8,18 +8,17 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SOLANA_VERSION: 1.18.26
+      SOLANA_VERSION: v1.18.26
       SOLANA_RPC_URL: https://api.devnet.solana.com
 
     steps:
       - uses: actions/checkout@v4
 
-      # --- Install Solana CLI ---
-      - name: Install Solana CLI
+      # --- Install Solana (OFFICIAL way) ---
+      - name: Install Solana Toolchain
         run: |
-          curl -L https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
-          tar -xjf solana.tar.bz2
-          sudo mv solana-release/bin/* /usr/local/bin/
+          sh -c "$(curl -sSfL https://release.solana.com/${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       # --- Restore wallet ---
@@ -46,11 +45,11 @@ jobs:
         env:
           DISC_MPC_PROGRAM_KEYPAIR: ${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}
 
-      # --- Build with Solana toolchain (NO cargo build-bpf) ---
-      - name: Build program
+      # --- Build BPF (THIS IS THE ONLY VALID WAY) ---
+      - name: Build BPF program
         working-directory: arcium/disc_mpc
         run: |
-          solana program build
+          cargo build-bpf
 
       # --- Deploy ---
       - name: Deploy program
