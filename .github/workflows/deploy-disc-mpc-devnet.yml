@@ -10,8 +10,6 @@ jobs:
     env:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
-      RUSTUP_TOOLCHAIN: nightly
-      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: true
 
     steps:
       - uses: actions/checkout@v4
@@ -21,10 +19,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev
 
-      - name: Install Rust nightly
+      - name: Install Rust 1.75.0 (Anchor-compatible)
         run: |
-          rustup toolchain install nightly
-          rustup default nightly
+          rustup toolchain install 1.75.0
+          rustup default 1.75.0
           rustc --version
           cargo --version
 
@@ -34,7 +32,6 @@ jobs:
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
-          solana-keygen --version
 
       - name: Write Solana keypairs
         run: |
@@ -73,11 +70,6 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           yarn install
+          rm -f Cargo.lock
           anchor build --skip-lint
           anchor deploy --provider.cluster devnet
-
-      - name: Init computation definition (optional)
-        if: ${{ success() }}
-        working-directory: arcium/disc_mpc
-        run: |
-          echo "Init step skipped"
