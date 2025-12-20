@@ -23,13 +23,13 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust (nightly only)
+      # Rust nightly (for lockfile generation + resolver)
       # -----------------------------
       - name: Install Rust nightly
         shell: bash
         run: |
           set -euo pipefail
-          rustup toolchain install nightly
+          rustup toolchain install nightly --profile minimal
           rustup default nightly
           rustc --version
           cargo --version
@@ -90,7 +90,7 @@ jobs:
           yarn --version
 
       # -----------------------------
-      # Anchor via AVM
+      # Anchor via AVM (pinned)
       # -----------------------------
       - name: Install Anchor (AVM 0.32.1)
         shell: bash
@@ -107,19 +107,27 @@ jobs:
       - name: Build & Deploy (Anchor)
         shell: bash
         working-directory: arcium/disc_mpc
-        env:
-          RUSTUP_TOOLCHAIN: nightly
-          CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "true"
         run: |
           set -euo pipefail
 
-          echo "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN"
-          echo "CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP=$CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP"
-          cargo --version
-          cargo -Vv
-
           yarn install
-          rm -f Cargo.lock
 
-          anchor build --skip-lint
+          echo ">>> Generate TEMP Cargo.lock (do NOT commit)"
+          # مهم: پاک نکن. بساز.
+          cargo generate-lockfile
+
+          echo ">>> Force deps compatible with Solana SBF toolchain"
+          # این دو تا دقیقاً همان خطای borsh 1.6 / rustc 1.75 را می‌بندد
+          cargo update -p borsh --precise 1.5.0
+          cargo update -p borsh-derive --precise 1.5.0
+
+          echo ">>> Sanity check locked versions"
+          grep -n 'name = "borsh"' Cargo.lock || true
+          grep -n 'name = "base64ct"' Cargo.lock || true
+
+          echo ">>> Anchor build (LOCKED; uses generated Cargo.lock)"
+          # کلید کار: -- --locked
+          anchor build --skip-lint -- --locked
+
+          echo ">>> Anchor deploy"
           anchor deploy --provider.cluster devnet
