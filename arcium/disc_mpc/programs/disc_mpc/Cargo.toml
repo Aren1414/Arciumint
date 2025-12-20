@@ -25,10 +25,5 @@ arcium-client = { version = "0.6.0-alpha", default-features = false }
 arcium-macros = "0.6.0-alpha"
 arcium-anchor = "0.6.0-alpha"
 
-
-[patch.crates-io]
-borsh = "=1.5.0"
-borsh-derive = "=1.5.0"
-
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
