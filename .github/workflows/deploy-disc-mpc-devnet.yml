@@ -11,87 +11,98 @@ jobs:
       SOLANA_VERSION: "1.18.26"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
       CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-      RUSTUP_TOOLCHAIN: nightly
-      CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "1"   # <<< حیاتی
 
     steps:
       - uses: actions/checkout@v4
 
-      # -----------------------------
-      # System deps
-      # -----------------------------
       - name: Install system dependencies
         run: |
+          set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
-      # -----------------------------
-      # Rust (nightly ONLY)
-      # -----------------------------
       - name: Install Rust nightly
         run: |
+          set -euo pipefail
           rustup toolchain install nightly
           rustup default nightly
           rustc --version
           cargo --version
+          cargo -Vv
 
-      # -----------------------------
-      # Solana CLI
-      # -----------------------------
       - name: Install Solana CLI
+        shell: bash
         run: |
+          set -euo pipefail
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
           tar -xjf solana.tar.bz2
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
           solana config set --url "${SOLANA_RPC_URL}"
 
-      # -----------------------------
-      # Wallets
-      # -----------------------------
       - name: Write Solana keypairs
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p ~/.config/solana
           mkdir -p arcium/disc_mpc/target/deploy
 
-          echo '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
-          echo '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+          printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
+          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
           chmod 600 ~/.config/solana/id.json
           chmod 600 arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
           solana config set --keypair ~/.config/solana/id.json
+          solana address
           solana balance || true
 
-      # -----------------------------
-      # Node / Yarn
-      # -----------------------------
+      - name: Airdrop SOL
+        shell: bash
+        run: |
+          set -euo pipefail
+          solana airdrop 2 || solana airdrop 1 || true
+          solana balance || true
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Enable Yarn
+        shell: bash
         run: |
+          set -euo pipefail
           corepack enable
           yarn --version
 
-      # -----------------------------
-      # Anchor (AVM pinned)
-      # -----------------------------
-      - name: Install Anchor
+      - name: Install Anchor (AVM 0.32.1)
+        shell: bash
         run: |
+          set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install 0.32.1
+          avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
 
-      # -----------------------------
-      # Build & Deploy
-      # -----------------------------
-      - name: Build & Deploy
+      - name: Build & Deploy (Anchor)
+        shell: bash
         working-directory: arcium/disc_mpc
+        env:
+          # این دو تا باید دقیقاً روی همین Step ست باشند
+          RUSTUP_TOOLCHAIN: nightly
+          CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP: "1"
         run: |
+          set -euo pipefail
+
+          echo "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN"
+          echo "CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP=$CARGO_UNSTABLE_NEXT_LOCKFILE_BUMP"
+          cargo --version
+          cargo -Vv
+
           yarn install
+
+          # اگر lockfile قدیمی/خراب باشد پاکش می‌کنیم
           rm -f Cargo.lock
+
           anchor build --skip-lint
           anchor deploy --provider.cluster devnet
