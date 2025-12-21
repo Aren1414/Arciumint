@@ -12,16 +12,35 @@ const RPC_URL =
 
 let _cachedProgram: anchor.Program | null = null;
 
-async function getDiscProgram(wallet: any, connection: Connection) {
+async function getDiscProgram(
+  wallet: any,
+  connection: Connection
+): Promise<anchor.Program> {
   if (_cachedProgram) return _cachedProgram;
 
-  const provider = new anchor.AnchorProvider(connection, wallet, { commitment: "confirmed" });
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    { commitment: "confirmed" }
+  );
+
   anchor.setProvider(provider);
 
-  const idl = await anchor.Program.fetchIdl(DISC_PROGRAM_ID, provider);
-  if (!idl) throw new Error("IDL not found for program");
+  const idl = await anchor.Program.fetchIdl(
+    DISC_PROGRAM_ID,
+    provider
+  );
 
-  _cachedProgram = new anchor.Program(idl as anchor.Idl, DISC_PROGRAM_ID, provider);
+  if (!idl) {
+    throw new Error("IDL not found on-chain");
+  }
+
+  _cachedProgram = new anchor.Program(
+    idl as anchor.Idl,
+    DISC_PROGRAM_ID,
+    provider as anchor.Provider
+  );
+
   return _cachedProgram;
 }
 
@@ -37,12 +56,21 @@ export async function runDiscMpcFlow(params: {
 
   const connection = new Connection(RPC_URL, "confirmed");
 
-  const provider = new anchor.AnchorProvider(connection, wallet, { commitment: "confirmed" });
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    { commitment: "confirmed" }
+  );
+
   anchor.setProvider(provider);
 
   const program = await getDiscProgram(wallet, connection);
 
-  const submission = await submitDiscMpc(provider, program, answers);
+  const submission = await submitDiscMpc(
+    provider,
+    program,
+    answers
+  );
 
   const evt = await waitForDiscScoresEvent({
     connection,
@@ -60,7 +88,10 @@ export async function runDiscMpcFlow(params: {
     cCipher: evt.c_score_cipher,
   });
 
-  setDiscResult({ ...decrypted, raw: { submission, evt } });
+  setDiscResult({
+    ...decrypted,
+    raw: { submission, evt },
+  });
 
   return {
     signature: submission.signature,
