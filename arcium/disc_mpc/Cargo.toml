@@ -5,6 +5,25 @@ members = [
 ]
 resolver = "2"
 
+# -------------------------------------------------
+# FORCE RustCrypto crates to pre-1.85 versions
+# (Anchor 0.32.1 / Solana 1.18 compatible)
+# -------------------------------------------------
+[patch.crates-io]
+base64ct = { git = "https://github.com/RustCrypto/formats.git", package = "base64ct", tag = "base64ct-v1.6.0" }
+const-oid = { git = "https://github.com/RustCrypto/formats.git", package = "const-oid", tag = "const-oid-v0.9.6" }
+pkcs8    = { git = "https://github.com/RustCrypto/formats.git", package = "pkcs8", tag = "pkcs8-v0.10.2" }
+sec1     = { git = "https://github.com/RustCrypto/formats.git", package = "sec1", tag = "sec1-v0.7.3" }
+spki     = { git = "https://github.com/RustCrypto/formats.git", package = "spki", tag = "spki-v0.7.3" }
+
+digest = { git = "https://github.com/RustCrypto/traits.git", package = "digest", tag = "digest-v0.10.7" }
+crypto-common = { git = "https://github.com/RustCrypto/traits.git", package = "crypto-common", tag = "crypto-common-v0.1.7" }
+
+elliptic-curve = { git = "https://github.com/RustCrypto/elliptic-curves.git", package = "elliptic-curve", tag = "elliptic-curve-v0.13.8" }
+
+# -------------------------------------------------
+# Release profile (unchanged)
+# -------------------------------------------------
 [profile.release]
 overflow-checks = true
 lto = "fat"
