@@ -2,12 +2,12 @@
 
 import { Connection } from "@solana/web3.js";
 import {
-  DISC_PROGRAM_ID,
   submitDiscMpc,
   decryptDiscScores,
 } from "./discMpcClient";
 import { waitForDiscScoresEvent } from "./discMpcEvents";
 import { setDiscResult } from "./discStore";
+import { DISC_PROGRAM_ID } from "./discMpcClient";
 
 const RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC ??
@@ -25,15 +25,13 @@ export async function runDiscMpcFlow(params: {
 
   const connection = new Connection(RPC_URL, "confirmed");
 
-  // 1) submit MPC computation (raw ix – no IDL, no Anchor)
-  const submission = await submitDiscMpc({
+  
+  const submission = await submitDiscMpc(
     wallet,
-    connection,
-    programId: DISC_PROGRAM_ID,
     answers,
-  });
+    connection
+  );
 
-  // 2) wait encrypted result event
   const evt = await waitForDiscScoresEvent({
     connection,
     programId: DISC_PROGRAM_ID,
@@ -41,7 +39,6 @@ export async function runDiscMpcFlow(params: {
     timeoutMs: 120_000,
   });
 
-  // 3) decrypt locally (only user can)
   const decrypted = decryptDiscScores({
     sharedSecret: submission.sharedSecret,
     nonce: evt.nonce,
@@ -51,7 +48,6 @@ export async function runDiscMpcFlow(params: {
     cCipher: evt.c_score_cipher,
   });
 
-  // 4) store for UI
   setDiscResult({
     ...decrypted,
     raw: { submission, evt },
