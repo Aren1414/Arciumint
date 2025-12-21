@@ -65,12 +65,7 @@ function toPct(x: number, total: number) {
   return Math.round((x / total) * 100);
 }
 
-function dominantFrom(
-  d: number,
-  i: number,
-  s: number,
-  c: number
-): DiscDominant {
+function dominantFrom(d: number, i: number, s: number, c: number): DiscDominant {
   const pairs: Array<[DiscDominant, number]> = [
     ["D", d],
     ["I", i],
@@ -81,10 +76,7 @@ function dominantFrom(
   return pairs[0][0];
 }
 
-async function ensureCompDefReady(
-  provider: anchor.AnchorProvider,
-  program: anchor.Program
-) {
+async function ensureCompDefReady(provider: anchor.AnchorProvider, program: anchor.Program) {
   const baseSeed = getArciumAccountBaseSeed("ComputationDefinitionAccount");
   const offset = getCompDefAccOffset("compute_disc");
 
@@ -122,8 +114,6 @@ async function ensureCompDefReady(
     await provider.wallet.signTransaction(finalizeTx);
     await provider.sendAndConfirm(finalizeTx, [], { commitment: "confirmed" });
   } catch {}
-
-  return compDefPda;
 }
 
 export async function submitDiscMpc(
@@ -137,23 +127,27 @@ export async function submitDiscMpc(
   await ensureCompDefReady(provider, program);
 
   const mxePub = await getMXEPublicKey(provider, program.programId);
+  if (!mxePub) {
+    throw new Error("MXE public key not available (cluster not initialized / wrong cluster offset / RPC issue)");
+  }
 
   const priv = x25519.utils.randomSecretKey();
   const pub = x25519.getPublicKey(priv);
 
-  const sharedSecret = x25519.getSharedSecret(priv, mxePub);
+  const sharedSecret = x25519.getSharedSecret(priv, mxePub as Uint8Array);
   const cipher = new RescueCipher(sharedSecret);
 
   const nonceBytes = randomBytes(16);
   const ciphertexts = cipher.encrypt(plaintext, nonceBytes);
 
+  if (!Array.isArray(ciphertexts) || ciphertexts.length !== 28) {
+    throw new Error(`Unexpected ciphertext length: ${ciphertexts?.length}`);
+  }
+
   const computationOffset = new anchor.BN(randomBytes(8), "hex");
   const clusterOffset = arciumEnv.arciumClusterOffset;
 
-  const computationAccount = getComputationAccAddress(
-    clusterOffset,
-    computationOffset
-  );
+  const computationAccount = getComputationAccAddress(clusterOffset, computationOffset);
 
   const sig = await program.methods
     .computeDisc(
@@ -176,12 +170,7 @@ export async function submitDiscMpc(
     })
     .rpc({ skipPreflight: true, commitment: "confirmed" });
 
-  await awaitComputationFinalization(
-    provider,
-    computationOffset,
-    program.programId,
-    "confirmed"
-  );
+  await awaitComputationFinalization(provider, computationOffset, program.programId, "confirmed");
 
   return {
     signature: sig,
@@ -223,4 +212,4 @@ export function decryptDiscScores(params: {
     cPct: toPct(cn, 28),
     dominant: dominantFrom(dn, in_, sn, cn),
   };
-      }
+}
