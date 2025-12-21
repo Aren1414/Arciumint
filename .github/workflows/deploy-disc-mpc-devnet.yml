@@ -10,16 +10,13 @@ jobs:
     env:
       SOLANA_VERSION: "2.3.0"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
-      ARCIUM_CLUSTER_OFFSET: "123"   
+      ARCIUM_CLUSTER_OFFSET: "123"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # -----------------------------
-      # System dependencies
-      # -----------------------------
       - name: System dependencies
         shell: bash
         run: |
@@ -27,9 +24,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq curl ca-certificates
 
-      # -----------------------------
-      # Rust 1.85.0
-      # -----------------------------
       - name: Install Rust 1.85.0
         shell: bash
         run: |
@@ -39,9 +33,6 @@ jobs:
           rustc --version
           cargo --version
 
-      # -----------------------------
-      # Solana CLI
-      # -----------------------------
       - name: Install Solana CLI
         shell: bash
         run: |
@@ -53,9 +44,6 @@ jobs:
           solana --version
           solana config set --url "${SOLANA_RPC_URL}"
 
-      # -----------------------------
-      # Wallets
-      # -----------------------------
       - name: Wallets
         shell: bash
         run: |
@@ -67,9 +55,6 @@ jobs:
           solana config set --keypair ~/.config/solana/id.json
           solana balance || true
 
-      # -----------------------------
-      # Node / Yarn
-      # -----------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -81,9 +66,6 @@ jobs:
           corepack enable
           yarn --version
 
-      # -----------------------------
-      # Anchor (AVM pinned 0.32.1)
-      # -----------------------------
       - name: Install Anchor
         shell: bash
         run: |
@@ -93,9 +75,6 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      # -----------------------------
-      # Arcium CLI
-      # -----------------------------
       - name: Install Arcium CLI
         shell: bash
         run: |
@@ -105,9 +84,6 @@ jobs:
           sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
-      # -----------------------------
-      # BUILD CONFIDENTIAL IXs
-      # -----------------------------
       - name: Arcium Build (generate *.arcis)
         shell: bash
         working-directory: arcium/disc_mpc
@@ -117,9 +93,6 @@ jobs:
           yarn install
           arcium build --skip-keys-sync
 
-      # -----------------------------
-      # DEPLOY (PROGRAM + MXE INIT)  
-      # -----------------------------
       - name: Arcium Deploy (Devnet)
         shell: bash
         working-directory: arcium/disc_mpc
@@ -129,6 +102,8 @@ jobs:
 
           arcium deploy \
             --cluster-offset ${ARCIUM_CLUSTER_OFFSET} \
+            --mempool-size 64 \
+            --recovery-set-size 1 \
             --keypair-path /home/runner/.config/solana/id.json \
-            --rpc-url "${SOLANA_RPC_URL}" \
-            --program-keypair ./target/deploy/disc_mpc-keypair.json
+            --program-keypair ./target/deploy/disc_mpc-keypair.json \
+            --rpc-url "${SOLANA_RPC_URL}"
