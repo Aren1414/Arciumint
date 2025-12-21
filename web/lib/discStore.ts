@@ -3,6 +3,15 @@ export type DiscResult = {
   i: number;
   s: number;
   c: number;
+
+  dPct: number;
+  iPct: number;
+  sPct: number;
+  cPct: number;
+
+  dominant: "D" | "I" | "S" | "C";
+
+  // optional raw for debugging
   raw?: any;
 };
 
