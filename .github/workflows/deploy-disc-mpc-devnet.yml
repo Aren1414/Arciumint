@@ -38,6 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
           solana --version
           solana config set --url "${SOLANA_RPC_URL}"
@@ -46,6 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
@@ -87,6 +89,7 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
           yarn install
           arcium build --skip-keys-sync
 
@@ -95,6 +98,7 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
           arcium deploy \
             --cluster-offset ${ARCIUM_CLUSTER_OFFSET} \
             --mempool-size 64 \
