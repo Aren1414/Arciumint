@@ -13,7 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # -----------------------------
       # System deps
+      # -----------------------------
       - name: System dependencies
         shell: bash
         run: |
@@ -21,9 +23,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
+      # -----------------------------
       # Rust toolchains
-      # stable = host tools default
-      # nightly = Cargo that understands edition2024
+      # stable = default
+      # nightly = Cargo with edition2024 support
+      # -----------------------------
       - name: Install Rust toolchains
         shell: bash
         run: |
@@ -34,19 +38,23 @@ jobs:
           rustc --version
           cargo +nightly --version
 
+      # -----------------------------
       # Solana CLI (pinned)
+      # -----------------------------
       - name: Install Solana CLI
         shell: bash
         env:
           SOLANA_VERSION: "1.18.26"
         run: |
           set -euo pipefail
-          curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
-          tar -xjf solana.tar.bz2
-          sudo mv solana-release/bin/* /usr/local/bin/
+          curl -fL "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o /tmp/solana.tar.bz2
+          tar -xjf /tmp/solana.tar.bz2 -C /tmp
+          sudo mv /tmp/solana-release/bin/* /usr/local/bin/
           solana --version
 
+      # -----------------------------
       # Node / Yarn
+      # -----------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -58,7 +66,9 @@ jobs:
           corepack enable
           yarn --version
 
+      # -----------------------------
       # Anchor (AVM pinned)
+      # -----------------------------
       - name: Install Anchor
         shell: bash
         run: |
@@ -68,18 +78,23 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      # Arcium CLI (binary)
+      # -----------------------------
+      # Arcium CLI (FIXED)
+      # -----------------------------
       - name: Install Arcium CLI
         shell: bash
         run: |
           set -euo pipefail
-          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o arcium
-          chmod +x arcium
-          sudo mv arcium /usr/local/bin/arcium
+          curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha \
+            -o /tmp/arcium-cli
+          chmod +x /tmp/arcium-cli
+          sudo mv /tmp/arcium-cli /usr/local/bin/arcium
           arcium --version
 
-      # BUILD MPC  <<< کلید حل مشکل >>>
-      - name: Build Arcium MPC (Cargo nightly)
+      # -----------------------------
+      # BUILD MPC (Cargo nightly)
+      # -----------------------------
+      - name: Build Arcium MPC
         shell: bash
         run: |
           set -euo pipefail
