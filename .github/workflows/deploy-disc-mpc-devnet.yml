@@ -10,6 +10,7 @@ jobs:
     env:
       SOLANA_VERSION: "2.3.0"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
+      ARCIUM_CLUSTER_OFFSET: "123"   
 
     steps:
       - uses: actions/checkout@v4
@@ -117,16 +118,17 @@ jobs:
           arcium build --skip-keys-sync
 
       # -----------------------------
-      # DEPLOY (NO BUILD)
+      # DEPLOY (PROGRAM + MXE INIT)  
       # -----------------------------
-      - name: Anchor Deploy
+      - name: Arcium Deploy (Devnet)
         shell: bash
         working-directory: arcium/disc_mpc
-        env:
-          ANCHOR_PROVIDER_URL: https://api.devnet.solana.com
-          ANCHOR_WALLET: /home/runner/.config/solana/id.json
-          ANCHOR_SKIP_BUILD: "1"
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
-          anchor deploy --provider.cluster devnet
+
+          arcium deploy \
+            --cluster-offset ${ARCIUM_CLUSTER_OFFSET} \
+            --keypair-path /home/runner/.config/solana/id.json \
+            --rpc-url "${SOLANA_RPC_URL}" \
+            --program-keypair ./target/deploy/disc_mpc-keypair.json
