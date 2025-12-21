@@ -6,7 +6,6 @@ import { randomBytes } from "crypto";
 import {
   RescueCipher,
   deserializeLE,
-  getArciumEnv,
   getMXEPublicKey,
   getMXEAccAddress,
   getMempoolAccAddress,
@@ -56,6 +55,13 @@ function toHexBytes(x: BytesLike): number[] {
 
 function toU8(x: BytesLike): Uint8Array {
   return x instanceof Uint8Array ? x : new Uint8Array(x);
+}
+
+function getClusterOffset(): number {
+  const raw = process.env.NEXT_PUBLIC_ARCIUM_CLUSTER_OFFSET ?? "123";
+  const n = Number(raw);
+  if (!Number.isFinite(n)) throw new Error("Invalid NEXT_PUBLIC_ARCIUM_CLUSTER_OFFSET");
+  return n;
 }
 
 function mapAnswers(answers: Record<number, string>): bigint[] {
@@ -132,14 +138,11 @@ export async function submitDiscMpc(
   answers: Record<number, string>
 ): Promise<DiscSubmission> {
   const plaintext = mapAnswers(answers);
-  const arciumEnv = getArciumEnv();
 
   await ensureCompDefReady(provider, program);
 
   const mxePub = await getMXEPublicKey(provider, program.programId);
-  if (!mxePub) {
-    throw new Error("MXE public key not available");
-  }
+  if (!mxePub) throw new Error("MXE public key not available");
 
   const priv = x25519.utils.randomSecretKey();
   const pub = x25519.getPublicKey(priv);
@@ -155,7 +158,7 @@ export async function submitDiscMpc(
   }
 
   const computationOffset = new anchor.BN(randomBytes(8), "hex");
-  const clusterOffset = arciumEnv.arciumClusterOffset;
+  const clusterOffset = getClusterOffset();
 
   const computationAccount = getComputationAccAddress(clusterOffset, computationOffset);
 
@@ -227,4 +230,4 @@ export function decryptDiscScores(params: {
     cPct: toPct(cn, 28),
     dominant: dominantFrom(dn, in_, sn, cn),
   };
-      }
+}
