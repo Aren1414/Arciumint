@@ -8,7 +8,7 @@ import {
 } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey(
-  "A4EDNsvT5oGXVXFNvvetgJDzZmYySaWY773C784VXUoM"
+  "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
 );
 
 
