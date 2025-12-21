@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # -----------------------------
-      # System deps
+      # System dependencies
       # -----------------------------
       - name: System dependencies
         run: |
@@ -22,12 +22,12 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust NIGHTLY (>= 1.82 واقعی)
+      # Rust NIGHTLY (edition2024 SUPPORTED)
       # -----------------------------
-      - name: Install Rust nightly (>=1.82)
+      - name: Install Rust nightly (edition2024 ready)
         run: |
-          rustup toolchain install nightly-2024-09-01 --profile minimal
-          rustup override set nightly-2024-09-01
+          rustup toolchain install nightly-2024-11-26 --profile minimal
+          rustup override set nightly-2024-11-26
           rustc --version
           cargo --version
 
@@ -54,9 +54,9 @@ jobs:
           yarn --version
 
       # -----------------------------
-      # Anchor / AVM  (🔥 نکته‌ی اصلی)
+      # Anchor / AVM (MUST use same nightly)
       # -----------------------------
-      - name: Install Anchor (AVM 0.32.1) with nightly
+      - name: Install Anchor (AVM 0.32.1)
         run: |
           cargo +nightly install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install 0.32.1
@@ -74,10 +74,10 @@ jobs:
           arcium --version
 
       # -----------------------------
-      # BUILD MPC (تنها حالت صحیح)
+      # BUILD MPC (FORCE Cargo nightly)
       # -----------------------------
       - name: Build Arcium MPC
         run: |
           cd arcium/disc_mpc
           yarn install
-          arcium build --skip-keys-sync
+          CARGO="cargo +nightly" arcium build --skip-keys-sync
