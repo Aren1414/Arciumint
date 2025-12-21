@@ -38,16 +38,14 @@ jobs:
         run: |
           set -euo pipefail
           sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-          solana --version
-          solana config set --url "${SOLANA_RPC_URL}"
+          "$HOME/.local/share/solana/install/active_release/bin/solana" --version
+          "$HOME/.local/share/solana/install/active_release/bin/solana" config set --url "${SOLANA_RPC_URL}"
 
       - name: Wallets
         shell: bash
         run: |
           set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
@@ -75,13 +73,15 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      - name: Install Arcium CLI
+      - name: Install Arcium CLI (arcup)
         shell: bash
         run: |
           set -euo pipefail
-          curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o /tmp/arcium
-          chmod +x /tmp/arcium
-          sudo mv /tmp/arcium /usr/local/bin/arcium
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          TARGET=x86_64_linux
+          curl -fL "https://bin.arcium.com/download/arcup_${TARGET}_0.3.0" -o "$HOME/.cargo/bin/arcup"
+          chmod +x "$HOME/.cargo/bin/arcup"
+          arcup install
           arcium --version
 
       - name: Arcium Build (generate *.arcis)
@@ -89,7 +89,6 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
           yarn install
           arcium build --skip-keys-sync
 
@@ -98,11 +97,10 @@ jobs:
         working-directory: arcium/disc_mpc
         run: |
           set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
           arcium deploy \
-            --cluster-offset ${ARCIUM_CLUSTER_OFFSET} \
+            --cluster-offset "${ARCIUM_CLUSTER_OFFSET}" \
             --mempool-size 64 \
             --recovery-set-size 1 \
-            --keypair-path ~/.config/solana/id.json \
-            --program-keypair ./target/deploy/disc_mpc-keypair.json \
+            --keypair-path "$HOME/.config/solana/id.json" \
+            --program-keypair "./target/deploy/disc_mpc-keypair.json" \
             --rpc-url "${SOLANA_RPC_URL}"
