@@ -48,6 +48,12 @@ export type DiscSubmission = {
   sharedSecret: Uint8Array;
 };
 
+type BytesLike = Uint8Array | number[];
+
+function toHexBytes(x: BytesLike): number[] {
+  return Array.isArray(x) ? x : Array.from(x);
+}
+
 function mapAnswers(answers: Record<number, string>): bigint[] {
   const out: bigint[] = [];
   for (let i = 1; i <= 28; i++) {
@@ -128,7 +134,7 @@ export async function submitDiscMpc(
 
   const mxePub = await getMXEPublicKey(provider, program.programId);
   if (!mxePub) {
-    throw new Error("MXE public key not available (cluster not initialized / wrong cluster offset / RPC issue)");
+    throw new Error("MXE public key not available");
   }
 
   const priv = x25519.utils.randomSecretKey();
@@ -183,17 +189,22 @@ export async function submitDiscMpc(
 
 export function decryptDiscScores(params: {
   sharedSecret: Uint8Array;
-  nonce: Uint8Array;
-  dCipher: Uint8Array;
-  iCipher: Uint8Array;
-  sCipher: Uint8Array;
-  cCipher: Uint8Array;
+  nonce: BytesLike;
+  dCipher: BytesLike;
+  iCipher: BytesLike;
+  sCipher: BytesLike;
+  cCipher: BytesLike;
 }): DiscDecryptedResult {
   const cipher = new RescueCipher(params.sharedSecret);
 
   const [d, i, s, c] = cipher.decrypt(
-    [params.dCipher, params.iCipher, params.sCipher, params.cCipher],
-    params.nonce
+    [
+      toHexBytes(params.dCipher),
+      toHexBytes(params.iCipher),
+      toHexBytes(params.sCipher),
+      toHexBytes(params.cCipher),
+    ],
+    toHexBytes(params.nonce)
   );
 
   const dn = Number(d);
