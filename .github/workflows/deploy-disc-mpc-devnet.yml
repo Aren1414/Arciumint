@@ -81,7 +81,7 @@ jobs:
           yarn --version
 
       # -----------------------------
-      # Anchor (AVM pinned)
+      # Anchor (AVM pinned 0.32.1)
       # -----------------------------
       - name: Install Anchor
         shell: bash
@@ -105,7 +105,7 @@ jobs:
           arcium --version
 
       # -----------------------------
-      # BUILD CONFIDENTIAL IXs (CRITICAL)
+      # BUILD CONFIDENTIAL IXs
       # -----------------------------
       - name: Arcium Build (generate *.arcis)
         shell: bash
@@ -125,7 +125,8 @@ jobs:
         env:
           ANCHOR_PROVIDER_URL: https://api.devnet.solana.com
           ANCHOR_WALLET: /home/runner/.config/solana/id.json
+          ANCHOR_SKIP_BUILD: "1"
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
-          anchor deploy --skip-build --provider.cluster devnet
+          anchor deploy --provider.cluster devnet
