@@ -11,51 +11,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # -----------------------------
-      # Install system deps
-      # -----------------------------
-      - name: Install system dependencies
-        shell: bash
+      - name: System deps
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev
 
       # -----------------------------
-      # Install Rust toolchains
-      # stable = compiler
-      # nightly = Cargo (edition2024 support)
+      # Rust 1.83 (Anchor / Solana compatible)
       # -----------------------------
-      - name: Install Rust toolchains
-        shell: bash
+      - name: Rust 1.83.0
         run: |
           set -euo pipefail
-          rustup toolchain install stable
-          rustup toolchain install nightly
-          rustup default stable
+          rustup toolchain install 1.83.0 --profile minimal
+          rustup default 1.83.0
           rustc --version
-          cargo +nightly --version
+          cargo --version
 
       # -----------------------------
-      # Install Solana CLI
+      # Solana CLI
       # -----------------------------
-      - name: Install Solana CLI
-        shell: bash
+      - name: Solana CLI
         run: |
           set -euo pipefail
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
 
       # -----------------------------
-      # Install Anchor (AVM pinned)
+      # Anchor (AVM pinned)
       # -----------------------------
-      - name: Install Anchor
-        shell: bash
+      - name: Anchor 0.32.1
         run: |
           set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
@@ -64,24 +52,21 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Install Arcium CLI (binary)
+      # Arcium CLI
       # -----------------------------
-      - name: Install Arcium CLI
-        shell: bash
+      - name: Arcium CLI
         run: |
           set -euo pipefail
-          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha \
-            -o arcium-cli
-          chmod +x arcium-cli
-          sudo mv arcium-cli /usr/local/bin/arcium
+          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o arcium
+          chmod +x arcium
+          sudo mv arcium /usr/local/bin/arcium
           arcium --version
 
       # -----------------------------
-      # Build MPC (Cargo = nightly)
+      # Build MPC
       # -----------------------------
       - name: Build Arcium MPC
-        shell: bash
         run: |
           set -euo pipefail
           cd arcium/disc_mpc
-          CARGO="cargo +nightly" arcium build --skip-keys-sync
+          arcium build --skip-keys-sync
