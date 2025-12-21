@@ -89,20 +89,21 @@ jobs:
           arcium --version
 
       # -----------------------------
-      # FIX TRANSITIVE DEPS (CRITICAL STEP)
+      # FIX TRANSITIVE DEPS (CORRECT WAY)
       # -----------------------------
-      - name: Force RustCrypto deps to pre-edition2024
+      - name: Downgrade RustCrypto crates (avoid edition2024)
         shell: bash
         run: |
           set -euo pipefail
           cd arcium/disc_mpc
-          cargo update -p const-oid --precise 0.9.6
-          cargo update -p base64ct --precise 1.6.0
-          cargo update -p pkcs8 --precise 0.10.2
-          cargo update -p sec1 --precise 0.7.3
-          cargo update -p spki --precise 0.7.3
-          cargo update -p digest --precise 0.10.7
-          cargo update -p crypto-common --precise 0.1.7
+
+          cargo update -p const-oid@0.10.1 --precise 0.9.6
+          cargo update -p base64ct@1.8.1   --precise 1.6.0
+          cargo update -p pkcs8@0.11.0-rc.1 --precise 0.10.2
+          cargo update -p sec1@0.8.0-rc.3   --precise 0.7.3
+          cargo update -p spki@0.8.0-rc.1   --precise 0.7.3
+          cargo update -p digest@0.11.0-pre.9 --precise 0.10.7
+          cargo update -p crypto-common@0.2.0-rc.1 --precise 0.1.7
 
       # -----------------------------
       # BUILD MPC
