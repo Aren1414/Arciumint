@@ -2,7 +2,11 @@
 
 import * as anchor from "@coral-xyz/anchor";
 import { Connection } from "@solana/web3.js";
-import { submitDiscMpc, decryptDiscScores, DISC_PROGRAM_ID } from "./discMpcClient";
+import {
+  submitDiscMpc,
+  decryptDiscScores,
+  DISC_PROGRAM_ID,
+} from "./discMpcClient";
 import { waitForDiscScoresEvent } from "./discMpcEvents";
 import { setDiscResult } from "./discStore";
 
@@ -26,19 +30,9 @@ async function getDiscProgram(
 
   anchor.setProvider(provider);
 
-  const idl = await anchor.Program.fetchIdl(
+  _cachedProgram = await anchor.Program.at(
     DISC_PROGRAM_ID,
     provider
-  );
-
-  if (!idl) {
-    throw new Error("IDL not found on-chain");
-  }
-
-  _cachedProgram = new anchor.Program(
-    idl as anchor.Idl,
-    DISC_PROGRAM_ID,
-    provider as anchor.Provider
   );
 
   return _cachedProgram;
