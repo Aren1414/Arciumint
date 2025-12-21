@@ -48,7 +48,6 @@ export default function DiscTestPage() {
     return (window as any).phantom?.solana ?? null;
   };
 
-  // ✅ MPC submit (FINAL)
   const submit = async () => {
     try {
       setSubmitting(true);
@@ -68,13 +67,11 @@ export default function DiscTestPage() {
         await provider.connect();
       }
 
-      // 🔐 MPC flow (encrypt → queue → wait → decrypt → store)
       await runDiscMpcFlow({
         wallet: provider,
         answers,
       });
 
-      // ➜ نمایش نتیجه از discStore
       router.push("/tests/disc/result");
     } catch (err) {
       console.error(err);
@@ -162,4 +159,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-  }
+}
