@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # -----------------------------
-      # System deps
+      # System dependencies
       # -----------------------------
       - name: System dependencies
         shell: bash
@@ -24,19 +24,16 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev jq
 
       # -----------------------------
-      # Rust toolchains
-      # stable = default
-      # nightly = Cargo with edition2024 support
+      # Rust toolchain (ONLY nightly)
       # -----------------------------
-      - name: Install Rust toolchains
+      - name: Install Rust nightly (DEFAULT)
         shell: bash
         run: |
           set -euo pipefail
-          rustup toolchain install 1.83.0 --profile minimal
           rustup toolchain install nightly --profile minimal
-          rustup default 1.83.0
+          rustup default nightly
           rustc --version
-          cargo +nightly --version
+          cargo --version
 
       # -----------------------------
       # Solana CLI (pinned)
@@ -79,20 +76,20 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Arcium CLI (FIXED)
+      # Arcium CLI
       # -----------------------------
       - name: Install Arcium CLI
         shell: bash
         run: |
           set -euo pipefail
           curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha \
-            -o /tmp/arcium-cli
-          chmod +x /tmp/arcium-cli
-          sudo mv /tmp/arcium-cli /usr/local/bin/arcium
+            -o /tmp/arcium
+          chmod +x /tmp/arcium
+          sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
       # -----------------------------
-      # BUILD MPC (Cargo nightly)
+      # BUILD MPC (nightly cargo REAL)
       # -----------------------------
       - name: Build Arcium MPC
         shell: bash
@@ -100,4 +97,4 @@ jobs:
           set -euo pipefail
           cd arcium/disc_mpc
           yarn install
-          CARGO="cargo +nightly" arcium build --skip-keys-sync
+          arcium build --skip-keys-sync
