@@ -1,76 +1,74 @@
 "use client";
 
-import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-  Connection,
-} from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+import { Connection } from "@solana/web3.js";
+import { DISC_PROGRAM_ID, submitDiscMpc, decryptDiscScores } from "./discMpcClient";
+import { waitForDiscScoresEvent } from "./discMpcEvents";
+import { setDiscResult } from "./discStore";
 
-const PROGRAM_ID = new PublicKey(
-  "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
-);
-
-
-const RPC_URL = "https://api.devnet.solana.com";
+// IMPORTANT: set env in NEXT_PUBLIC_SOLANA_RPC
+const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC ?? "https://api.devnet.solana.com";
 
 /**
- * DISC:
- * a=0, b=1, c=2, d=3
+ * Full flow:
+ * 1) queue MPC compute_disc with encrypted answers
+ * 2) wait event DiscScoresEvent
+ * 3) decrypt locally
+ * 4) store result for UI
  */
-function mapAnswers(answers: Record<number, string>): Uint8Array {
-  const out = new Uint8Array(28);
-
-  for (let i = 1; i <= 28; i++) {
-    const v = answers[i];
-    if (v === "a") out[i - 1] = 0;
-    else if (v === "b") out[i - 1] = 1;
-    else if (v === "c") out[i - 1] = 2;
-    else if (v === "d") out[i - 1] = 3;
-    else throw new Error(`Invalid answer at ${i}`);
-  }
-
-  return out;
-}
-
-export async function submitDiscMpc({
-  wallet,
-  answers,
-}: {
-  wallet: any;
+export async function runDiscMpcFlow(params: {
+  wallet: any; // Phantom provider
   answers: Record<number, string>;
 }) {
+  const { wallet, answers } = params;
+
   if (!wallet?.publicKey || !wallet?.signTransaction) {
     throw new Error("Wallet not connected");
   }
 
   const connection = new Connection(RPC_URL, "confirmed");
 
-  const data = Buffer.from(mapAnswers(answers));
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet,
+    { commitment: "confirmed" }
+  );
+  anchor.setProvider(provider);
 
-  const ix = new TransactionInstruction({
-    programId: PROGRAM_ID,
-    keys: [
-      {
-        pubkey: wallet.publicKey,
-        isSigner: true,
-        isWritable: false,
-      },
-    ],
-    data,
+  // Load IDL dynamically from Anchor generated artifact OR from your app bundle.
+  // Practical approach: import the IDL json from /target/idl if you ship it to web.
+  // You must create: web/lib/idl/disc_mpc.json (copy from arcium/disc_mpc/target/idl/disc_mpc.json after build)
+  const idl = (await import("./idl/disc_mpc.json")).default as anchor.Idl;
+
+  const program = new anchor.Program(idl, DISC_PROGRAM_ID, provider);
+
+  // 1) submit computation
+  const submission = await submitDiscMpc(provider, program, answers);
+
+  // 2) wait scores event
+  const evt = await waitForDiscScoresEvent({
+    connection,
+    program,
+    computationAccount: submission.computationAccount,
+    timeoutMs: 120_000,
   });
 
-  const tx = new Transaction().add(ix);
-  tx.feePayer = wallet.publicKey;
+  // 3) decrypt locally
+  const decrypted = decryptDiscScores({
+    sharedSecret: submission.sharedSecret,
+    nonce: evt.nonce,
+    dCipher: evt.d_score_cipher,
+    iCipher: evt.i_score_cipher,
+    sCipher: evt.s_score_cipher,
+    cCipher: evt.c_score_cipher,
+  });
 
-  const { blockhash } = await connection.getLatestBlockhash("confirmed");
-  tx.recentBlockhash = blockhash;
+  // 4) store
+  setDiscResult({ ...decrypted, raw: { submission, evt } });
 
-  const signedTx = await wallet.signTransaction(tx);
-  const signature = await connection.sendRawTransaction(
-    signedTx.serialize(),
-    { skipPreflight: false }
-  );
-
-  return { signature };
+  return {
+    signature: submission.signature,
+    computationAccount: submission.computationAccount.toBase58(),
+    result: decrypted,
+  };
 }
