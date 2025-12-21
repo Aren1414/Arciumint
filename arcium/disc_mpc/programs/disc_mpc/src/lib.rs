@@ -18,7 +18,6 @@ pub mod disc_mpc {
         ctx: Context<ComputeDisc>,
         computation_offset: u64,
 
-        // 28 encrypted answers (each is encrypted u8 => [u8;32])
         ciphertext_0: [u8; 32],
         ciphertext_1: [u8; 32],
         ciphertext_2: [u8; 32],
@@ -99,6 +98,7 @@ pub mod disc_mpc {
             1,
             0,
         )?;
+
         Ok(())
     }
 
@@ -115,8 +115,8 @@ pub mod disc_mpc {
             Err(_) => return Err(ErrorCode::AbortedComputation.into()),
         };
 
-        
         emit!(DiscScoresEvent {
+            computation_account: ctx.accounts.computation_account.key(),
             d_score_cipher: o.ciphertexts[0],
             i_score_cipher: o.ciphertexts[1],
             s_score_cipher: o.ciphertexts[2],
@@ -202,9 +202,7 @@ pub struct ComputeDiscCallback<'info> {
     /// CHECK: checked by arcium program via callback constraints.
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(
-        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
@@ -231,6 +229,7 @@ pub struct InitComputeDiscCompDef<'info> {
 
 #[event]
 pub struct DiscScoresEvent {
+    pub computation_account: Pubkey,
     pub d_score_cipher: [u8; 32],
     pub i_score_cipher: [u8; 32],
     pub s_score_cipher: [u8; 32],
@@ -244,4 +243,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-        }
+}
