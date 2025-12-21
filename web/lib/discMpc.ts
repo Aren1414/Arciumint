@@ -1,23 +1,27 @@
 "use client";
 
-import * as anchor from "@coral-xyz/anchor";
-import { Connection } from "@solana/web3.js";
-import { DISC_PROGRAM_ID, submitDiscMpc, decryptDiscScores } from "./discMpcClient";
+import { Connection, PublicKey } from "@solana/web3.js";
+import {
+  DISC_PROGRAM_ID,
+  submitDiscMpc,
+  decryptDiscScores,
+} from "./discMpcClient";
 import { waitForDiscScoresEvent } from "./discMpcEvents";
 import { setDiscResult } from "./discStore";
 
-// IMPORTANT: set env in NEXT_PUBLIC_SOLANA_RPC
-const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC ?? "https://api.devnet.solana.com";
+const RPC_URL =
+  process.env.NEXT_PUBLIC_SOLANA_RPC ??
+  "https://api.devnet.solana.com";
 
 /**
  * Full flow:
- * 1) queue MPC compute_disc with encrypted answers
- * 2) wait event DiscScoresEvent
+ * 1) submit encrypted DISC answers (MPC)
+ * 2) wait DiscScoresEvent
  * 3) decrypt locally
- * 4) store result for UI
+ * 4) store for UI
  */
 export async function runDiscMpcFlow(params: {
-  wallet: any; // Phantom provider
+  wallet: any;
   answers: Record<number, string>;
 }) {
   const { wallet, answers } = params;
@@ -28,32 +32,23 @@ export async function runDiscMpcFlow(params: {
 
   const connection = new Connection(RPC_URL, "confirmed");
 
-  const provider = new anchor.AnchorProvider(
-    connection,
+  // 1) submit MPC computation
+  const submission = await submitDiscMpc({
     wallet,
-    { commitment: "confirmed" }
-  );
-  anchor.setProvider(provider);
+    connection,
+    programId: DISC_PROGRAM_ID,
+    answers,
+  });
 
-  // Load IDL dynamically from Anchor generated artifact OR from your app bundle.
-  // Practical approach: import the IDL json from /target/idl if you ship it to web.
-  // You must create: web/lib/idl/disc_mpc.json (copy from arcium/disc_mpc/target/idl/disc_mpc.json after build)
-  const idl = (await import("./idl/disc_mpc.json")).default as anchor.Idl;
-
-  const program = new anchor.Program(idl, DISC_PROGRAM_ID, provider);
-
-  // 1) submit computation
-  const submission = await submitDiscMpc(provider, program, answers);
-
-  // 2) wait scores event
+  // 2) wait for DiscScoresEvent
   const evt = await waitForDiscScoresEvent({
     connection,
-    program,
+    programId: DISC_PROGRAM_ID,
     computationAccount: submission.computationAccount,
     timeoutMs: 120_000,
   });
 
-  // 3) decrypt locally
+  // 3) decrypt locally (only user can decrypt)
   const decrypted = decryptDiscScores({
     sharedSecret: submission.sharedSecret,
     nonce: evt.nonce,
@@ -63,8 +58,11 @@ export async function runDiscMpcFlow(params: {
     cCipher: evt.c_score_cipher,
   });
 
-  // 4) store
-  setDiscResult({ ...decrypted, raw: { submission, evt } });
+  // 4) store result for result page
+  setDiscResult({
+    ...decrypted,
+    raw: { submission, evt },
+  });
 
   return {
     signature: submission.signature,
