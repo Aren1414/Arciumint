@@ -1,6 +1,5 @@
 "use client";
 
-import * as anchor from "@coral-xyz/anchor";
 import { Connection } from "@solana/web3.js";
 import {
   DISC_PROGRAM_ID,
@@ -9,7 +8,6 @@ import {
 } from "./discMpcClient";
 import { waitForDiscScoresEvent } from "./discMpcEvents";
 import { setDiscResult } from "./discStore";
-import idl from "./idl/disc_mpc.json";
 
 const RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC ??
@@ -19,7 +17,7 @@ export async function runDiscMpcFlow(params: {
   wallet: any;
   answers: Record<number, string>;
 }) {
-  const { wallet } = params;
+  const { wallet, answers } = params;
 
   if (!wallet?.publicKey || !wallet?.signTransaction) {
     throw new Error("Wallet not connected");
@@ -27,25 +25,15 @@ export async function runDiscMpcFlow(params: {
 
   const connection = new Connection(RPC_URL, "confirmed");
 
-  const provider = new anchor.AnchorProvider(
+  // 1) submit MPC computation (raw ix – no IDL, no Anchor)
+  const submission = await submitDiscMpc({
+    wallet,
     connection,
-    wallet,
-    { commitment: "confirmed" }
-  );
-  anchor.setProvider(provider);
+    programId: DISC_PROGRAM_ID,
+    answers,
+  });
 
-  const program = new anchor.Program(
-    idl as anchor.Idl,
-    DISC_PROGRAM_ID,
-    provider
-  );
-
-  const submission = await submitDiscMpc(
-    wallet,
-    program,
-    connection
-  );
-
+  // 2) wait encrypted result event
   const evt = await waitForDiscScoresEvent({
     connection,
     programId: DISC_PROGRAM_ID,
@@ -53,6 +41,7 @@ export async function runDiscMpcFlow(params: {
     timeoutMs: 120_000,
   });
 
+  // 3) decrypt locally (only user can)
   const decrypted = decryptDiscScores({
     sharedSecret: submission.sharedSecret,
     nonce: evt.nonce,
@@ -62,6 +51,7 @@ export async function runDiscMpcFlow(params: {
     cCipher: evt.c_score_cipher,
   });
 
+  // 4) store for UI
   setDiscResult({
     ...decrypted,
     raw: { submission, evt },
