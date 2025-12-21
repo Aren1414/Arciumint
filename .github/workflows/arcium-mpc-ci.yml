@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # -----------------------------
+      # System dependencies
+      # -----------------------------
       - name: System deps
         run: |
           set -euo pipefail
@@ -20,7 +23,7 @@ jobs:
           sudo apt-get install -y pkg-config libudev-dev
 
       # -----------------------------
-      # Rust 1.83 (Anchor / Solana compatible)
+      # Rust 1.83 (Anchor / Solana safe)
       # -----------------------------
       - name: Rust 1.83.0
         run: |
@@ -31,13 +34,13 @@ jobs:
           cargo --version
 
       # -----------------------------
-      # Solana CLI
+      # Solana CLI (explicit, pinned)
       # -----------------------------
-      - name: Solana CLI
+      - name: Install Solana CLI
         run: |
           set -euo pipefail
           curl -sSfL https://solana-install.solana.workers.dev | bash
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       # -----------------------------
@@ -52,9 +55,9 @@ jobs:
           anchor --version
 
       # -----------------------------
-      # Arcium CLI
+      # Arcium CLI ONLY (NO surfpool)
       # -----------------------------
-      - name: Arcium CLI
+      - name: Install Arcium CLI
         run: |
           set -euo pipefail
           curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o arcium
