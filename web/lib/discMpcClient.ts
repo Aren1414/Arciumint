@@ -54,6 +54,10 @@ function toHexBytes(x: BytesLike): number[] {
   return Array.isArray(x) ? x : Array.from(x);
 }
 
+function toU8(x: BytesLike): Uint8Array {
+  return x instanceof Uint8Array ? x : new Uint8Array(x);
+}
+
 function mapAnswers(answers: Record<number, string>): bigint[] {
   const out: bigint[] = [];
   for (let i = 1; i <= 28; i++) {
@@ -204,7 +208,7 @@ export function decryptDiscScores(params: {
       toHexBytes(params.sCipher),
       toHexBytes(params.cCipher),
     ],
-    toHexBytes(params.nonce)
+    toU8(params.nonce)
   );
 
   const dn = Number(d);
@@ -223,4 +227,4 @@ export function decryptDiscScores(params: {
     cPct: toPct(cn, 28),
     dominant: dominantFrom(dn, in_, sn, cn),
   };
-}
+      }
