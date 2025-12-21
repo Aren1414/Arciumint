@@ -9,7 +9,7 @@ jobs:
 
     env:
       SOLANA_VERSION: "2.3.0"
-      SOLANA_RPC_URL: "${{ secrets.HELIUS_DEVNET_RPC }}"
+      SOLANA_RPC_URL: "https://api.devnet.solana.com"
       ARCIUM_CLUSTER_OFFSET: "123"
 
     steps:
@@ -24,14 +24,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq curl ca-certificates
 
-      - name: Install Rust 1.85.0
+      - name: Install Rust
         shell: bash
         run: |
           set -euo pipefail
           rustup toolchain install 1.85.0 --profile minimal
           rustup default 1.85.0
-          rustc --version
-          cargo --version
 
       - name: Install Solana CLI
         shell: bash
@@ -39,8 +37,8 @@ jobs:
           set -euo pipefail
           sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-          "$HOME/.local/share/solana/install/active_release/bin/solana" --version
-          "$HOME/.local/share/solana/install/active_release/bin/solana" config set --url "${SOLANA_RPC_URL}"
+          solana --version
+          solana config set --url "${SOLANA_RPC_URL}"
 
       - name: Wallets
         shell: bash
@@ -73,18 +71,16 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      - name: Install Arcium CLI (arcup)
+      - name: Install Arcium CLI
         shell: bash
         run: |
           set -euo pipefail
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          TARGET=x86_64_linux
-          curl -fL "https://bin.arcium.com/download/arcup_${TARGET}_0.3.0" -o "$HOME/.cargo/bin/arcup"
-          chmod +x "$HOME/.cargo/bin/arcup"
-          arcup install
+          curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o /tmp/arcium
+          chmod +x /tmp/arcium
+          sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
-      - name: Arcium Build (generate *.arcis)
+      - name: Arcium Build
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
@@ -98,9 +94,9 @@ jobs:
         run: |
           set -euo pipefail
           arcium deploy \
-            --cluster-offset "${ARCIUM_CLUSTER_OFFSET}" \
+            --cluster-offset 123 \
             --mempool-size 64 \
             --recovery-set-size 1 \
-            --keypair-path "$HOME/.config/solana/id.json" \
-            --program-keypair "./target/deploy/disc_mpc-keypair.json" \
-            --rpc-url "${SOLANA_RPC_URL}"
+            --keypair-path ~/.config/solana/id.json \
+            --program-keypair ./target/deploy/disc_mpc-keypair.json \
+            --rpc-url https://api.devnet.solana.com
