@@ -18,11 +18,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
-      # 🔴 ONLY NIGHTLY (MANDATORY)
-      - name: Install Rust nightly
+      
+      - name: Install Rust nightly (NEW ENOUGH)
         run: |
-          rustup toolchain install nightly --profile minimal
-          rustup default nightly
+          rustup toolchain install nightly-2024-02-15 --profile minimal
+          rustup default nightly-2024-02-15
           rustc --version
           cargo --version
 
@@ -56,8 +56,11 @@ jobs:
           sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
-      # ✅ THIS IS THE ONLY VALID BUILD MODE
+      
       - name: Build Arcium MPC
+        env:
+          RUSTUP_TOOLCHAIN: nightly-2024-02-15
+          CARGO: cargo +nightly-2024-02-15
         run: |
           cd arcium/disc_mpc
           yarn install
