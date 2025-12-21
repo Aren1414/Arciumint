@@ -13,20 +13,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # -----------------------------
-      # System deps
-      # -----------------------------
       - name: System deps
+        shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
-      # -----------------------------
-      # Rust 1.83 (NO nightly)
-      # -----------------------------
-      - name: Rust 1.83.0
+      - name: Rust 1.83.0 (host toolchain)
+        shell: bash
         run: |
           set -euo pipefail
           rustup toolchain install 1.83.0 --profile minimal
@@ -34,10 +32,8 @@ jobs:
           rustc --version
           cargo --version
 
-      # -----------------------------
-      # Solana CLI
-      # -----------------------------
-      - name: Solana CLI
+      - name: Solana CLI (pinned)
+        shell: bash
         run: |
           set -euo pipefail
           curl -L "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o solana.tar.bz2
@@ -46,35 +42,43 @@ jobs:
           solana config set --url "${SOLANA_RPC_URL}"
           solana --version
 
-      # -----------------------------
-      # Wallets
-      # -----------------------------
-      - name: Wallets
+      - name: Write keypairs
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
+          mkdir -p ~/.config/solana
+          mkdir -p arcium/disc_mpc/target/deploy
+
           printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
           printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-          chmod 600 ~/.config/solana/id.json arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-          solana config set --keypair ~/.config/solana/id.json
 
-      # -----------------------------
-      # Node + Yarn
-      # -----------------------------
+          chmod 600 ~/.config/solana/id.json
+          chmod 600 arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
+
+          solana config set --keypair ~/.config/solana/id.json
+          solana address
+          solana balance || true
+
+      - name: Airdrop (optional)
+        shell: bash
+        run: |
+          set -euo pipefail
+          solana airdrop 1 || true
+          solana balance || true
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Yarn
+      - name: Enable Yarn
+        shell: bash
         run: |
           set -euo pipefail
           corepack enable
           yarn --version
 
-      # -----------------------------
-      # Anchor (AVM pinned)
-      # -----------------------------
-      - name: Anchor 0.32.1
+      - name: Anchor (AVM pinned 0.32.1)
+        shell: bash
         run: |
           set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
@@ -82,10 +86,8 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      # -----------------------------
-      # Build & Deploy (NO --locked)
-      # -----------------------------
       - name: Build & Deploy
+        shell: bash
         working-directory: arcium/disc_mpc
         env:
           ANCHOR_PROVIDER_URL: https://api.devnet.solana.com
