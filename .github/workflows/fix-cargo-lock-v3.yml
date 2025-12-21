@@ -1,0 +1,42 @@
+name: Fix Cargo.lock to v3 (ONE TIME)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-lock:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust 1.82.0 (last v3 lockfile)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.82.0 --profile minimal
+          rustup default 1.82.0
+          cargo --version
+
+      - name: Regenerate Cargo.lock (v3)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd arcium/disc_mpc
+          rm -f Cargo.lock
+          cargo generate-lockfile
+
+      - name: Commit Cargo.lock v3
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add arcium/disc_mpc/Cargo.lock
+          git commit -m "fix: regenerate Cargo.lock v3 (anchor compatible)"
+          git push
