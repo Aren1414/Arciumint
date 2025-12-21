@@ -10,88 +10,55 @@ jobs:
   arcium-ci:
     runs-on: ubuntu-latest
 
-    env:
-      RUSTUP_TOOLCHAIN: nightly-2024-12-15
-
     steps:
       - uses: actions/checkout@v4
 
-      # -----------------------------
-      # System deps
-      # -----------------------------
       - name: System dependencies
         run: |
-          set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
-      # -----------------------------
-      # Rust (PINNED NIGHTLY >= 1.76)
-      # -----------------------------
-      - name: Install Rust nightly (PINNED)
+      # 🔴 ONLY NIGHTLY (MANDATORY)
+      - name: Install Rust nightly
         run: |
-          set -euo pipefail
-          rustup toolchain install nightly-2024-12-15 --profile minimal
-          rustup default nightly-2024-12-15
+          rustup toolchain install nightly --profile minimal
+          rustup default nightly
           rustc --version
           cargo --version
 
-      # -----------------------------
-      # Solana CLI
-      # -----------------------------
       - name: Install Solana CLI
-        env:
-          SOLANA_VERSION: "1.18.26"
         run: |
-          set -euo pipefail
-          curl -fL "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" -o /tmp/solana.tar.bz2
-          tar -xjf /tmp/solana.tar.bz2 -C /tmp
-          sudo mv /tmp/solana-release/bin/* /usr/local/bin/
+          curl -fL https://github.com/solana-labs/solana/releases/download/v1.18.26/solana-release-x86_64-unknown-linux-gnu.tar.bz2 -o solana.tar.bz2
+          tar -xjf solana.tar.bz2
+          sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
 
-      # -----------------------------
-      # Node / Yarn
-      # -----------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Enable Yarn
+      - name: Yarn
         run: |
-          set -euo pipefail
           corepack enable
           yarn --version
 
-      # -----------------------------
-      # Anchor
-      # -----------------------------
-      - name: Install Anchor
+      - name: Install Anchor 0.32.1
         run: |
-          set -euo pipefail
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-          avm install 0.32.1 || true
+          avm install 0.32.1
           avm use 0.32.1
           anchor --version
 
-      # -----------------------------
-      # Arcium CLI
-      # -----------------------------
       - name: Install Arcium CLI
         run: |
-          set -euo pipefail
           curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o /tmp/arcium
           chmod +x /tmp/arcium
           sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
-      # -----------------------------
-      # BUILD MPC (REAL FIX)
-      # -----------------------------
+      # ✅ THIS IS THE ONLY VALID BUILD MODE
       - name: Build Arcium MPC
-        env:
-          CARGO: cargo
         run: |
-          set -euo pipefail
           cd arcium/disc_mpc
           yarn install
           arcium build --skip-keys-sync
