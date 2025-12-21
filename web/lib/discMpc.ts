@@ -68,7 +68,7 @@ export async function runDiscMpcFlow(params: {
 
   const evt = await waitForDiscScoresEvent({
     connection,
-    programId: DISC_PROGRAM_ID,
+    program,
     computationAccount: submission.computationAccount,
     timeoutMs: 120_000,
   });
