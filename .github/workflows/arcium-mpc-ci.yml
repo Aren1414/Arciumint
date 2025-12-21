@@ -11,28 +11,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      # System deps
+      - name: System dependencies
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y pkg-config libudev-dev jq
 
-      # Rust toolchain for host tooling (avm/anchor/arcium wrapper)
-      # Note: This is NOT the Solana SBF toolchain; it's for host-side commands.
-      - name: Install Rust 1.83.0 (host toolchain)
+      # Rust toolchains
+      # stable = host tools default
+      # nightly = Cargo that understands edition2024
+      - name: Install Rust toolchains
         shell: bash
         run: |
           set -euo pipefail
           rustup toolchain install 1.83.0 --profile minimal
+          rustup toolchain install nightly --profile minimal
           rustup default 1.83.0
           rustc --version
-          cargo --version
+          cargo +nightly --version
 
-      - name: Install Solana CLI (pinned)
+      # Solana CLI (pinned)
+      - name: Install Solana CLI
         shell: bash
         env:
           SOLANA_VERSION: "1.18.26"
@@ -43,6 +46,7 @@ jobs:
           sudo mv solana-release/bin/* /usr/local/bin/
           solana --version
 
+      # Node / Yarn
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -54,7 +58,8 @@ jobs:
           corepack enable
           yarn --version
 
-      - name: Install Anchor (AVM pinned 0.32.1)
+      # Anchor (AVM pinned)
+      - name: Install Anchor
         shell: bash
         run: |
           set -euo pipefail
@@ -63,19 +68,21 @@ jobs:
           avm use 0.32.1
           anchor --version
 
-      - name: Install Arcium CLI (binary)
+      # Arcium CLI (binary)
+      - name: Install Arcium CLI
         shell: bash
         run: |
           set -euo pipefail
-          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o arcium-cli
-          chmod +x arcium-cli
-          sudo mv arcium-cli /usr/local/bin/arcium
+          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o arcium
+          chmod +x arcium
+          sudo mv arcium /usr/local/bin/arcium
           arcium --version
 
-      - name: Build Arcium MPC
+      # BUILD MPC  <<< کلید حل مشکل >>>
+      - name: Build Arcium MPC (Cargo nightly)
         shell: bash
         run: |
           set -euo pipefail
           cd arcium/disc_mpc
           yarn install
-          arcium build --skip-keys-sync
+          CARGO="cargo +nightly" arcium build --skip-keys-sync
