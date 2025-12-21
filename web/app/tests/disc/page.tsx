@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePhantom } from "@phantom/react-sdk";
 import { discQuestions } from "./questions.public";
-import { submitDiscMpc } from "@/lib/discMpc";
+import { runDiscMpcFlow } from "@/lib/discMpc";
 
 export default function DiscTestPage() {
   const router = useRouter();
@@ -13,7 +13,6 @@ export default function DiscTestPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [mpcRawResult, setMpcRawResult] = useState<any>(null);
 
   const address = useMemo(() => {
     const a = user?.addresses?.[0]?.address;
@@ -49,10 +48,10 @@ export default function DiscTestPage() {
     return (window as any).phantom?.solana ?? null;
   };
 
+  // ✅ MPC submit (FINAL)
   const submit = async () => {
     try {
       setSubmitting(true);
-      setMpcRawResult(null);
 
       if (Object.keys(answers).length !== total) {
         alert("Answer all questions");
@@ -69,12 +68,14 @@ export default function DiscTestPage() {
         await provider.connect();
       }
 
-      const result = await submitDiscMpc({
+      // 🔐 MPC flow (encrypt → queue → wait → decrypt → store)
+      await runDiscMpcFlow({
         wallet: provider,
         answers,
       });
 
-      setMpcRawResult(result);
+      // ➜ نمایش نتیجه از discStore
+      router.push("/tests/disc/result");
     } catch (err) {
       console.error(err);
       alert("MPC computation failed");
@@ -82,45 +83,6 @@ export default function DiscTestPage() {
       setSubmitting(false);
     }
   };
-
-  if (mpcRawResult) {
-    return (
-      <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#4f1aff,#3700b3,#0b0018)] -z-10" />
-
-        <div className="max-w-3xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">DISC Result</h1>
-            <button
-              onClick={() => {
-                setMpcRawResult(null);
-                setCurrentIndex(0);
-                setAnswers({});
-              }}
-              className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
-            >
-              Retake
-            </button>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-lg">
-            <pre className="whitespace-pre-wrap break-words text-sm">
-              {JSON.stringify(mpcRawResult, null, 2)}
-            </pre>
-          </div>
-
-          <div className="mt-6">
-            <button
-              onClick={() => router.push("/tests")}
-              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-            >
-              Back to Assessments
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="relative min-h-screen px-6 py-10 text-white overflow-hidden">
@@ -200,4 +162,4 @@ export default function DiscTestPage() {
       </div>
     </main>
   );
-}
+  }
