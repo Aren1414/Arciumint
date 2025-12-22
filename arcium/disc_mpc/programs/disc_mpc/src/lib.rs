@@ -26,7 +26,6 @@ pub mod disc_mpc {
     pub fn compute_disc(
         ctx: Context<ComputeDisc>,
         computation_offset: u64,
-
         ciphertext_0: [u8; 32],
         ciphertext_1: [u8; 32],
         ciphertext_2: [u8; 32],
@@ -55,7 +54,6 @@ pub mod disc_mpc {
         ciphertext_25: [u8; 32],
         ciphertext_26: [u8; 32],
         ciphertext_27: [u8; 32],
-
         pubkey: [u8; 32],
         nonce: u128,
     ) -> Result<()> {
@@ -99,7 +97,7 @@ pub mod disc_mpc {
             computation_offset,
             args,
             None,
-            vec![ComputeDiscCallback::callback_ix(
+            vec![crate::instruction::ComputeDiscCallback::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
                 &[],
@@ -158,12 +156,15 @@ pub struct ComputeDisc<'info> {
     pub mxe_account: Account<'info, MXEAccount>,
 
     #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    /// CHECK: PDA address is constrained by derive_mempool_pda!; account is validated by the Arcium program during CPI.
     pub mempool_account: UncheckedAccount<'info>,
 
     #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    /// CHECK: PDA address is constrained by derive_execpool_pda!; account is validated by the Arcium program during CPI.
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
+    /// CHECK: PDA address is constrained by derive_comp_pda!; account is validated by the Arcium program during CPI.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
@@ -193,12 +194,14 @@ pub struct ComputeDiscCallback<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: Account is validated by the Arcium program via callback constraints; kept Unchecked for flexibility.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
+    /// CHECK: Sysvar address is fixed; constraint enforces correct account.
     pub instructions_sysvar: AccountInfo<'info>,
 }
 
@@ -212,6 +215,7 @@ pub struct InitComputeDiscCompDef<'info> {
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
     #[account(mut)]
+    /// CHECK: Computation definition PDA is created/initialized by init_comp_def; not type-checked pre-init.
     pub comp_def_account: UncheckedAccount<'info>,
 
     pub arcium_program: Program<'info, Arcium>,
@@ -234,4 +238,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-                          }
+}
