@@ -10,6 +10,7 @@ jobs:
     env:
       SOLANA_VERSION: "2.3.0"
       SOLANA_RPC_URL: "https://api.devnet.solana.com"
+      SOLANA_RPC_ENCODING: "base64"
       ARCIUM_CLUSTER_OFFSET: "123"
 
     steps:
@@ -45,7 +46,6 @@ jobs:
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          which solana
           solana --version
           solana config set --url "${SOLANA_RPC_URL}"
 
@@ -105,10 +105,11 @@ jobs:
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
+          export SOLANA_RPC_ENCODING=base64
           arcium deploy \
             --cluster-offset 123 \
             --mempool-size 64 \
             --recovery-set-size 1 \
             --keypair-path ~/.config/solana/id.json \
             --program-keypair ./target/deploy/disc_mpc-keypair.json \
-            --rpc-url https://api.devnet.solana.com
+            --rpc-url "${SOLANA_RPC_URL}"
