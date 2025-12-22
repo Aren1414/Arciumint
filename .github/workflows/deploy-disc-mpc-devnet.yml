@@ -10,6 +10,7 @@ jobs:
     env:
       ARCIUM_CLUSTER_OFFSET: "123"
       SOLANA_RPC_URL: "https://devnet.helius-rpc.com/?api-key=${{ secrets.HELIUS_API_KEY }}"
+      SOLANA_VERSION: "v1.18.18"
 
     steps:
       # -----------------------------
@@ -27,10 +28,16 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y pkg-config libudev-dev jq curl ca-certificates
+          sudo apt-get install -y \
+            pkg-config \
+            libudev-dev \
+            jq \
+            curl \
+            ca-certificates \
+            xz-utils
 
       # -----------------------------
-      # Rust (pinned)
+      # Rust
       # -----------------------------
       - name: Install Rust 1.85.0
         shell: bash
@@ -39,23 +46,24 @@ jobs:
           rustup toolchain install 1.85.0 --profile minimal
           rustup default 1.85.0
           rustc --version
-          cargo --version
 
       # -----------------------------
-      # Solana CLI (FIXED)
+      # Solana CLI (NO installer, NO SSL issue)
       # -----------------------------
-      - name: Install Solana CLI (stable installer)
+      - name: Install Solana CLI (GitHub release tarball)
         shell: bash
         run: |
           set -euo pipefail
-          curl -sSfL https://release.solana.com/stable/install | bash
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
 
-      - name: Verify Solana CLI
-        shell: bash
-        run: |
-          set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          SOLANA_URL="https://github.com/solana-labs/solana/releases/download/${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
+
+          curl -L --retry 5 --retry-delay 5 \
+            "$SOLANA_URL" \
+            -o solana.tar.bz2
+
+          tar -xjf solana.tar.bz2
+          sudo mv solana-release/bin/* /usr/local/bin/
+
           solana --version
           solana config set --url "${SOLANA_RPC_URL}"
 
@@ -68,17 +76,10 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.config/solana arcium/disc_mpc/target/deploy
 
-          printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' \
-            > ~/.config/solana/id.json
+          printf '%s' '${{ secrets.SOLANA_WALLET_KEYPAIR }}' > ~/.config/solana/id.json
+          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
 
-          printf '%s' '${{ secrets.DISC_MPC_PROGRAM_KEYPAIR }}' \
-            > arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-          chmod 600 \
-            ~/.config/solana/id.json \
-            arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
-
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          chmod 600 ~/.config/solana/id.json arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
           solana config set --keypair ~/.config/solana/id.json
           solana balance || true
 
@@ -92,14 +93,13 @@ jobs:
       - name: Yarn
         shell: bash
         run: |
-          set -euo pipefail
           corepack enable
           yarn --version
 
       # -----------------------------
-      # Anchor (pinned)
+      # Anchor
       # -----------------------------
-      - name: Install Anchor (AVM 0.32.1)
+      - name: Install Anchor (0.32.1)
         shell: bash
         run: |
           set -euo pipefail
@@ -121,27 +121,24 @@ jobs:
           arcium --version
 
       # -----------------------------
-      # Build (*.arcis)
+      # Build *.arcis
       # -----------------------------
-      - name: Arcium Build (generate *.arcis)
-        shell: bash
+      - name: Arcium Build
         working-directory: arcium/disc_mpc
+        shell: bash
         run: |
           set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
           yarn install
           arcium build --skip-keys-sync
 
       # -----------------------------
-      # Deploy PROGRAM ONLY
+      # Deploy program only
       # -----------------------------
-      - name: Arcium Deploy (Devnet – program only)
-        shell: bash
+      - name: Arcium Deploy (Devnet)
         working-directory: arcium/disc_mpc
+        shell: bash
         run: |
           set -euo pipefail
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
-
           arcium deploy \
             --cluster-offset "${ARCIUM_CLUSTER_OFFSET}" \
             --mempool-size Small \
