@@ -19,6 +19,3 @@ wallet = "~/.config/solana/id.json"
 
 [registry]
 url = "https://api.apr.dev"
-
-[scripts]
-init_compute_disc_comp_def = "ts-node scripts/init-devnet.ts"
