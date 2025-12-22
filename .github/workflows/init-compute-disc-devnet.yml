@@ -52,11 +52,6 @@ jobs:
         working-directory: arcium/disc_mpc
         run: yarn install
 
-      
-      - name: Anchor build (generate IDL)
-        working-directory: arcium/disc_mpc
-        run: anchor build
-
       - name: Init compute_disc comp def
         working-directory: arcium/disc_mpc
         run: npx ts-node scripts/init-devnet.ts
