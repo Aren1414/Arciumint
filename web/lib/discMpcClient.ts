@@ -162,12 +162,13 @@ export async function submitDiscMpc(
 
   const computationAccount = getComputationAccAddress(clusterOffset, computationOffset);
 
+  
   const sig = await program.methods
     .computeDisc(
       computationOffset,
-      ...ciphertexts.map((c) => Array.from(c)),
       Array.from(pub),
-      new anchor.BN(deserializeLE(nonceBytes).toString())
+      new anchor.BN(deserializeLE(nonceBytes).toString()),
+      ciphertexts.map((c) => Array.from(c)) // Vec<[u8;32]>
     )
     .accountsPartial({
       payer: provider.wallet.publicKey,
@@ -183,7 +184,12 @@ export async function submitDiscMpc(
     })
     .rpc({ skipPreflight: true, commitment: "confirmed" });
 
-  await awaitComputationFinalization(provider, computationOffset, program.programId, "confirmed");
+  await awaitComputationFinalization(
+    provider,
+    computationOffset,
+    program.programId,
+    "confirmed"
+  );
 
   return {
     signature: sig,
@@ -230,4 +236,4 @@ export function decryptDiscScores(params: {
     cPct: toPct(cn, 28),
     dominant: dominantFrom(dn, in_, sn, cn),
   };
-}
+  }
