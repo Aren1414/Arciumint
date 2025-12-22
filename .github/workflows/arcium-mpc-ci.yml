@@ -76,4 +76,4 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
           cd arcium/disc_mpc
           yarn install
-          arcium build --skip-keys-sync --no-idl
+          arcium build --skip-keys-sync
