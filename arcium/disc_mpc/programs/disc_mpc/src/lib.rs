@@ -11,13 +11,16 @@ declare_id!("PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM");
 pub mod disc_mpc {
     use super::*;
 
-    pub fn init_compute_disc_comp_def(
-        ctx: Context<InitComputeDiscCompDef>,
-    ) -> Result<()> {
+    // --------------------------------------------------
+    // INIT COMPUTATION DEFINITION (OFF-CHAIN ARCIS)
+    // --------------------------------------------------
+    pub fn init_compute_disc_comp_def(ctx: Context<InitComputeDiscCompDef>) -> Result<()> {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis".to_string(),
+                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
+                    .to_string(),
+                
                 hash: [0; 32],
             })),
             None,
@@ -25,6 +28,9 @@ pub mod disc_mpc {
         Ok(())
     }
 
+    // --------------------------------------------------
+    // QUEUE COMPUTATION
+    // --------------------------------------------------
     pub fn compute_disc(
         ctx: Context<ComputeDisc>,
         computation_offset: u64,
@@ -69,31 +75,37 @@ pub mod disc_mpc {
         Ok(())
     }
 
+    // --------------------------------------------------
+    // CALLBACK
+    // --------------------------------------------------
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let verified = output
+        // NOTE: طبق خطای تو، ciphertexts/nonce زیر field_0 هستند.
+        let ComputeDiscOutput { field_0 } = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
-            .map_err(|_| DiscMpcError::AbortedComputation)?;
-
-        let inner = verified.field_0;
+            .map_err(|_| ErrorCode::AbortedComputation)?;
 
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
-            d_score_cipher: inner.ciphertexts[0],
-            i_score_cipher: inner.ciphertexts[1],
-            s_score_cipher: inner.ciphertexts[2],
-            c_score_cipher: inner.ciphertexts[3],
-            nonce: inner.nonce.to_le_bytes(),
+            d_score_cipher: field_0.ciphertexts[0],
+            i_score_cipher: field_0.ciphertexts[1],
+            s_score_cipher: field_0.ciphertexts[2],
+            c_score_cipher: field_0.ciphertexts[3],
+            nonce: field_0.nonce.to_le_bytes(),
         });
 
         Ok(())
     }
 }
 
-#[queue_computation_accounts("compute_disc", payer, error = DiscMpcError)]
+// --------------------------------------------------
+// ACCOUNTS
+// --------------------------------------------------
+
+#[queue_computation_accounts("compute_disc", payer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
 pub struct ComputeDisc<'info> {
@@ -113,19 +125,22 @@ pub struct ComputeDisc<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    #[account(mut, address = derive_mempool_pda!(mxe_account, DiscMpcError::ClusterNotSet))]
+    /// CHECK: PDA derived via derive_mempool_pda! and validated by Arcium program during CPI
+    #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub mempool_account: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_execpool_pda!(mxe_account, DiscMpcError::ClusterNotSet))]
+    /// CHECK: PDA derived via derive_execpool_pda! and validated by Arcium program during CPI
+    #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub executing_pool: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, DiscMpcError::ClusterNotSet))]
+    /// CHECK: PDA derived via derive_comp_pda! and validated by Arcium program during CPI
+    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(mut, address = derive_cluster_pda!(mxe_account, DiscMpcError::ClusterNotSet))]
+    #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
@@ -138,7 +153,7 @@ pub struct ComputeDisc<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-#[callback_accounts("compute_disc", error = DiscMpcError)]
+#[callback_accounts("compute_disc")]
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
@@ -149,24 +164,30 @@ pub struct ComputeDiscCallback<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: Validated by Arcium program via callback constraints
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, DiscMpcError::ClusterNotSet))]
+    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
+    /// CHECK: Sysvar instruction account, fixed address
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions_sysvar: AccountInfo<'info>,
 }
 
-#[init_computation_definition_accounts("compute_disc", payer, error = DiscMpcError)]
+#[init_computation_definition_accounts("compute_disc", payer)]
 #[derive(Accounts)]
 pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(mut, address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
+
+    /// CHECK: Created and validated by init_comp_def
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
+
     pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
 }
@@ -182,9 +203,9 @@ pub struct DiscScoresEvent {
 }
 
 #[error_code]
-pub enum DiscMpcError {
+pub enum ErrorCode {
     #[msg("The computation was aborted")]
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-    }
+}
