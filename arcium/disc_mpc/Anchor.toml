@@ -5,14 +5,20 @@ package_manager = "yarn"
 
 [features]
 resolution = true
-skip-lint = false
+skip-lint = true
+
+[programs.localnet]
+disc_mpc = "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
 
 [programs.devnet]
 disc_mpc = "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
 
 [provider]
-cluster = "https://devnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
+[registry]
+url = "https://api.apr.dev"
+
 [scripts]
-init_compute_disc_comp_def = "ts-node scripts/init-devnet.ts"
+init_compute_disc_comp_def = "anchor run init_compute_disc_comp_def"
