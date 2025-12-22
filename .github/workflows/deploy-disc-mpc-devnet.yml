@@ -98,7 +98,7 @@ jobs:
           yarn install
           arcium build --skip-keys-sync
 
-      - name: Arcium Deploy (Devnet)
+      - name: Arcium Deploy (Devnet – program only)
         shell: bash
         working-directory: arcium/disc_mpc
         run: |
@@ -110,4 +110,5 @@ jobs:
             --recovery-set-size 1 \
             --keypair-path "$HOME/.config/solana/id.json" \
             --program-keypair "./target/deploy/disc_mpc-keypair.json" \
-            --rpc-url "${SOLANA_RPC_URL}"
+            --rpc-url "${SOLANA_RPC_URL}" \
+            --skip-init
