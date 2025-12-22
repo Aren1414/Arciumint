@@ -18,7 +18,7 @@ pub mod disc_mpc {
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
                 source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis".to_string(),
-                hash: [0; 32], 
+                hash: [0; 32],
             })),
             None,
         )?;
@@ -74,24 +74,26 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let o = output
+        let verified = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| DiscMpcError::AbortedComputation)?;
 
+        let inner = verified.field_0;
+
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
-            d_score_cipher: o.ciphertexts[0],
-            i_score_cipher: o.ciphertexts[1],
-            s_score_cipher: o.ciphertexts[2],
-            c_score_cipher: o.ciphertexts[3],
-            nonce: o.nonce.to_le_bytes(),
+            d_score_cipher: inner.ciphertexts[0],
+            i_score_cipher: inner.ciphertexts[1],
+            s_score_cipher: inner.ciphertexts[2],
+            c_score_cipher: inner.ciphertexts[3],
+            nonce: inner.nonce.to_le_bytes(),
         });
 
         Ok(())
     }
 }
 
-#[queue_computation_accounts("compute_disc", payer)]
+#[queue_computation_accounts("compute_disc", payer, error = DiscMpcError)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
 pub struct ComputeDisc<'info> {
@@ -136,7 +138,7 @@ pub struct ComputeDisc<'info> {
     pub arcium_program: Program<'info, Arcium>,
 }
 
-#[callback_accounts("compute_disc")]
+#[callback_accounts("compute_disc", error = DiscMpcError)]
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
@@ -156,7 +158,7 @@ pub struct ComputeDiscCallback<'info> {
     pub instructions_sysvar: AccountInfo<'info>,
 }
 
-#[init_computation_definition_accounts("compute_disc", payer)]
+#[init_computation_definition_accounts("compute_disc", payer, error = DiscMpcError)]
 #[derive(Accounts)]
 pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
@@ -185,4 +187,4 @@ pub enum DiscMpcError {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-}
+    }
