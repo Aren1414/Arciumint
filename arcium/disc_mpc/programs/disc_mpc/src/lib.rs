@@ -20,7 +20,6 @@ pub mod disc_mpc {
             Some(CircuitSource::OffChain(OffChainCircuitSource {
                 source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
                     .to_string(),
-                
                 hash: [0; 32],
             })),
             None,
@@ -36,27 +35,23 @@ pub mod disc_mpc {
         computation_offset: u64,
         pubkey: [u8; 32],
         nonce: u128,
-        c0: [u8; 32], c1: [u8; 32], c2: [u8; 32], c3: [u8; 32],
-        c4: [u8; 32], c5: [u8; 32], c6: [u8; 32], c7: [u8; 32],
-        c8: [u8; 32], c9: [u8; 32], c10: [u8; 32], c11: [u8; 32],
-        c12: [u8; 32], c13: [u8; 32], c14: [u8; 32], c15: [u8; 32],
-        c16: [u8; 32], c17: [u8; 32], c18: [u8; 32], c19: [u8; 32],
-        c20: [u8; 32], c21: [u8; 32], c22: [u8; 32], c23: [u8; 32],
-        c24: [u8; 32], c25: [u8; 32], c26: [u8; 32], c27: [u8; 32],
+        ciphertexts: Vec<[u8; 32]>,
     ) -> Result<()> {
+        // 28 answers => 28 encrypted u8 ciphertexts
+        require!(ciphertexts.len() == 28, ErrorCode::InvalidCiphertextsLen);
+
         ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
-        let args = ArgBuilder::new()
+        // ArgBuilder API per docs (looping is fine)
+        let mut builder = ArgBuilder::new()
             .x25519_pubkey(pubkey)
-            .plaintext_u128(nonce)
-            .encrypted_u8(c0).encrypted_u8(c1).encrypted_u8(c2).encrypted_u8(c3)
-            .encrypted_u8(c4).encrypted_u8(c5).encrypted_u8(c6).encrypted_u8(c7)
-            .encrypted_u8(c8).encrypted_u8(c9).encrypted_u8(c10).encrypted_u8(c11)
-            .encrypted_u8(c12).encrypted_u8(c13).encrypted_u8(c14).encrypted_u8(c15)
-            .encrypted_u8(c16).encrypted_u8(c17).encrypted_u8(c18).encrypted_u8(c19)
-            .encrypted_u8(c20).encrypted_u8(c21).encrypted_u8(c22).encrypted_u8(c23)
-            .encrypted_u8(c24).encrypted_u8(c25).encrypted_u8(c26).encrypted_u8(c27)
-            .build();
+            .plaintext_u128(nonce);
+
+        for ct in ciphertexts {
+            builder = builder.encrypted_u8(ct);
+        }
+
+        let args = builder.build();
 
         queue_computation(
             ctx.accounts,
@@ -83,7 +78,7 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        // NOTE: طبق خطای تو، ciphertexts/nonce زیر field_0 هستند.
+        // NOTE: ciphertexts/nonce under field_0
         let ComputeDiscOutput { field_0 } = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
@@ -208,4 +203,6 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-}
+    #[msg("ciphertexts length must be exactly 28")]
+    InvalidCiphertextsLen,
+    }
