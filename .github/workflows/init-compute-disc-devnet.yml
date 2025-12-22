@@ -18,7 +18,7 @@ jobs:
       - name: System deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libudev-dev curl jq
+          sudo apt-get install -y pkg-config libudev-dev curl jq ca-certificates
 
       - name: Install Rust
         run: |
@@ -41,16 +41,38 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Anchor
+      - name: Yarn
+        run: |
+          corepack enable
+          yarn --version
+
+      - name: Install Anchor (AVM 0.32.1)
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm install 0.32.1 || true
           avm use 0.32.1
           anchor --version
 
+      - name: Install Arcium CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL https://bin.arcium.com/download/arcium_x86_64_linux_0.6.0-alpha -o /tmp/arcium
+          chmod +x /tmp/arcium
+          sudo mv /tmp/arcium /usr/local/bin/arcium
+          arcium --version
+
       - name: Install JS deps
         working-directory: arcium/disc_mpc
         run: yarn install
+
+      - name: Arcium Build (generate build/*.arcis)
+        working-directory: arcium/disc_mpc
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:/usr/local/bin:$PATH"
+          arcium build --skip-keys-sync
 
       - name: Init compute_disc comp def
         working-directory: arcium/disc_mpc
