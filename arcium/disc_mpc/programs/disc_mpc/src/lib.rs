@@ -12,9 +12,9 @@ declare_id!("PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM");
 pub mod disc_mpc {
     use super::*;
 
-    // ----------------------------------
-    // INIT COMPUTATION DEFINITION (OFFCHAIN)
-    // ----------------------------------
+    // --------------------------------------------------
+    // INIT COMPUTATION DEFINITION (OFF-CHAIN ARCIS)
+    // --------------------------------------------------
     pub fn init_compute_disc_comp_def(
         ctx: Context<InitComputeDiscCompDef>,
     ) -> Result<()> {
@@ -30,9 +30,9 @@ pub mod disc_mpc {
         Ok(())
     }
 
-    // ----------------------------------
+    // --------------------------------------------------
     // QUEUE COMPUTATION
-    // ----------------------------------
+    // --------------------------------------------------
     pub fn compute_disc(
         ctx: Context<ComputeDisc>,
         computation_offset: u64,
@@ -107,11 +107,13 @@ pub mod disc_mpc {
             computation_offset,
             args,
             None,
-            vec![ComputeDiscCallback::callback_ix(
-                computation_offset,
-                &ctx.accounts.mxe_account,
-                &[],
-            )?],
+            vec![
+                <ComputeDiscCallback as CallbackCompAccs>::callback_ix(
+                    computation_offset,
+                    &ctx.accounts.mxe_account,
+                    &[],
+                )?
+            ],
             1,
             0,
         )?;
@@ -119,9 +121,9 @@ pub mod disc_mpc {
         Ok(())
     }
 
-    // ----------------------------------
+    // --------------------------------------------------
     // CALLBACK
-    // ----------------------------------
+    // --------------------------------------------------
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
         ctx: Context<ComputeDiscCallback>,
@@ -172,12 +174,15 @@ pub struct ComputeDisc<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: PDA derived via derive_mempool_pda! and validated by Arcium program during CPI
     #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub mempool_account: UncheckedAccount<'info>,
 
+    /// CHECK: PDA derived via derive_execpool_pda! and validated by Arcium program during CPI
     #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub executing_pool: UncheckedAccount<'info>,
 
+    /// CHECK: PDA derived via derive_comp_pda! and validated by Arcium program during CPI
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     pub computation_account: UncheckedAccount<'info>,
 
@@ -208,11 +213,13 @@ pub struct ComputeDiscCallback<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: Validated by Arcium program via callback constraints
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
+    /// CHECK: Sysvar instruction account, fixed address
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions_sysvar: AccountInfo<'info>,
 }
@@ -226,6 +233,7 @@ pub struct InitComputeDiscCompDef<'info> {
     #[account(mut, address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: Created and validated by init_comp_def
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
@@ -249,4 +257,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Cluster not set")]
     ClusterNotSet,
-        }
+            }
