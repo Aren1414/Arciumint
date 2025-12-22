@@ -22,7 +22,7 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      # Node + Yarn (اجباری)
+      # Node + Yarn 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -53,7 +53,7 @@ jobs:
           sudo mv /tmp/arcium /usr/local/bin/arcium
           arcium --version
 
-      # BUILD (خیلی مهم)
+      # BUILD 
       - name: Arcium Build
         working-directory: arcium/disc_mpc
         shell: bash
