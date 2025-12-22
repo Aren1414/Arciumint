@@ -9,8 +9,8 @@ jobs:
 
     env:
       SOLANA_VERSION: "2.3.0"
-      SOLANA_RPC_URL: "${{ secrets.HELIUS_DEVNET_RPC }}"
       ARCIUM_CLUSTER_OFFSET: "123"
+      SOLANA_RPC_URL: "https://devnet.helius-rpc.com/?api-key=${{ secrets.HELIUS_API_KEY }}"
 
     steps:
       - uses: actions/checkout@v4
