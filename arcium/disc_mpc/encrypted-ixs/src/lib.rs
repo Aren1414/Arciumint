@@ -1,8 +1,9 @@
-use arcis::*;
+use arcis::{encrypted, instruction};
+use arcis_imports::*;
 
 #[encrypted]
 mod circuits {
-    use arcis::*;
+    use arcis_imports::*;
 
     // 28 answers, each in range 0..=3
     // 0 = D, 1 = I, 2 = S, 3 = C
@@ -18,7 +19,10 @@ mod circuits {
     }
 
     #[instruction]
-    pub fn compute_disc(input_ctxt: Enc<Shared, DiscInput>) -> Enc<Shared, DiscOutput> {
+    pub fn compute_disc(
+        input_ctxt: Enc<Shared, DiscInput>
+    ) -> Enc<Shared, DiscOutput> {
+
         let input = input_ctxt.to_arcis();
 
         let mut d: u8 = 0;
