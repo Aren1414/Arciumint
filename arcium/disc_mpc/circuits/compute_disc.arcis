@@ -1,9 +1,0 @@
-fn compute_disc(
-    d: u8,
-    i: u8,
-    s: u8,
-    c: u8,
-    nonce: u128
-) -> (u8, u8, u8, u8) {
-    return (d, i, s, c);
-}

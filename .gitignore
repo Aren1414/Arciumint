@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+build/
+artifacts/
+programs/**/build/
+arcium/disc_mpc/target/deploy/*.json
+arcium/disc_mpc/target/deploy/*-keypair.json
+.config/solana/id.json
+**/id.json
