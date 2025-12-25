@@ -38,6 +38,12 @@ build/
 artifacts/
 programs/**/build/
 
+# arcium build outputs (NEEDED for raw.githubusercontent.com circuit source)
+!arcium/disc_mpc/build/
+!arcium/disc_mpc/build/**
+!arcium/disc_mpc/artifacts/
+!arcium/disc_mpc/artifacts/**
+
 # arcium / anchor deploy outputs
 arcium/disc_mpc/target/deploy/*
 !arcium/disc_mpc/target/deploy/disc_mpc-keypair.json
