@@ -3,7 +3,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey(
-  "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
+  "6pbFHZfhjVEvwcWAUGoKbVjLF7rYqkcjkiqvLPAf2KJP"
 );
 
 export async function waitForDiscResult({
