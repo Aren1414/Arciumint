@@ -22,7 +22,7 @@ import {
 } from "@arcium-hq/client";
 
 export const DISC_PROGRAM_ID = new PublicKey(
-  "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
+  "6pbFHZfhjVEvwcWAUGoKbVjLF7rYqkcjkiqvLPAf2KJP"
 );
 
 export type DiscDominant = "D" | "I" | "S" | "C";
