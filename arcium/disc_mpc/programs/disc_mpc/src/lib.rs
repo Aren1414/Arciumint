@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
-use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
+use arcium_anchor::prelude::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM");
+declare_id!("6pbFHZfhjVEvwcWAUGoKbVjLF7rYqkcjkiqvLPAf2KJP");
 
 #[arcium_program]
 pub mod disc_mpc {

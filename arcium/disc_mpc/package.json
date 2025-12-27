@@ -6,7 +6,7 @@
     "init:devnet": "ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ts-node scripts/init-devnet.ts"
   },
   "dependencies": {
-    "@arcium-hq/client": "^0.5.2",
+    "@arcium-hq/client": "^0.5.4",
     "@coral-xyz/anchor": "^0.32.1"
   },
   "devDependencies": {

@@ -7,15 +7,15 @@ package_manager = "yarn"
 resolution = true
 skip-lint = true
 
-[programs.localnet]
-disc_mpc = "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
-
 [programs.devnet]
-disc_mpc = "PPyR7WKqttjq4ZwcVwrerPsHkUnEkcZ6Vq7zQ1CbSvM"
+disc_mpc = "6pbFHZfhjVEvwcWAUGoKbVjLF7rYqkcjkiqvLPAf2KJP"
+
+[programs.localnet]
+disc_mpc = "BmNrypStv4BapVhgqDCiqtUgjvaQJYs4ynpUwSv9FfWv"
+
+[registry]
+url = "https://api.apr.dev"
 
 [provider]
 cluster = "devnet"
 wallet = "~/.config/solana/id.json"
-
-[registry]
-url = "https://api.apr.dev"

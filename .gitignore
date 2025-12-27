@@ -10,9 +10,6 @@
 /.next/
 /out/
 
-# production
-/build
-
 # misc
 .DS_Store
 *.pem
@@ -33,14 +30,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# build artifacts
-build/
-artifacts/
-programs/**/build/
-
-# arcium build outputs (NEEDED for raw.githubusercontent.com circuit source)
+# ignore build everywhere EXCEPT arcium/disc_mpc
+**/build/*
 !arcium/disc_mpc/build/
 !arcium/disc_mpc/build/**
+
+# artifacts
+artifacts/
 !arcium/disc_mpc/artifacts/
 !arcium/disc_mpc/artifacts/**
 
