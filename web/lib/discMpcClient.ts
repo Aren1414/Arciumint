@@ -58,7 +58,7 @@ function toU8(x: BytesLike): Uint8Array {
 }
 
 function getClusterOffset(): number {
-  const raw = process.env.NEXT_PUBLIC_ARCIUM_CLUSTER_OFFSET ?? "123";
+  const raw = process.env.NEXT_PUBLIC_ARCIUM_CLUSTER_OFFSET ?? "456";
   const n = Number(raw);
   if (!Number.isFinite(n)) throw new Error("Invalid NEXT_PUBLIC_ARCIUM_CLUSTER_OFFSET");
   return n;
