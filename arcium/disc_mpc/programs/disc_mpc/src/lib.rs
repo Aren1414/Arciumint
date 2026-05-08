@@ -1,12 +1,15 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
-use arcium_anchor::prelude::{CircuitSource, OffChainCircuitSource};
+
+// IMPORTANT: types come from arcium_client in this SDK version
+use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
+
 use arcium_macros::circuit_hash;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("6pbFHZfhjVEvwcWAUGoKbVjLF7rYqkcjkiqvLPAf2KJP");
+declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -16,6 +19,8 @@ pub mod disc_mpc {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
+                // NOTE: arcium build produces build/compute_disc.arcis at repo root (disc_mpc/build)
+                // Keep URL for off-chain fetch; the on-chain verification uses circuit_hash!("compute_disc")
                 source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
                     .to_string(),
                 hash: circuit_hash!("compute_disc"),
@@ -190,4 +195,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-            }
+}
