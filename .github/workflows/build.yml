@@ -11,19 +11,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Solana 2.3.0 (Arcium compatible)
+      - name: Install Solana 2.3.0 (mirror)
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v2.3.0/install)"
+          wget https://solana-mirror.s3.amazonaws.com/v2.3.0/solana-install-init-x86_64-unknown-linux-gnu
+          chmod +x solana-install-init-x86_64-unknown-linux-gnu
+          ./solana-install-init-x86_64-unknown-linux-gnu --no-modify-path
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
-      - name: Install Rust + Anchor
+      - name: Install Anchor 0.32.1
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --force
           avm install 0.32.1
           avm use 0.32.1
-          anchor --version
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          anchor --version
 
       - name: Install Arcium toolchain
         run: |
@@ -31,7 +33,7 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           arcium --version
 
-      - name: Build Arcium (correct workspace)
+      - name: Build Arcium
         run: |
           cd arcium/disc_mpc
           solana --version
