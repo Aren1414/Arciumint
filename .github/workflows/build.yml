@@ -13,24 +13,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Solana (APT method — official & stable)
+      - name: Install toolchain (Rust + Solana + Anchor)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gnupg curl
-          curl -sSfL https://release.solana.com/stable/solana-release.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/solana.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/solana.gpg] https://release.solana.com/stable/apt stable main" | sudo tee /etc/apt/sources.list.d/solana.list
-          sudo apt-get update
-          sudo apt-get install -y solana-cli
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          rustc --version
           solana --version
-
-      - name: Install AVM (Anchor Version Manager)
-        run: |
-          cargo install --git https://github.com/coral-xyz/anchor avm --force
-          avm install latest
-          avm use latest
           anchor --version
 
       - name: Build Arcium
