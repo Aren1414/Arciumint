@@ -2,8 +2,6 @@ name: Arcium Build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
@@ -13,14 +11,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install toolchain (Rust + Solana + Anchor)
+      - name: Install Arcium Toolchain (official)
         run: |
-          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          rustc --version
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify tools
+        run: |
           solana --version
           anchor --version
+          surfpool --version
+          arcium --version
 
       - name: Build Arcium
         run: |
