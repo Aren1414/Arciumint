@@ -1,0 +1,40 @@
+name: Arcium Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+
+      - name: Install AVM (Anchor Version Manager)
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm install latest
+          avm use latest
+          anchor --version
+
+      - name: Build Arcium
+        run: |
+          arcium build --skip-keys-sync
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: arcium-build
+          path: ./build
