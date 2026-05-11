@@ -11,22 +11,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Arcium Toolchain (official)
+      - name: Install Solana + Anchor + Surfpool (Solana dev skill)
         run: |
-          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Verify tools
-        run: |
           solana --version
           anchor --version
           surfpool --version
+
+      - name: Install Arcium toolchain (official)
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           arcium --version
 
       - name: Build Arcium
         run: |
+          solana --version
+          anchor --version
+          arcium --version
           arcium build --skip-keys-sync
 
       - name: Upload build artifacts
