@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -19,7 +19,7 @@ jobs:
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
       - name: Install AVM (Anchor Version Manager)
@@ -34,7 +34,7 @@ jobs:
           arcium build --skip-keys-sync
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: arcium-build
-          path: ./build
+          path: build
