@@ -16,12 +16,14 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Solana (mirror, no SSL issues)
+      - name: Install Solana (APT method — official & stable)
         run: |
-          wget https://solana-mirror.s3.amazonaws.com/solana-install-init-x86_64-unknown-linux-gnu
-          chmod +x solana-install-init-x86_64-unknown-linux-gnu
-          ./solana-install-init-x86_64-unknown-linux-gnu --no-modify-path
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          sudo apt-get update
+          sudo apt-get install -y gnupg curl
+          curl -sSfL https://release.solana.com/stable/solana-release.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/solana.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/solana.gpg] https://release.solana.com/stable/apt stable main" | sudo tee /etc/apt/sources.list.d/solana.list
+          sudo apt-get update
+          sudo apt-get install -y solana-cli
           solana --version
 
       - name: Install AVM (Anchor Version Manager)
