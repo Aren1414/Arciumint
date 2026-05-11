@@ -16,9 +16,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Solana
+      - name: Install Solana (mirror, no SSL issues)
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          wget https://solana-mirror.s3.amazonaws.com/solana-install-init-x86_64-unknown-linux-gnu
+          chmod +x solana-install-init-x86_64-unknown-linux-gnu
+          ./solana-install-init-x86_64-unknown-linux-gnu --no-modify-path
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
