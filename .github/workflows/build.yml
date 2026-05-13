@@ -23,25 +23,29 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      # 🔥 FIX 1: Use nightly Rust (required for edition2024 deps)
-      - name: Install Rust (nightly)
-        run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
-          rustup toolchain install nightly
-          rustup default nightly
-          rustc --version
-          cargo --version
-
+      # ✅ 1. Install Solana FIRST
       - name: Install Solana
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
 
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # Arcium stable install
+      # 🔥 2. Install Rust AFTER Solana (override conflict)
+      - name: Install Rust nightly (FIX edition2024)
+        run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+          rustup toolchain install nightly
+          rustup default nightly
+
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+          rustc --version
+          cargo --version
+
+      # Arcium install
       - name: Install Arcium
         run: |
           curl -L https://install.arcium.com/ | bash
@@ -49,7 +53,7 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # 🔥 IMPORTANT: force correct toolchain for build
+      # 🔍 verify
       - name: Verify toolchain
         run: |
           rustc --version
