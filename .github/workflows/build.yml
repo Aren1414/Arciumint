@@ -23,6 +23,16 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
+      # 🔥 FIX 1: Use nightly Rust (required for edition2024 deps)
+      - name: Install Rust (nightly)
+        run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup toolchain install nightly
+          rustup default nightly
+          rustc --version
+          cargo --version
+
       - name: Install Solana
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
@@ -31,7 +41,7 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # ✅ Arcium 0.10.1 (stable + clean install)
+      # Arcium stable install
       - name: Install Arcium
         run: |
           curl -L https://install.arcium.com/ | bash
@@ -39,10 +49,13 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # 🔥 IMPORTANT: ensure no cached arcis artifacts break IR
-      - name: Clean Rust cache
+      # 🔥 IMPORTANT: force correct toolchain for build
+      - name: Verify toolchain
         run: |
-          cargo clean || true
+          rustc --version
+          cargo --version
+          solana --version
+          arcium --version
 
       - name: Verify wallet
         run: |
@@ -54,6 +67,7 @@ jobs:
         run: |
           cd arcium/disc_mpc
           rm -rf build
+          cargo clean || true
           arcium build --skip-keys-sync
 
       - name: Deploy project
@@ -66,18 +80,11 @@ jobs:
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com
 
-      - name: Verify deploy
-        run: |
-          solana program show --programs \
-            --url https://api.devnet.solana.com
-
       - name: Commit and push build directory
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc/build
-
           git commit -m "Update Arcium build output" || echo "No changes"
-
           git push origin HEAD:main
