@@ -6,7 +6,7 @@
     "init:devnet": "ts-node scripts/init-devnet.ts"
   },
   "dependencies": {
-    "@arcium-hq/client": "^0.9.7",
+    "@arcium-hq/client": "^0.10.1",
     "@coral-xyz/anchor": "^0.32.1"
   },
   "devDependencies": {
