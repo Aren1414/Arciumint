@@ -12,50 +12,105 @@ jobs:
 
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+      RUSTUP_TOOLCHAIN: nightly
 
     steps:
+      # =========================
+      # CHECKOUT
+      # =========================
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # =========================
+      # SOLANA WALLET
+      # =========================
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
-          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+
+          echo '${{ secrets.SOLANA_KEYPAIR }}' \
+            > ~/.config/solana/id.json
+
           chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust
+      # =========================
+      # RUST NIGHTLY
+      # =========================
+      - name: Install Rust Nightly
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
-          rustup toolchain install nightly
+
+          source "$HOME/.cargo/env"
+
+          rustup toolchain install nightly --profile minimal
+
           rustup default nightly
+
+          rustup component add rustfmt clippy
+
+          rustup update nightly
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
+      # =========================
+      # FORCE NIGHTLY CARGO
+      # =========================
+      - name: Verify Nightly
+        run: |
+          source "$HOME/.cargo/env"
+
+          rustc --version
+          cargo --version
+
+          which cargo
+          which rustc
+
+      # =========================
+      # SOLANA
+      # =========================
       - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+          echo "$HOME/.local/share/solana/install/active_release/bin" \
+            >> $GITHUB_PATH
+
+      # =========================
+      # ARCIUM
+      # =========================
       - name: Install Arcium
         run: |
           curl -sSfL https://install.arcium.com/ | bash
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Verify versions
+      # =========================
+      # VERIFY ALL
+      # =========================
+      - name: Verify Versions
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
+
           rustc --version
           cargo --version
           solana --version
           arcium --version
 
-      - name: Remove Cargo.lock
+      # =========================
+      # REMOVE LOCKFILES
+      # =========================
+      - name: Remove Lockfiles
         run: |
           rm -f arcium/disc_mpc/Cargo.lock
+          rm -f arcium/disc_mpc/programs/Cargo.lock
+          rm -f arcium/disc_mpc/encrypted-ixs/Cargo.lock
 
+      # =========================
+      # GENERATE PROGRAM ID
+      # =========================
       - name: Generate Program ID
         run: |
           solana-keygen new \
@@ -64,40 +119,73 @@ jobs:
             --outfile program-keypair.json
 
           PROGRAM_ID=$(solana address -k program-keypair.json)
+
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+
           echo "Generated Program ID:"
           echo "$PROGRAM_ID"
 
+      # =========================
+      # UPDATE Anchor.toml
+      # =========================
       - name: Update Anchor.toml
         run: |
-          sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
+          sed -i \
+            "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
+            arcium/disc_mpc/Anchor.toml
 
+      # =========================
+      # UPDATE declare_id
+      # =========================
       - name: Update Rust declare_id
         run: |
-          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
+          sed -i \
+            "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
+            arcium/disc_mpc/programs/src/lib.rs
 
-      - name: Clean target
+      # =========================
+      # CLEAN
+      # =========================
+      - name: Clean Workspace
         run: |
           cd arcium/disc_mpc
+
           rm -rf target
           rm -rf build
+
           cargo clean || true
 
+      # =========================
+      # BUILD
+      # =========================
       - name: Build
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
+
           cd arcium/disc_mpc
+
+          cargo +nightly --version
+          rustc +nightly --version
+
           arcium build --skip-keys-sync
 
-      - name: Verify artifacts
+      # =========================
+      # VERIFY BUILD
+      # =========================
+      - name: Verify Artifacts
         run: |
           test -f arcium/disc_mpc/build/compute_disc.arcis
           test -f arcium/disc_mpc/build/compute_disc.hash
 
+      # =========================
+      # DEPLOY
+      # =========================
       - name: Deploy
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
+
           cd arcium/disc_mpc
+
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -105,16 +193,31 @@ jobs:
             --rpc-url https://api.devnet.solana.com \
             --program-keypair ../program-keypair.json
 
-      - name: Test deployed program
+      # =========================
+      # TEST
+      # =========================
+      - name: Test
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
+
           cd arcium/disc_mpc
+
           arcium test --cluster devnet
 
-      - name: Commit generated files
+      # =========================
+      # COMMIT
+      # =========================
+      - name: Commit Generated Files
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+          git config --global user.email \
+            "github-actions[bot]@users.noreply.github.com"
+
+          git config --global user.name \
+            "github-actions[bot]"
+
           git add .
-          git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes"
+
+          git commit -m "fresh deploy $PROGRAM_ID" \
+            || echo "No changes"
+
           git push
