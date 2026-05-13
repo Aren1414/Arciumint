@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -23,29 +27,30 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      # ✅ 1. Install Solana FIRST
-      - name: Install Solana
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      # 🔥 2. Install Rust AFTER Solana (override conflict)
-      - name: Install Rust nightly (FIX edition2024)
+      # ✅ HARD FIX: Rust properly enforced for ALL steps
+      - name: Install Rust (nightly + override)
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           source $HOME/.cargo/env
 
           rustup toolchain install nightly
           rustup default nightly
 
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          # 🔥 CRITICAL: force project-wide override
+          rustup override set nightly || true
 
           rustc --version
           cargo --version
 
-      # Arcium install
+      - name: Install Solana
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Install Arcium
         run: |
           curl -L https://install.arcium.com/ | bash
@@ -53,12 +58,12 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # 🔍 verify
-      - name: Verify toolchain
+      # ✅ IMPORTANT: verify REAL cargo used in CI
+      - name: Verify toolchain (must be nightly)
         run: |
-          rustc --version
+          which cargo
           cargo --version
-          solana --version
+          rustc --version
           arcium --version
 
       - name: Verify wallet
@@ -70,8 +75,14 @@ jobs:
       - name: Build project
         run: |
           cd arcium/disc_mpc
+
           rm -rf build
           cargo clean || true
+
+          # 🔥 force nightly explicitly (no ambiguity)
+          cargo +nightly build
+
+          # then Arcium build
           arcium build --skip-keys-sync
 
       - name: Deploy project
@@ -84,7 +95,7 @@ jobs:
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com
 
-      - name: Commit and push build directory
+      - name: Commit build output
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
