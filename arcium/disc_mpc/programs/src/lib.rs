@@ -1,9 +1,11 @@
-use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
 
-// IMPORTANT: types come from arcium_client in this SDK version
-use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
+use arcium_client::idl::arcium::types::{
+    CircuitSource,
+    OffChainCircuitSource,
+    Address,
+};
 
 use arcium_macros::circuit_hash;
 
@@ -19,8 +21,6 @@ pub mod disc_mpc {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                // NOTE: arcium build produces build/compute_disc.arcis at repo root (disc_mpc/build)
-                // Keep URL for off-chain fetch; the on-chain verification uses circuit_hash!("compute_disc")
                 source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
                     .to_string(),
                 hash: circuit_hash!("compute_disc"),
@@ -78,7 +78,7 @@ pub mod disc_mpc {
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
         emit!(DiscScoresEvent {
-            computation_account: ctx.accounts.computation_account.key(),
+            computation_account: ctx.accounts.computation_account.clone(),
             d_score_cipher: field_0.ciphertexts[0],
             i_score_cipher: field_0.ciphertexts[1],
             s_score_cipher: field_0.ciphertexts[2],
@@ -97,41 +97,28 @@ pub struct ComputeDisc<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(
-        init_if_needed,
-        space = 9,
-        payer = payer,
-        seeds = [&SIGN_PDA_SEED],
-        bump,
-        address = derive_sign_pda!(),
-    )]
+    #[account(mut)]
     pub sign_pda_account: Account<'info, SignerAccount>,
 
-    #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK:
-    #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub mempool_account: UncheckedAccount<'info>,
 
-    /// CHECK:
-    #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub executing_pool: UncheckedAccount<'info>,
 
-    /// CHECK:
-    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
-    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
+    #[account(mut)]
     pub pool_account: Account<'info, FeePool>,
 
-    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
+    #[account(mut)]
     pub clock_account: Account<'info, ClockAccount>,
 
     pub system_program: Program<'info, System>,
@@ -143,20 +130,14 @@ pub struct ComputeDisc<'info> {
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK:
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
-    /// CHECK:
-    #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions_sysvar: AccountInfo<'info>,
 }
 
@@ -166,11 +147,9 @@ pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(mut, address = derive_mxe_pda!())]
+    #[account(mut)]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK:
-    #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
     pub arcium_program: Program<'info, Arcium>,
@@ -179,7 +158,7 @@ pub struct InitComputeDiscCompDef<'info> {
 
 #[event]
 pub struct DiscScoresEvent {
-    pub computation_account: Pubkey,
+    pub computation_account: Address,
     pub d_score_cipher: [u8; 32],
     pub i_score_cipher: [u8; 32],
     pub s_score_cipher: [u8; 32],
