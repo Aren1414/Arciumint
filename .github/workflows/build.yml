@@ -3,6 +3,9 @@ name: Arcium Build
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,40 +15,63 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
+          persist-credentials: true
 
-      - name: Install Solana + Anchor + Surfpool (Solana dev skill)
+      - name: Restore Solana wallet
+        run: |
+          mkdir -p ~/.config/solana
+          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+          chmod 600 ~/.config/solana/id.json
+
+      - name: Install Solana
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install Arcium toolchain
+      - name: Install Arcium
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Build Arcium (correct workspace)
+      - name: Verify wallet
+        run: |
+          solana config set --url https://api.devnet.solana.com
+          solana address
+          solana balance
+
+      - name: Build project
         run: |
           cd arcium/disc_mpc
-          solana --version
-          anchor --version
-          arcium --version
+
+          rm -rf build
+
           arcium build --skip-keys-sync
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: arcium-build
-          path: arcium/disc_mpc/build
+      - name: Deploy project
+        run: |
+          cd arcium/disc_mpc
 
-      - name: Commit and push build output to repo
+          arcium deploy \
+            --cluster-offset 456 \
+            --recovery-set-size 4 \
+            --keypair-path ~/.config/solana/id.json \
+            --rpc-url https://api.devnet.solana.com
+
+      - name: Verify deploy
+        run: |
+          solana program show --programs \
+            --url https://api.devnet.solana.com
+
+      - name: Commit and push build directory
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
-          cp -r arcium/disc_mpc/build ./arcium_build_output
+          git add arcium/disc_mpc/build
 
-          git add arcium_build_output
-          git commit -m "Auto-update Arcium build output" || echo "No changes to commit"
-          git push
+          git commit -m "Update Arcium build output" || echo "No changes"
+
+          git push origin HEAD:main
