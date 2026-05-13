@@ -7,4 +7,5 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-arcis-imports = "0.9.7"
+arcis = "0.10.1"
+arcis-imports = "0.10.1"
