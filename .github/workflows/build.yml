@@ -31,13 +31,18 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # ✅ FIX: use official installer (prevents broken binary issue)
+      # ✅ Arcium 0.10.1 (stable + clean install)
       - name: Install Arcium
         run: |
-          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
-          
+          curl -L https://install.arcium.com/ | bash
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # 🔥 IMPORTANT: ensure no cached arcis artifacts break IR
+      - name: Clean Rust cache
+        run: |
+          cargo clean || true
 
       - name: Verify wallet
         run: |
