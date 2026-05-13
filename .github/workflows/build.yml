@@ -1,4 +1,4 @@
-name: Arcium Build
+name: Arcium Build Fresh Deploy
 
 on:
   workflow_dispatch:
@@ -10,95 +10,58 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-      RUSTUP_TOOLCHAIN: nightly
-
     steps:
-      # =========================
-      # Checkout
-      # =========================
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          persist-credentials: true
+      - uses: actions/checkout@v4
 
-      # =========================
-      # Wallet
-      # =========================
-      - name: Setup Solana Wallet
-        run: |
-          mkdir -p ~/.config/solana
-          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
-          chmod 600 ~/.config/solana/id.json
-
-      # =========================
-      # Rust (FIXED)
-      # =========================
-      - name: Install Rust nightly
-        run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
-
-          rustup toolchain install nightly
-          rustup default nightly
-
-          rustc --version
-          cargo --version
-
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      # =========================
-      # Solana
-      # =========================
       - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      # =========================
-      # Arcium
-      # =========================
+      - name: Install Rust + Anchor deps
+        run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup toolchain install nightly
+          rustup default nightly
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
       - name: Install Arcium
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # =========================
-      # Verify toolchain
+      # NEW PROGRAM ID GENERATION
       # =========================
-      - name: Verify toolchain consistency
+      - name: Generate new Program ID
         run: |
-          which cargo
-          cargo --version
-          rustc --version
-          solana --version
-          arcium --version
+          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json
+          PROGRAM_ID=$(solana address -k program-keypair.json)
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
       # =========================
-      # CLEAN (IMPORTANT FIX)
+      # UPDATE ANCHOR TOML
       # =========================
-      - name: Clean workspace
+      - name: Inject Program ID into Anchor.toml
         run: |
-          cd arcium/disc_mpc
-          rm -rf build target Cargo.lock
-          cargo clean || true
+          sed -i "s/^disc_mpc = .*/disc_mpc = \"$PROGRAM_ID\"/" arcium/disc_mpc/Anchor.toml
+
+      # =========================
+      # UPDATE RUST DECLARE ID
+      # =========================
+      - name: Inject Program ID into Rust
+        run: |
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
 
       # =========================
       # BUILD
       # =========================
-      - name: Arcium build
+      - name: Build
         run: |
           cd arcium/disc_mpc
           arcium build --skip-keys-sync
-
-      # =========================
-      # VERIFY OUTPUT (FIXED PATH)
-      # =========================
-      - name: Validate build output
-        run: |
-          ls -la arcium/disc_mpc/build || exit 1
 
       # =========================
       # DEPLOY
@@ -106,7 +69,6 @@ jobs:
       - name: Deploy
         run: |
           cd arcium/disc_mpc
-
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -114,22 +76,12 @@ jobs:
             --rpc-url https://api.devnet.solana.com
 
       # =========================
-      # TEST (SAFE MODE)
+      # SAVE OUTPUT
       # =========================
-      - name: Test deployed program
+      - name: Commit artifacts
         run: |
-          cd arcium/disc_mpc
-          arcium test --cluster devnet || true
-
-      # =========================
-      # COMMIT OUTPUT
-      # =========================
-      - name: Commit build output
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-
-          git add arcium/disc_mpc/build
-
-          git commit -m "Update Arcium build output" || echo "No changes"
-          git push origin HEAD:main
+          git config --global user.email "bot@github.com"
+          git config --global user.name "github-actions"
+          git add .
+          git commit -m "fresh program deploy $PROGRAM_ID" || echo "no changes"
+          git push
