@@ -24,39 +24,36 @@ jobs:
       # =========================
       # Wallet
       # =========================
-      - name: Restore Solana wallet
+      - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
       # =========================
-      # Rust (FIXED)
+      # Rust (FIXED - CLEAN + NO env injection)
       # =========================
-      - name: Install Rust nightly (clean + stable override)
+      - name: Install Rust nightly
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-
           source $HOME/.cargo/env
 
           rustup toolchain install nightly
           rustup default nightly
 
-          # IMPORTANT: ensure CI actually uses nightly everywhere
-          rustup override set nightly
+          rustup override set nightly || true
 
           rustc --version
           cargo --version
 
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          echo "$HOME/.cargo/env" >> $GITHUB_ENV
 
       # =========================
       # Solana
       # =========================
       - name: Install Solana
         run: |
-          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+          curl -sSfL https://solana-install.solana.workers.dev | bash
 
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -65,17 +62,17 @@ jobs:
       # =========================
       # Arcium
       # =========================
-      - name: Install Arcium 0.10.1
+      - name: Install Arcium
         run: |
-          curl -L https://install.arcium.com/ | bash
+          curl -sSfL https://install.arcium.com/ | bash
 
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       # =========================
-      # Verify
+      # Verify toolchain (CRITICAL)
       # =========================
-      - name: Verify toolchain
+      - name: Verify toolchain consistency
         run: |
           which cargo
           cargo --version
@@ -84,40 +81,39 @@ jobs:
           arcium --version
 
       # =========================
-      # CLEAN (FIXED + IMPORTANT)
+      # CLEAN (IMPORTANT FIX)
       # =========================
-      - name: Clean workspace (Arcium-safe)
+      - name: Clean workspace
         run: |
           cd arcium/disc_mpc
 
           rm -rf build
           rm -rf target
           rm -rf Cargo.lock || true
-
           cargo clean || true
 
       # =========================
-      # BUILD (CRITICAL ORDER FIX)
+      # BUILD (IMPORTANT ORDER FIX)
       # =========================
-      - name: Build Arcium project
+      - name: Arcium build
         run: |
           cd arcium/disc_mpc
 
-          # ⚠️ IMPORTANT: DO NOT run cargo build first
-          # Arcium must generate artifacts FIRST
+          # MUST generate artifacts first
           arcium build --skip-keys-sync
 
       # =========================
-      # VERIFY ARTIFACTS (NEW)
+      # VERIFY ARTIFACTS (HARD FAIL IF MISSING)
       # =========================
-      - name: Verify build artifacts
+      - name: Validate build output
         run: |
-          ls -la arcium/disc_mpc/build || exit 1
+          test -f arcium/disc_mpc/build/compute_disc.arcis
+          test -f arcium/disc_mpc/build/compute_disc.hash
 
       # =========================
       # DEPLOY
       # =========================
-      - name: Deploy project
+      - name: Deploy
         run: |
           cd arcium/disc_mpc
 
@@ -128,7 +124,7 @@ jobs:
             --rpc-url https://api.devnet.solana.com
 
       # =========================
-      # COMMIT OUTPUT
+      # COMMIT ARTIFACTS
       # =========================
       - name: Commit build output
         run: |
