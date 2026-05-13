@@ -78,7 +78,7 @@ jobs:
         run: |
           sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
 
-      - name: Force nightly inside workspace
+      - name: Force nightly in workspace
         run: |
           source $HOME/.cargo/env
           cd arcium/disc_mpc
@@ -97,7 +97,7 @@ jobs:
         run: |
           source $HOME/.cargo/env
           cd arcium/disc_mpc
-          arcium build --skip-keys-sync
+          rustup run nightly arcium build --skip-keys-sync
 
       - name: Verify artifacts
         run: |
@@ -108,18 +108,18 @@ jobs:
         run: |
           source $HOME/.cargo/env
           cd arcium/disc_mpc
-          arcium deploy \
+          rustup run nightly arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair ../program-keypair.json
+            --program-keypair ../../program-keypair.json
 
       - name: Test deployed program
         run: |
           source $HOME/.cargo/env
           cd arcium/disc_mpc
-          arcium test --cluster devnet
+          rustup run nightly arcium test --cluster devnet
 
       - name: Commit generated files
         run: |
