@@ -27,7 +27,9 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      # ✅ HARD FIX: Rust properly enforced for ALL steps
+      # =========================
+      # Rust Setup (Nightly Lock)
+      # =========================
       - name: Install Rust (nightly + override)
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -36,13 +38,14 @@ jobs:
 
           rustup toolchain install nightly
           rustup default nightly
-
-          # 🔥 CRITICAL: force project-wide override
           rustup override set nightly || true
 
           rustc --version
           cargo --version
 
+      # =========================
+      # Solana
+      # =========================
       - name: Install Solana
         run: |
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
@@ -51,6 +54,9 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      # =========================
+      # Arcium
+      # =========================
       - name: Install Arcium
         run: |
           curl -L https://install.arcium.com/ | bash
@@ -58,33 +64,45 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # ✅ IMPORTANT: verify REAL cargo used in CI
-      - name: Verify toolchain (must be nightly)
+      # =========================
+      # Verify toolchain
+      # =========================
+      - name: Verify toolchain
         run: |
           which cargo
           cargo --version
           rustc --version
           arcium --version
 
-      - name: Verify wallet
-        run: |
-          solana config set --url https://api.devnet.solana.com
-          solana address
-          solana balance
-
-      - name: Build project
+      # =========================
+      # CLEAN (FIXED SECTION)
+      # =========================
+      - name: Clean workspace (IMPORTANT FIX)
         run: |
           cd arcium/disc_mpc
 
           rm -rf build
+          rm -rf target
+          rm -rf ../build || true
+          rm -rf Cargo.lock || true
+
           cargo clean || true
 
-          # 🔥 force nightly explicitly (no ambiguity)
+      # =========================
+      # Build
+      # =========================
+      - name: Build project
+        run: |
+          cd arcium/disc_mpc
+
+          # enforce nightly explicitly
           cargo +nightly build
 
-          # then Arcium build
           arcium build --skip-keys-sync
 
+      # =========================
+      # Deploy
+      # =========================
       - name: Deploy project
         run: |
           cd arcium/disc_mpc
@@ -95,11 +113,15 @@ jobs:
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com
 
+      # =========================
+      # Commit artifacts
+      # =========================
       - name: Commit build output
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc/build
+
           git commit -m "Update Arcium build output" || echo "No changes"
           git push origin HEAD:main
