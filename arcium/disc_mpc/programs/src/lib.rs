@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator, program};
+use anchor_lang::{declare_id, emit, require, program, AnchorDeserialize, AnchorSerialize, Discriminator};
 
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
@@ -160,7 +160,7 @@ pub struct InitComputeDiscCompDef<'info> {
     pub payer: Signer<'info>,
 
     #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: Box<Account<'info, MXEAccount>>,
+    pub mxe_account: Account<'info, MXEAccount>,
 
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
@@ -193,4 +193,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-      }
+    }
