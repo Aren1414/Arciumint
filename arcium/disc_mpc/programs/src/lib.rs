@@ -1,5 +1,10 @@
+use anchor_lang::prelude::*;
+use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator, program};
+
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
+use arcium_anchor::LUT_PROGRAM_ID;
+
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
@@ -12,7 +17,15 @@ pub mod disc_mpc {
     use super::*;
 
     pub fn init_compute_disc_comp_def(ctx: Context<InitComputeDiscCompDef>) -> Result<()> {
-        init_comp_def(ctx.accounts, None, None)?;
+        init_comp_def(
+            ctx.accounts,
+            Some(CircuitSource::OffChain(OffChainCircuitSource {
+                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
+                    .to_string(),
+                hash: circuit_hash!("compute_disc"),
+            })),
+            None,
+        )?;
         Ok(())
     }
 
@@ -180,4 +193,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-    }
+      }
