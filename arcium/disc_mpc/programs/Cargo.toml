@@ -25,13 +25,11 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
 
 arcium-client = { version = "0.10.1", default-features = false }
 arcium-anchor = { version = "0.10.1", default-features = false }
 arcium-macros = "0.10.1"
-
-borsh = "0.10.3"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
