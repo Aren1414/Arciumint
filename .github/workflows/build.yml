@@ -31,10 +31,12 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # 🔥 FIX: pin Arcium CLI version to match arcis 0.9.7
-      - name: Install Arcium (0.9.7 pinned)
+      # ✅ FIX: use official installer (prevents broken binary issue)
+      - name: Install Arcium
         run: |
-          curl -L https://bin.arcium.com/download/arcium_x86_64_linux_0.9.7 | bash
+          curl --proto '=https' --tlsv1.2 -sSfL https://install.arcium.com/ | bash
+          
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Verify wallet
