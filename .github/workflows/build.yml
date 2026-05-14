@@ -42,6 +42,11 @@ jobs:
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+      - name: Install Anchor (required BEFORE Arcium)
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
       - name: Install Arcium
         run: |
           curl -sSfL https://install.arcium.com/ | bash
@@ -54,9 +59,8 @@ jobs:
           rustc --version
           cargo --version
           solana --version
+          anchor --version
           arcium --version
-
-      
 
       - name: Clean Arcium global cache
         run: |
@@ -77,8 +81,6 @@ jobs:
           rm -rf build
           cargo clean || true
 
-      
-
       - name: Generate Program ID
         run: |
           solana-keygen new \
@@ -88,7 +90,6 @@ jobs:
 
           PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Generated Program ID:"
           echo "$PROGRAM_ID"
 
       - name: Update Anchor.toml
