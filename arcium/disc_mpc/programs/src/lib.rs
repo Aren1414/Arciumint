@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::{declare_id, emit, require, program, AnchorDeserialize, AnchorSerialize, Discriminator};
+use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator};
 
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
@@ -111,7 +111,7 @@ pub struct ComputeDisc<'info> {
     #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub mempool_account: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut, address = derive_exec_pool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub executing_pool: UncheckedAccount<'info>,
 
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
