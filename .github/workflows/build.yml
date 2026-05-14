@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      ARCIUM_DOCKER: "1"
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
       RUSTUP_TOOLCHAIN: nightly
       CARGO_UNSTABLE_EDITION2024: "1"
-      ARCIUM_DOCKER: "0"
 
     steps:
       - name: Checkout
@@ -37,13 +37,11 @@ jobs:
           rustup component add rustfmt clippy
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana + Anchor (official)
+      - name: Install Solana + Anchor
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          solana --version
-          anchor --version
 
       - name: Install Arcium
         run: |
@@ -61,33 +59,22 @@ jobs:
           anchor --version
           arcium --version
 
-      - name: Clean Arcium global cache
+      - name: Clean caches
         run: |
           rm -rf ~/.arcium
-
-      - name: Clean Anchor cache
-        run: |
           rm -rf arcium/disc_mpc/.anchor
-
-      - name: Remove Cargo.lock
-        run: |
           rm -f arcium/disc_mpc/Cargo.lock
+          rm -rf arcium/disc_mpc/target
 
-      - name: Clean target
+      - name: Normalize anchor-lang version in CI
         run: |
           cd arcium/disc_mpc
-          rm -rf target
-          rm -rf build
-          cargo clean || true
+          cargo update -p anchor-lang --precise 0.32.1 || true
 
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana-keygen new \
-            --silent \
-            --no-bip39-passphrase \
-            --outfile program-keypair.json
-
+          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json
           PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
           echo "$PROGRAM_ID"
@@ -96,36 +83,23 @@ jobs:
         run: |
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
 
-      - name: Update Rust declare_id
+      - name: Update declare_id
         run: |
           sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
 
-      - name: Force nightly in workspace
-        run: |
-          source $HOME/.cargo/env
-          cd arcium/disc_mpc
-          rustup override set nightly
-          rustup show active-toolchain
-          cargo --version
-
-      - name: Build
+      - name: Build (Docker mode)
         run: |
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          rustup run nightly arcium build --skip-keys-sync
-
-      - name: Verify artifacts
-        run: |
-          test -f arcium/disc_mpc/build/compute_disc.arcis
-          test -f arcium/disc_mpc/build/compute_disc.hash
+          arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          rustup run nightly arcium deploy \
+          arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
@@ -137,12 +111,4 @@ jobs:
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          rustup run nightly arcium test --cluster devnet
-
-      - name: Commit generated files
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add .
-          git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes"
-          git push
+          arcium test --cluster devnet
