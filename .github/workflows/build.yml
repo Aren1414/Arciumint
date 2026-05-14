@@ -13,7 +13,8 @@ jobs:
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
       RUSTUP_TOOLCHAIN: nightly
-      CARGO_UNSTABLE_EDITION2024: "1"  
+      CARGO_UNSTABLE_EDITION2024: "1"
+      ARCIUM_DOCKER: "0"  
 
     steps:
       - name: Checkout
