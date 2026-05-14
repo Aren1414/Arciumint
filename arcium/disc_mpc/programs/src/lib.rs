@@ -1,3 +1,5 @@
+// arcium/disc_mpc/programs/src/lib.rs
+
 use anchor_lang::prelude::*;
 use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator};
 
@@ -105,22 +107,24 @@ pub struct ComputeDisc<'info> {
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
 
+    
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    
+    #[account(mut)]
     pub mempool_account: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_exec_pool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub executing_pool: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
@@ -142,11 +146,11 @@ pub struct ComputeDiscCallback<'info> {
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: UncheckedAccount<'info>,
 
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(mut)]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
@@ -160,12 +164,13 @@ pub struct InitComputeDiscCompDef<'info> {
     pub payer: Signer<'info>,
 
     #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
-    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
+    
+    #[account(mut)]
     pub address_lookup_table: UncheckedAccount<'info>,
 
     #[account(address = LUT_PROGRAM_ID)]
