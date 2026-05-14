@@ -17,7 +17,7 @@ no-log-ix-name = []
 
 idl-build = [
     "anchor-lang/idl-build",
-    "arcium-anchor/idl-build"
+    "arcium-anchor/idl-build",
 ]
 
 anchor-debug = []
@@ -25,7 +25,9 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
+
 anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+
 
 arcium-client = { version = "0.10.1", default-features = false }
 arcium-anchor = { version = "0.10.1", default-features = false }
