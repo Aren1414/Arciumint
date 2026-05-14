@@ -37,15 +37,12 @@ jobs:
           rustup component add rustfmt clippy
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana
+      - name: Install Solana + Anchor (official)
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Install Anchor (required BEFORE Arcium)
-        run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          solana --version
+          anchor --version
 
       - name: Install Arcium
         run: |
