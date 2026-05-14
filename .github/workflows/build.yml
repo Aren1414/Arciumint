@@ -40,6 +40,7 @@ jobs:
       - name: Install Solana + Anchor (official)
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
           anchor --version
@@ -53,6 +54,7 @@ jobs:
       - name: Verify versions
         run: |
           source $HOME/.cargo/env
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           rustc --version
           cargo --version
           solana --version
@@ -80,6 +82,7 @@ jobs:
 
       - name: Generate Program ID
         run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
@@ -108,6 +111,7 @@ jobs:
       - name: Build
         run: |
           source $HOME/.cargo/env
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           rustup run nightly arcium build --skip-keys-sync
 
@@ -119,6 +123,7 @@ jobs:
       - name: Deploy
         run: |
           source $HOME/.cargo/env
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           rustup run nightly arcium deploy \
             --cluster-offset 456 \
@@ -130,6 +135,7 @@ jobs:
       - name: Test deployed program
         run: |
           source $HOME/.cargo/env
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           rustup run nightly arcium test --cluster devnet
 
