@@ -56,9 +56,28 @@ jobs:
           solana --version
           arcium --version
 
+      
+
+      - name: Clean Arcium global cache
+        run: |
+          rm -rf ~/.arcium
+
+      - name: Clean Anchor cache
+        run: |
+          rm -rf arcium/disc_mpc/.anchor
+
       - name: Remove Cargo.lock
         run: |
           rm -f arcium/disc_mpc/Cargo.lock
+
+      - name: Clean target
+        run: |
+          cd arcium/disc_mpc
+          rm -rf target
+          rm -rf build
+          cargo clean || true
+
+      
 
       - name: Generate Program ID
         run: |
@@ -87,13 +106,6 @@ jobs:
           rustup override set nightly
           rustup show active-toolchain
           cargo --version
-
-      - name: Clean target
-        run: |
-          cd arcium/disc_mpc
-          rm -rf target
-          rm -rf build
-          cargo clean || true
 
       - name: Build
         run: |
