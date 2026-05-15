@@ -69,19 +69,6 @@ jobs:
           rm -rf arcium/disc_mpc/target
           rm -f arcium/disc_mpc/Cargo.lock
 
-      - name: Normalize dependencies
-        run: |
-          cd arcium/disc_mpc
-
-          cargo update -p anchor-lang --precise 0.32.1 || true
-          cargo update -p borsh --precise 0.10.4 || true
-
-          echo "=== anchor-lang tree ==="
-          cargo tree -p anchor-lang || true
-
-          echo "=== borsh tree ==="
-          cargo tree -p borsh || true
-
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
