@@ -1,7 +1,10 @@
 #![feature(stmt_expr_attributes)]
 #![feature(trivial_bounds)]
 
+use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use arcium_anchor::LUT_PROGRAM_ID;
+
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
@@ -207,4 +210,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-}
+              }
