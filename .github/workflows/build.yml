@@ -32,12 +32,10 @@ jobs:
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-
           source "$HOME/.cargo/env"
 
           rustup toolchain install nightly --profile minimal
           rustup default nightly
-
           rustup component add rustfmt
           rustup component add clippy
 
@@ -46,20 +44,17 @@ jobs:
       - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
-
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Arcium
         run: |
           curl -sSfL https://install.arcium.com/ | bash
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Verify versions
         run: |
           source "$HOME/.cargo/env"
-
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           rustc --version
@@ -73,32 +68,6 @@ jobs:
           rm -rf arcium/disc_mpc/.anchor
           rm -rf arcium/disc_mpc/target
           rm -f arcium/disc_mpc/Cargo.lock
-
-      - name: Inject CI patch
-        run: |
-          PATCH_MARKER="# BEGIN CI-INJECTED PATCH"
-
-          if ! grep -qF "$PATCH_MARKER" arcium/disc_mpc/Cargo.toml; then
-
-            {
-              echo ""
-              echo "# BEGIN CI-INJECTED PATCH"
-              echo ""
-              echo "[patch.crates-io]"
-              echo 'anchor-lang = { version = "0.32.1" }'
-              echo 'arcium-anchor = { version = "0.10.1" }'
-              echo 'arcium-client = { version = "0.10.1" }'
-              echo 'arcium-macros = { version = "0.10.1" }'
-              echo 'borsh = { version = "0.10.4" }'
-              echo ""
-              echo "# END CI-INJECTED PATCH"
-            } >> arcium/disc_mpc/Cargo.toml
-
-            echo "CI patch injected"
-
-          else
-            echo "CI patch already exists"
-          fi
 
       - name: Normalize dependencies
         run: |
@@ -125,7 +94,6 @@ jobs:
           PROGRAM_ID=$(solana address -k program-keypair.json)
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-
           echo "Generated Program ID: $PROGRAM_ID"
 
       - name: Update Anchor.toml
@@ -136,18 +104,18 @@ jobs:
 
       - name: Update declare_id
         run: |
-          find arcium/disc_mpc/programs -name "*.rs" -type f -exec \
+          while IFS= read -r file; do
             sed -i \
-            "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
+              "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
+              "$file"
+          done < <(find arcium/disc_mpc/programs -name "*.rs" -type f)
 
       - name: Build
         run: |
           source "$HOME/.cargo/env"
-
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           cd arcium/disc_mpc
-
           arcium build --skip-keys-sync
 
       - name: Verify artifacts
@@ -158,7 +126,6 @@ jobs:
       - name: Deploy
         run: |
           source "$HOME/.cargo/env"
-
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           cd arcium/disc_mpc
@@ -173,17 +140,14 @@ jobs:
       - name: Test deployed program
         run: |
           source "$HOME/.cargo/env"
-
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           cd arcium/disc_mpc
-
           arcium test --cluster devnet
 
       - name: Commit generated files
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
           git config --global user.name "github-actions[bot]"
 
           git add \
@@ -192,5 +156,4 @@ jobs:
             program-keypair.json || true
 
           git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes to commit"
-
           git push || echo "Push failed"
