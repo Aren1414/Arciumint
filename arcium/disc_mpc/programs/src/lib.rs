@@ -1,16 +1,12 @@
+use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-use arcium_anchor::traits::CallbackCompAccs;
 use arcium_anchor::LUT_PROGRAM_ID;
-
-use anchor_lang::declare_id;
-use anchor_lang::{AnchorDeserialize, AnchorSerialize, Discriminator, require};
 
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-// declare_id macro comes from anchor_lang; CI ensures single anchor-lang version
 declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
 
 #[arcium_program]
@@ -21,8 +17,7 @@ pub mod disc_mpc {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
-                    .to_string(),
+                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis".to_string(),
                 hash: circuit_hash!("compute_disc"),
             })),
             None,
@@ -55,7 +50,7 @@ pub mod disc_mpc {
             ctx.accounts,
             computation_offset,
             args,
-            vec![<ComputeDiscCallback as CallbackCompAccs>::callback_ix(
+            vec![ComputeDiscCallback::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
                 &[],
@@ -72,7 +67,6 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        
         let ComputeDiscOutput { field_0 } = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
@@ -160,9 +154,7 @@ pub struct ComputeDiscCallback<'info> {
 
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(
-        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
@@ -212,4 +204,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-    }
+}
