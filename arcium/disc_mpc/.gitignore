@@ -8,3 +8,5 @@ test-ledger
 encrypted-ixs/arcis_temp_target
 encrypted-ixs/src/main.rs
 artifacts/
+solana-release*
+*.tar.bz2
