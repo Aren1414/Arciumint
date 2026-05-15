@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ARCIUM_DOCKER: "1"
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
       RUSTUP_TOOLCHAIN: nightly
       CARGO_UNSTABLE_EDITION2024: "1"
+      ARCIUM_DOCKER: "1"
 
     steps:
       - name: Checkout
@@ -74,18 +74,38 @@ jobs:
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json
+          solana-keygen new \
+            --silent \
+            --no-bip39-passphrase \
+            --outfile program-keypair.json
           PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Generated Program ID:"
           echo "$PROGRAM_ID"
 
       - name: Update Anchor.toml
         run: |
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
 
-      - name: Update declare_id
+      
+      - name: Update declare_id (Address::new)
         run: |
-          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
+          sed -i "s/declare_id!(Address::new(\".*\"))/declare_id!(Address::new(\"$PROGRAM_ID\"))/g" arcium/disc_mpc/programs/src/lib.rs
+
+      - name: Force nightly in workspace
+        run: |
+          source $HOME/.cargo/env
+          cd arcium/disc_mpc
+          rustup override set nightly
+          rustup show active-toolchain
+          cargo --version
+
+      - name: Clean target
+        run: |
+          cd arcium/disc_mpc
+          rm -rf target
+          rm -rf build
+          cargo clean || true
 
       - name: Build (Docker mode)
         run: |
@@ -93,6 +113,11 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           arcium build --skip-keys-sync
+
+      - name: Verify artifacts
+        run: |
+          test -f arcium/disc_mpc/build/compute_disc.arcis
+          test -f arcium/disc_mpc/build/compute_disc.hash
 
       - name: Deploy
         run: |
@@ -112,3 +137,11 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           arcium test --cluster devnet
+
+      - name: Commit generated files
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes"
+          git push
