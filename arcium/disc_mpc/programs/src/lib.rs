@@ -1,16 +1,15 @@
-use anchor_lang::prelude::*;
-use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator};
-
 use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
 use arcium_anchor::LUT_PROGRAM_ID;
 
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
+use solana_address::Address;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
+
+declare_id!(Address::new("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ"));
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -50,23 +49,18 @@ pub mod disc_mpc {
 
         let args = builder.build();
 
-        
-        let callback_ix = <ComputeDiscCallback as CallbackCompAccs>::callback_ix(
-            computation_offset,
-            &ctx.accounts.mxe_account,
-            &[],
-        )
-        .map_err(|_| ErrorCode::AbortedComputation)?;
-
         queue_computation(
             ctx.accounts,
             computation_offset,
             args,
-            vec![callback_ix],
+            vec![<ComputeDiscCallback as CallbackCompAccs>::callback_ix(
+                computation_offset,
+                &ctx.accounts.mxe_account,
+                &[],
+            )?],
             1,
             0,
-        )
-        .map_err(|_| ErrorCode::AbortedComputation)?;
+        )?;
 
         Ok(())
     }
@@ -110,24 +104,34 @@ pub struct ComputeDisc<'info> {
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
 
-    
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: UncheckedAccount<'info>,
+    pub mxe_account: Account<'info, MXEAccount>,
 
-    
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet),
+    )]
     pub mempool_account: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_exec_pool_pda!(mxe_account, ErrorCode::ClusterNotSet),
+    )]
     pub executing_pool: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet),
+    )]
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet),
+    )]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
@@ -149,11 +153,14 @@ pub struct ComputeDiscCallback<'info> {
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
     #[account(address = derive_mxe_pda!())]
-    pub mxe_account: UncheckedAccount<'info>,
+    pub mxe_account: Account<'info, MXEAccount>,
 
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet),
+    )]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
@@ -167,13 +174,15 @@ pub struct InitComputeDiscCompDef<'info> {
     pub payer: Signer<'info>,
 
     #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: UncheckedAccount<'info>,
+    pub mxe_account: Account<'info, MXEAccount>,
 
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
-    
-    #[account(mut)]
+    #[account(
+        mut,
+        address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot),
+    )]
     pub address_lookup_table: UncheckedAccount<'info>,
 
     #[account(address = LUT_PROGRAM_ID)]
@@ -201,4 +210,4 @@ pub enum ErrorCode {
     ClusterNotSet,
     #[msg("ciphertexts length must be exactly 28")]
     InvalidCiphertextsLen,
-    }
+}
