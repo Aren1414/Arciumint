@@ -1,5 +1,3 @@
-// arcium/disc_mpc/programs/src/lib.rs
-
 use anchor_lang::prelude::*;
 use anchor_lang::{declare_id, emit, require, AnchorDeserialize, AnchorSerialize, Discriminator};
 
@@ -52,18 +50,23 @@ pub mod disc_mpc {
 
         let args = builder.build();
 
+        
+        let callback_ix = <ComputeDiscCallback as CallbackCompAccs>::callback_ix(
+            computation_offset,
+            &ctx.accounts.mxe_account,
+            &[],
+        )
+        .map_err(|_| ErrorCode::AbortedComputation)?;
+
         queue_computation(
             ctx.accounts,
             computation_offset,
             args,
-            vec![<ComputeDiscCallback as CallbackCompAccs>::callback_ix(
-                computation_offset,
-                &ctx.accounts.mxe_account,
-                &[],
-            )?],
+            vec![callback_ix],
             1,
             0,
-        )?;
+        )
+        .map_err(|_| ErrorCode::AbortedComputation)?;
 
         Ok(())
     }
