@@ -32,16 +32,18 @@ jobs:
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
+
           rustup toolchain install nightly --profile minimal
           rustup default nightly
-          rustup component add rustfmt clippy
+          rustup component add rustfmt
+          rustup component add clippy
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana + Anchor
+      - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Arcium
@@ -52,75 +54,90 @@ jobs:
 
       - name: Verify versions
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           rustc --version
           cargo --version
           solana --version
-          anchor --version || true
           arcium --version
 
       - name: Clean caches
         run: |
           rm -rf ~/.arcium
           rm -rf arcium/disc_mpc/.anchor
-          rm -f arcium/disc_mpc/Cargo.lock
           rm -rf arcium/disc_mpc/target
+          rm -f arcium/disc_mpc/Cargo.lock
 
-      - name: Inject CI patch to force versions (idempotent)
+      - name: Inject CI patch
         run: |
           PATCH_MARKER="# BEGIN CI-INJECTED PATCH"
+
           if ! grep -qF "$PATCH_MARKER" arcium/disc_mpc/Cargo.toml; then
+
             cat >> arcium/disc_mpc/Cargo.toml <<'PATCH'
+            # BEGIN CI-INJECTED PATCH
 
-# BEGIN CI-INJECTED PATCH
-[patch.crates-io]
-anchor-lang = { version = "0.32.1" }
-arcium-anchor = { version = "0.10.1" }
-arcium-client = { version = "0.10.1" }
-arcium-macros = { version = "0.10.1" }
-borsh = { version = "0.10.4" }
-# END CI-INJECTED PATCH
+            [patch.crates-io]
+            anchor-lang = { version = "0.32.1" }
+            arcium-anchor = { version = "0.10.1" }
+            arcium-client = { version = "0.10.1" }
+            arcium-macros = { version = "0.10.1" }
+            borsh = { version = "0.10.4" }
 
+            # END CI-INJECTED PATCH
             PATCH
+
             echo "CI patch injected"
+
           else
-            echo "CI patch already present, skipping injection"
+            echo "CI patch already exists"
           fi
 
-      - name: Normalize anchor-lang and borsh in CI and show dependency trees
+      - name: Normalize dependencies
         run: |
           cd arcium/disc_mpc
+
           cargo update -p anchor-lang --precise 0.32.1 || true
           cargo update -p borsh --precise 0.10.4 || true
+
           echo "=== anchor-lang tree ==="
           cargo tree -p anchor-lang || true
+
           echo "=== borsh tree ==="
           cargo tree -p borsh || true
 
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json
+
+          solana-keygen new \
+            --silent \
+            --no-bip39-passphrase \
+            --outfile program-keypair.json
+
           PROGRAM_ID=$(solana address -k program-keypair.json)
+
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
           echo "Generated Program ID: $PROGRAM_ID"
 
       - name: Update Anchor.toml
         run: |
-          sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
+          sed -i \
+            "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
+            arcium/disc_mpc/Anchor.toml
 
-      - name: Update declare_id (handle both forms)
+      - name: Update declare_id
         run: |
-          # handle declare_id!(Address::new("..."))
-          sed -i "s/declare_id!(Address::new(\".*\"))/declare_id!(Address::new(\"$PROGRAM_ID\"))/g" arcium/disc_mpc/programs/src/lib.rs || true
-          # handle declare_id!("...")
-          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs || true
+          find arcium/disc_mpc/programs -name "*.rs" -type f -exec \
+          sed -i \
+          "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
 
-      - name: Build (Docker mode)
+      - name: Build
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           cd arcium/disc_mpc
           arcium build --skip-keys-sync
 
@@ -131,9 +148,11 @@ borsh = { version = "0.10.4" }
 
       - name: Deploy
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           cd arcium/disc_mpc
+
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -143,16 +162,21 @@ borsh = { version = "0.10.4" }
 
       - name: Test deployed program
         run: |
-          source $HOME/.cargo/env
+          source "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           cd arcium/disc_mpc
           arcium test --cluster devnet
 
-      - name: Commit generated files (only build outputs and Anchor.toml)
+      - name: Commit generated files
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          # add only the build outputs and Anchor.toml and program-keypair if present
-          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml program-keypair.json || true
+
+          git add \
+            arcium/disc_mpc/build \
+            arcium/disc_mpc/Anchor.toml \
+            program-keypair.json || true
+
           git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes to commit"
           git push || echo "Push failed"
