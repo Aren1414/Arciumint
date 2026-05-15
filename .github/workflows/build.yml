@@ -87,25 +87,9 @@ jobs:
         run: |
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
 
-      
-      - name: Update declare_id (Address::new)
+      - name: Update declare_id (plain string)
         run: |
-          sed -i "s/declare_id!(Address::new(\".*\"))/declare_id!(Address::new(\"$PROGRAM_ID\"))/g" arcium/disc_mpc/programs/src/lib.rs
-
-      - name: Force nightly in workspace
-        run: |
-          source $HOME/.cargo/env
-          cd arcium/disc_mpc
-          rustup override set nightly
-          rustup show active-toolchain
-          cargo --version
-
-      - name: Clean target
-        run: |
-          cd arcium/disc_mpc
-          rm -rf target
-          rm -rf build
-          cargo clean || true
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
 
       - name: Build (Docker mode)
         run: |
