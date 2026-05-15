@@ -2,11 +2,15 @@ use arcium_anchor::prelude::*;
 use arcium_anchor::traits::CallbackCompAccs;
 use arcium_anchor::LUT_PROGRAM_ID;
 
+use anchor_lang::declare_id;
+use anchor_lang::{AnchorDeserialize, AnchorSerialize, Discriminator, require};
+
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
+// declare_id macro comes from anchor_lang; CI ensures single anchor-lang version
 declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
 
 #[arcium_program]
@@ -51,7 +55,7 @@ pub mod disc_mpc {
             ctx.accounts,
             computation_offset,
             args,
-            vec![ComputeDiscCallback::callback_ix(
+            vec![<ComputeDiscCallback as CallbackCompAccs>::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
                 &[],
@@ -68,8 +72,10 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let ComputeDiscOutput { field_0 } =
-            output.verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)?;
+        
+        let ComputeDiscOutput { field_0 } = output
+            .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
+            .map_err(|_| ErrorCode::AbortedComputation)?;
 
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
@@ -112,7 +118,7 @@ pub struct ComputeDisc<'info> {
 
     #[account(
         mut,
-        address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_exec_pool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
     pub executing_pool: UncheckedAccount<'info>,
 
