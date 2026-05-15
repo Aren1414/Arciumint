@@ -87,7 +87,7 @@ jobs:
         run: |
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
 
-      - name: Update declare_id (plain string)
+      - name: Update declare_id
         run: |
           sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
 
