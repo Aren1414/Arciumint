@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
-use arcium_anchor::prelude::*;
-use arcium_anchor::LUT_PROGRAM_ID;
+#![feature(stmt_expr_attributes)]
+#![feature(trivial_bounds)]
 
+use arcium_anchor::prelude::*;
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
 
@@ -17,7 +17,8 @@ pub mod disc_mpc {
         init_comp_def(
             ctx.accounts,
             Some(CircuitSource::OffChain(OffChainCircuitSource {
-                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis".to_string(),
+                source: "https://raw.githubusercontent.com/Aren1414/Arciumint/main/arcium/disc_mpc/build/compute_disc.arcis"
+                    .to_string(),
                 hash: circuit_hash!("compute_disc"),
             })),
             None,
@@ -112,7 +113,7 @@ pub struct ComputeDisc<'info> {
 
     #[account(
         mut,
-        address = derive_exec_pool_pda!(mxe_account, ErrorCode::ClusterNotSet)
+        address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
     )]
     pub executing_pool: UncheckedAccount<'info>,
 
@@ -154,7 +155,9 @@ pub struct ComputeDiscCallback<'info> {
 
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
+    #[account(
+        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
+    )]
     pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
