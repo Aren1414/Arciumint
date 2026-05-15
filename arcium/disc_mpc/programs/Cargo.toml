@@ -25,9 +25,8 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-
+# pinned versions — CI also enforces these via patch
 anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
-
 
 arcium-client = { version = "0.10.1", default-features = false }
 arcium-anchor = { version = "0.10.1", default-features = false }
@@ -35,5 +34,5 @@ arcium-macros = "0.10.1"
 
 borsh = "0.10.4"
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+[package.metadata]
+# keep metadata minimal
