@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Solana Wallet
         run: |
@@ -56,7 +57,7 @@ jobs:
           rustc --version
           cargo --version
           solana --version
-          anchor --version
+          anchor --version || true
           arcium --version
 
       - name: Clean caches
@@ -66,30 +67,55 @@ jobs:
           rm -f arcium/disc_mpc/Cargo.lock
           rm -rf arcium/disc_mpc/target
 
-      - name: Normalize anchor-lang version in CI
+      - name: Inject CI patch to force versions (idempotent)
+        run: |
+          PATCH_MARKER="# BEGIN CI-INJECTED PATCH"
+          if ! grep -qF "$PATCH_MARKER" arcium/disc_mpc/Cargo.toml; then
+            cat >> arcium/disc_mpc/Cargo.toml <<'PATCH'
+
+# BEGIN CI-INJECTED PATCH
+[patch.crates-io]
+anchor-lang = { version = "0.32.1" }
+arcium-anchor = { version = "0.10.1" }
+arcium-client = { version = "0.10.1" }
+arcium-macros = { version = "0.10.1" }
+borsh = { version = "0.10.4" }
+# END CI-INJECTED PATCH
+
+            PATCH
+            echo "CI patch injected"
+          else
+            echo "CI patch already present, skipping injection"
+          fi
+
+      - name: Normalize anchor-lang and borsh in CI and show dependency trees
         run: |
           cd arcium/disc_mpc
           cargo update -p anchor-lang --precise 0.32.1 || true
+          cargo update -p borsh --precise 0.10.4 || true
+          echo "=== anchor-lang tree ==="
+          cargo tree -p anchor-lang || true
+          echo "=== borsh tree ==="
+          cargo tree -p borsh || true
 
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana-keygen new \
-            --silent \
-            --no-bip39-passphrase \
-            --outfile program-keypair.json
+          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json
           PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Generated Program ID:"
-          echo "$PROGRAM_ID"
+          echo "Generated Program ID: $PROGRAM_ID"
 
       - name: Update Anchor.toml
         run: |
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
 
-      - name: Update declare_id
+      - name: Update declare_id (handle both forms)
         run: |
-          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs
+          # handle declare_id!(Address::new("..."))
+          sed -i "s/declare_id!(Address::new(\".*\"))/declare_id!(Address::new(\"$PROGRAM_ID\"))/g" arcium/disc_mpc/programs/src/lib.rs || true
+          # handle declare_id!("...")
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" arcium/disc_mpc/programs/src/lib.rs || true
 
       - name: Build (Docker mode)
         run: |
@@ -122,10 +148,11 @@ jobs:
           cd arcium/disc_mpc
           arcium test --cluster devnet
 
-      - name: Commit generated files
+      - name: Commit generated files (only build outputs and Anchor.toml)
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add .
-          git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes"
-          git push
+          # add only the build outputs and Anchor.toml and program-keypair if present
+          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml program-keypair.json || true
+          git commit -m "fresh deploy $PROGRAM_ID" || echo "No changes to commit"
+          git push || echo "Push failed"
