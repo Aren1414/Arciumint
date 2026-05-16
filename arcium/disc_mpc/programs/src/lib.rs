@@ -3,25 +3,9 @@
 
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-use borsh::{BorshSerialize, BorshDeserialize};
 use arcium_macros::circuit_hash;
 
 declare_id!("FygFxVHQsikUznYVfGxgue3trkRu1uVyprHAA5BRa9Tr");
-
-
-#[derive(BorshSerialize, BorshDeserialize)]
-pub struct DiscOutput {
-    pub d_score: u8,
-    pub i_score: u8,
-    pub s_score: u8,
-    pub c_score: u8,
-}
-
-
-#[derive(BorshSerialize, BorshDeserialize)]
-pub struct ComputeDiscOutput {
-    pub field_0: DiscOutput,
-}
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -77,19 +61,28 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let ComputeDiscOutput { field_0 } = output
+        
+        let result = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
-        msg!("Scores: D={}, I={}, S={}, C={}", 
-            field_0.d_score, field_0.i_score, field_0.s_score, field_0.c_score);
+        
+       
+        let d_score_cipher = result.ciphertexts[0];
+        let i_score_cipher = result.ciphertexts[1];
+        let s_score_cipher = result.ciphertexts[2];
+        let c_score_cipher = result.ciphertexts[3];
+        let nonce_bytes = result.nonce.to_le_bytes();
 
+        msg!("Computation completed. Encrypted results emitted.");
+        
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
-            d_score: field_0.d_score,
-            i_score: field_0.i_score,
-            s_score: field_0.s_score,
-            c_score: field_0.c_score,
+            d_score_cipher,
+            i_score_cipher,
+            s_score_cipher,
+            c_score_cipher,
+            nonce: nonce_bytes,
         });
 
         Ok(())
@@ -167,10 +160,11 @@ pub struct InitComputeDiscCompDef<'info> {
 #[event]
 pub struct DiscScoresEvent {
     pub computation_account: Pubkey,
-    pub d_score: u8,
-    pub i_score: u8,
-    pub s_score: u8,
-    pub c_score: u8,
+    pub d_score_cipher: [u8; 32],
+    pub i_score_cipher: [u8; 32],
+    pub s_score_cipher: [u8; 32],
+    pub c_score_cipher: [u8; 32],
+    pub nonce: [u8; 16],
 }
 
 #[error_code]
