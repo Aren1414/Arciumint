@@ -7,10 +7,10 @@ resolution = true
 skip-lint = true
 
 [programs.devnet]
-disc_mpc = "BeTs4bmTq2XqodfRXEniy3fqRMD5hpDbwr3m4dZcBayi"
+disc_mpc = "9L66PfcacUy1b3Euh79GE57LPDEk77GR8Vc779eJJr64"
 
 [programs.localnet]
-disc_mpc = "BeTs4bmTq2XqodfRXEniy3fqRMD5hpDbwr3m4dZcBayi"
+disc_mpc = "9L66PfcacUy1b3Euh79GE57LPDEk77GR8Vc779eJJr64"
 
 [registry]
 url = "https://api.apr.dev"
