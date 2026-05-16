@@ -91,7 +91,7 @@ pub mod disc_mpc {
     }
 }
 
-// ساختارهای Accounts (مطابق با الگوی fresh_project، فقط اسم‌ها عوض شده)
+
 #[queue_computation_accounts("compute_disc", payer)]
 #[derive(Accounts)]
 #[instruction(computation_offset: u64)]
