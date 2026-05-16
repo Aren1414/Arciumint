@@ -62,17 +62,17 @@ pub mod disc_mpc {
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
         
-        let result = output
+        let ComputeDiscOutput { field_0 } = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
-
         
-       
-        let d_score_cipher = result.ciphertexts[0];
-        let i_score_cipher = result.ciphertexts[1];
-        let s_score_cipher = result.ciphertexts[2];
-        let c_score_cipher = result.ciphertexts[3];
-        let nonce_bytes = result.nonce.to_le_bytes();
+        
+        
+        let d_score_cipher = field_0.ciphertexts[0];
+        let i_score_cipher = field_0.ciphertexts[1];
+        let s_score_cipher = field_0.ciphertexts[2];
+        let c_score_cipher = field_0.ciphertexts[3];
+        let nonce_bytes = field_0.nonce.to_le_bytes();
 
         msg!("Computation completed. Encrypted results emitted.");
         
@@ -173,4 +173,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
-    }
+            }
