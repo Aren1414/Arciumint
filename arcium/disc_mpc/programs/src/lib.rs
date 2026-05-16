@@ -11,7 +11,7 @@ use arcium_macros::circuit_hash;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
+declare_id!("8cgb2Xo7mbdvQWWpsd5h937HAfogKAXXrwLwZV8hbLTh");
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct DiscOutput {

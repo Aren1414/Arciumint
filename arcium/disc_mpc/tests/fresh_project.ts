@@ -1,7 +1,7 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import * as anchor from "@anchor-lang/core";
+import { Program } from "@anchor-lang/core";
 import { PublicKey } from "@solana/web3.js";
-import { DiscMpc } from "../target/types/disc_mpc";
+import { FreshProject } from "../target/types/fresh_project";
 import { randomBytes } from "crypto";
 import {
   awaitComputationFinalization,
@@ -9,8 +9,8 @@ import {
   getCompDefAccOffset,
   getArciumAccountBaseSeed,
   getArciumProgramId,
+  getArciumProgram,
   uploadCircuit,
-  buildFinalizeCompDefTx,
   RescueCipher,
   deserializeLE,
   getMXEPublicKey,
@@ -20,33 +20,20 @@ import {
   getExecutingPoolAccAddress,
   getComputationAccAddress,
   getClusterAccAddress,
+  getLookupTableAddress,
   x25519,
 } from "@arcium-hq/client";
 import * as fs from "fs";
 import * as os from "os";
 import { expect } from "chai";
 
-// Cluster configuration
-// For localnet testing: null (uses ARCIUM_CLUSTER_PUBKEY from env)
-// For devnet/testnet: specific cluster offset
-const CLUSTER_OFFSET: number | null = null;
-
-/**
- * Gets the cluster account address based on configuration.
- * - If CLUSTER_OFFSET is set: Uses getClusterAccAddress (devnet/testnet)
- * - If null: Uses getArciumEnv().arciumClusterOffset (localnet)
- */
-function getClusterAccount(): PublicKey {
-  const offset = CLUSTER_OFFSET ?? getArciumEnv().arciumClusterOffset;
-  return getClusterAccAddress(offset);
-}
-
-describe("DiscMpc", () => {
+describe("FreshProject", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace
-    .DiscMpc as Program<DiscMpc>;
+    .FreshProject as Program<FreshProject>;
   const provider = anchor.getProvider();
+  const arciumProgram = getArciumProgram(provider as anchor.AnchorProvider);
 
   type Event = anchor.IdlEvents<(typeof program)["idl"]>;
   const awaitEvent = async <E extends keyof Event>(
@@ -64,18 +51,13 @@ describe("DiscMpc", () => {
   };
 
   const arciumEnv = getArciumEnv();
-  const clusterAccount = getClusterAccount();
+  const clusterAccount = getClusterAccAddress(arciumEnv.arciumClusterOffset);
 
   it("Is initialized!", async () => {
     const owner = readKpJson(`${os.homedir()}/.config/solana/id.json`);
 
     console.log("Initializing add together computation definition");
-    const initATSig = await initAddTogetherCompDef(
-      program,
-      owner,
-      false,
-      false,
-    );
+    const initATSig = await initAddTogetherCompDef(program, owner);
     console.log(
       "Add together computation definition initialized with signature",
       initATSig,
@@ -145,10 +127,8 @@ describe("DiscMpc", () => {
   });
 
   async function initAddTogetherCompDef(
-    program: Program<DiscMpc>,
+    program: Program<FreshProject>,
     owner: anchor.web3.Keypair,
-    uploadRawCircuit: boolean,
-    offchainSource: boolean,
   ): Promise<string> {
     const baseSeedCompDefAcc = getArciumAccountBaseSeed(
       "ComputationDefinitionAccount",
@@ -162,12 +142,20 @@ describe("DiscMpc", () => {
 
     console.log("Comp def pda is ", compDefPDA);
 
+    const mxeAccount = getMXEAccAddress(program.programId);
+    const mxeAcc = await arciumProgram.account.mxeAccount.fetch(mxeAccount);
+    const lutAddress = getLookupTableAddress(
+      program.programId,
+      mxeAcc.lutOffsetSlot,
+    );
+
     const sig = await program.methods
       .initAddTogetherCompDef()
       .accounts({
         compDefAccount: compDefPDA,
         payer: owner.publicKey,
-        mxeAccount: getMXEAccAddress(program.programId),
+        mxeAccount,
+        addressLookupTable: lutAddress,
       })
       .signers([owner])
       .rpc({
@@ -175,31 +163,21 @@ describe("DiscMpc", () => {
       });
     console.log("Init add together computation definition transaction", sig);
 
-    if (uploadRawCircuit) {
-      const rawCircuit = fs.readFileSync("build/add_together.arcis");
+    const rawCircuit = fs.readFileSync("build/add_together.arcis");
+    await uploadCircuit(
+      provider as anchor.AnchorProvider,
+      "add_together",
+      program.programId,
+      rawCircuit,
+      true,
+      500,
+      {
+        skipPreflight: true,
+        preflightCommitment: "confirmed",
+        commitment: "confirmed",
+      },
+    );
 
-      await uploadCircuit(
-        provider as anchor.AnchorProvider,
-        "add_together",
-        program.programId,
-        rawCircuit,
-        true,
-      );
-    } else if (!offchainSource) {
-      const finalizeTx = await buildFinalizeCompDefTx(
-        provider as anchor.AnchorProvider,
-        Buffer.from(offset).readUInt32LE(),
-        program.programId,
-      );
-
-      const latestBlockhash = await provider.connection.getLatestBlockhash();
-      finalizeTx.recentBlockhash = latestBlockhash.blockhash;
-      finalizeTx.lastValidBlockHeight = latestBlockhash.lastValidBlockHeight;
-
-      finalizeTx.sign(owner);
-
-      await provider.sendAndConfirm(finalizeTx);
-    }
     return sig;
   }
 });
