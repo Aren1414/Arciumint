@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_macros::circuit_hash;
@@ -63,7 +61,7 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let output_struct = output
+        let _output_struct = output
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
