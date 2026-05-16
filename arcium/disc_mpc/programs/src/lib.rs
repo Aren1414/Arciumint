@@ -4,6 +4,7 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_anchor::LUT_PROGRAM_ID;
+use borsh::{BorshSerialize, BorshDeserialize};
 
 use arcium_client::idl::arcium::types::{CircuitSource, OffChainCircuitSource};
 use arcium_macros::circuit_hash;
@@ -11,6 +12,22 @@ use arcium_macros::circuit_hash;
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
+
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct DiscOutput {
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
+}
+
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct ComputeDiscOutput {
+    pub field_0: DiscOutput,
+}
+// =======================================================
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -75,13 +92,16 @@ pub mod disc_mpc {
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
+        
+        msg!("Scores: D={}, I={}, S={}, C={}", 
+            field_0.d_score, field_0.i_score, field_0.s_score, field_0.c_score);
+
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
-            d_score_cipher: field_0.ciphertexts[0],
-            i_score_cipher: field_0.ciphertexts[1],
-            s_score_cipher: field_0.ciphertexts[2],
-            c_score_cipher: field_0.ciphertexts[3],
-            nonce: field_0.nonce.to_le_bytes(),
+            d_score: field_0.d_score,
+            i_score: field_0.i_score,
+            s_score: field_0.s_score,
+            c_score: field_0.c_score,
         });
 
         Ok(())
@@ -195,11 +215,10 @@ pub struct InitComputeDiscCompDef<'info> {
 #[event]
 pub struct DiscScoresEvent {
     pub computation_account: Pubkey,
-    pub d_score_cipher: [u8; 32],
-    pub i_score_cipher: [u8; 32],
-    pub s_score_cipher: [u8; 32],
-    pub c_score_cipher: [u8; 32],
-    pub nonce: [u8; 16],
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
 }
 
 #[error_code]
