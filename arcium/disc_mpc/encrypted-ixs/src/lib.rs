@@ -4,16 +4,15 @@ use arcis::*;
 mod circuits {
     use arcis::*;
 
-    
+    pub struct DiscInput {
+        pub answers: [u8; 28],
+    }
+
     pub struct DiscOutput {
         pub d_score: u8,
         pub i_score: u8,
         pub s_score: u8,
         pub c_score: u8,
-    }
-
-    pub struct DiscInput {
-        pub answers: [u8; 28],
     }
 
     #[instruction]
