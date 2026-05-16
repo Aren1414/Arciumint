@@ -15,14 +15,6 @@ opt-level = 3
 incremental = false
 codegen-units = 1
 
-
 [patch.crates-io]
-
 anchor-lang = { git = "https://github.com/coral-xyz/anchor", tag = "v0.32.1" }
-
-
-borsh = "=1.6.1"
-borsh-derive = "=1.6.1"
-
-
-solana-program = { git = "https://github.com/solana-labs/solana", tag = "v1.18.17" }
+solana-program = { git = "https://github.com/solana-labs/solana", tag = "v2.3.0" }
