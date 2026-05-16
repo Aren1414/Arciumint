@@ -29,10 +29,29 @@ jobs:
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+      - name: Switch Solana to version 2.3.0
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana-install update 2.3.0
+          solana --version
+
+      - name: Install Anchor CLI 0.32.1
+        run: |
+          cargo install --locked anchor-cli --version 0.32.1
+          anchor --version
+
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Add dependency patches to Cargo.toml
+        run: |
+          cd arcium/disc_mpc
+          # Add patch section if not already present
+          if ! grep -q "\[patch.crates-io\]" Cargo.toml; then
+            echo -e "\n[patch.crates-io]\nanchor-lang = \"0.32.1\"\nborsh = \"0.10.4\"\nborsh-derive = \"0.10.4\"\nsolana-program = \"1.18.11\"" >> Cargo.toml
+          fi
 
       - name: Generate Program ID
         run: |
