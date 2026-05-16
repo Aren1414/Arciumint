@@ -19,15 +19,20 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust and Solana 2.3.0
+      - name: Install Rust and Solana
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source "$HOME/.cargo/env"
           rustup toolchain install nightly --profile minimal
           rustup default nightly
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          sh -c "$(curl -sSfL https://release.solana.com/v2.3.0/install)"
+          curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Update Solana to version 2.3.0
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana-install update 2.3.0
           solana --version
 
       - name: Install Anchor CLI 0.32.1
