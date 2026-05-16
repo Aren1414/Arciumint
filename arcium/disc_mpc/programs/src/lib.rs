@@ -13,7 +13,6 @@ const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("DhTtJLxGddjgxi8qGbX2scdTHoaf2XCa89GNjfSWtazJ");
 
-
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct DiscOutput {
     pub d_score: u8,
@@ -22,12 +21,10 @@ pub struct DiscOutput {
     pub c_score: u8,
 }
 
-
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct ComputeDiscOutput {
     pub field_0: DiscOutput,
 }
-// =======================================================
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -92,7 +89,6 @@ pub mod disc_mpc {
             .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
-        
         msg!("Scores: D={}, I={}, S={}, C={}", 
             field_0.d_score, field_0.i_score, field_0.s_score, field_0.c_score);
 
@@ -114,7 +110,6 @@ pub mod disc_mpc {
 pub struct ComputeDisc<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
     #[account(
         init_if_needed,
         space = 9,
@@ -124,43 +119,22 @@ pub struct ComputeDisc<'info> {
         address = derive_sign_pda!(),
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
-
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
-
-    #[account(
-        mut,
-        address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(mut, address = derive_mempool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub mempool_account: UncheckedAccount<'info>,
-
-    #[account(
-        mut,
-        address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(mut, address = derive_execpool_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub executing_pool: UncheckedAccount<'info>,
-
-    #[account(
-        mut,
-        address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account, ErrorCode::ClusterNotSet))]
     pub computation_account: UncheckedAccount<'info>,
-
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
-
-    #[account(
-        mut,
-        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(mut, address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
-
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
     pub pool_account: Account<'info, FeePool>,
-
     #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
     pub clock_account: Account<'info, ClockAccount>,
-
     pub system_program: Program<'info, System>,
     pub arcium_program: Program<'info, Arcium>,
 }
@@ -169,20 +143,13 @@ pub struct ComputeDisc<'info> {
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
-
     #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
-
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
-
     pub computation_account: UncheckedAccount<'info>,
-
-    #[account(
-        address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet)
-    )]
+    #[account(address = derive_cluster_pda!(mxe_account, ErrorCode::ClusterNotSet))]
     pub cluster_account: Account<'info, Cluster>,
-
     #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions_sysvar: AccountInfo<'info>,
 }
@@ -192,22 +159,14 @@ pub struct ComputeDiscCallback<'info> {
 pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
     #[account(mut, address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
-
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
-
-    #[account(
-        mut,
-        address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
-    )]
+    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
     pub address_lookup_table: UncheckedAccount<'info>,
-
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
-
     pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
 }
