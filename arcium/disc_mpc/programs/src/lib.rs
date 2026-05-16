@@ -3,9 +3,25 @@
 
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use borsh::{BorshSerialize, BorshDeserialize};
 use arcium_macros::circuit_hash;
 
 declare_id!("FygFxVHQsikUznYVfGxgue3trkRu1uVyprHAA5BRa9Tr");
+
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct DiscOutput {
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
+}
+
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct ComputeDiscOutput {
+    pub field_0: DiscOutput,
+}
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -31,13 +47,17 @@ pub mod disc_mpc {
         ciphertexts: Vec<[u8; 32]>,
     ) -> Result<()> {
         require!(ciphertexts.len() == 28, ErrorCode::InvalidCiphertextsLen);
+
         let mut builder = ArgBuilder::new()
             .x25519_pubkey(pubkey)
             .plaintext_u128(nonce);
+
         for ct in ciphertexts {
             builder = builder.encrypted_u8(ct);
         }
+
         let args = builder.build();
+
         queue_computation(
             ctx.accounts,
             computation_offset,
@@ -57,24 +77,25 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let o = match output.verify_output(
-            &ctx.accounts.cluster_account,
-            &ctx.accounts.computation_account,
-        ) {
-            Ok(ComputeDiscOutput { field_0 }) => field_0,
-            Err(_) => return Err(ErrorCode::AbortedComputation.into()),
-        };
-        msg!("Scores: D={}, I={}, S={}, C={}", o.d_score, o.i_score, o.s_score, o.c_score);
+        let ComputeDiscOutput { field_0 } = output
+            .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
+            .map_err(|_| ErrorCode::AbortedComputation)?;
+
+        msg!("Scores: D={}, I={}, S={}, C={}", 
+            field_0.d_score, field_0.i_score, field_0.s_score, field_0.c_score);
+
         emit!(DiscScoresEvent {
             computation_account: ctx.accounts.computation_account.key(),
-            d_score: o.d_score,
-            i_score: o.i_score,
-            s_score: o.s_score,
-            c_score: o.c_score,
+            d_score: field_0.d_score,
+            i_score: field_0.i_score,
+            s_score: field_0.s_score,
+            c_score: field_0.c_score,
         });
+
         Ok(())
     }
 }
+
 
 #[queue_computation_accounts("compute_disc", payer)]
 #[derive(Accounts)]
@@ -158,4 +179,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
-}
+    }
