@@ -1,11 +1,10 @@
 use arcis::*;
-use borsh::{BorshSerialize, BorshDeserialize};
 
 #[encrypted]
 mod circuits {
     use arcis::*;
 
-    #[derive(BorshSerialize, BorshDeserialize)]
+    
     pub struct DiscOutput {
         pub d_score: u8,
         pub i_score: u8,
@@ -20,7 +19,6 @@ mod circuits {
     #[instruction]
     pub fn compute_disc(input_ctxt: Enc<Shared, DiscInput>) -> Enc<Shared, DiscOutput> {
         let input = input_ctxt.to_arcis();
-
         let mut d = 0u8;
         let mut i = 0u8;
         let mut s = 0u8;
