@@ -9,19 +9,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-      RUSTUP_TOOLCHAIN: nightly
-      CARGO_UNSTABLE_EDITION2024: "1"
-      ARCIUM_DOCKER: "1"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
 
       - name: Setup Solana Wallet
         run: |
@@ -29,34 +19,17 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust
-        run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-
-          rustup toolchain install nightly --profile minimal
-          rustup default nightly
-          rustup component add rustfmt
-          rustup component add clippy
-
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Install Solana
-        run: |
-          curl -sSfL https://solana-install.solana.workers.dev | bash
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Install Arcium
-        run: |
-          curl -sSfL https://install.arcium.com/ | bash
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Setup Arcium
+        uses: arcium-hq/setup-arcium@v0.9.3
+        with:
+          runner-arch-os: x86_64_linux
+          arcium-version: "0.10.1"      
+          anchor-version: "1.0.1"       
+          solana-cli-version: "3.1.15"  
 
       - name: Verify versions
         run: |
-          source "$HOME/.cargo/env"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           rustc --version
           cargo --version
           solana --version
@@ -64,55 +37,20 @@ jobs:
 
       - name: Generate Program ID
         run: |
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
-          solana-keygen new \
-            --silent \
-            --no-bip39-passphrase \
-            --outfile program-keypair.json \
-            --force
-
+          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json --force
           PROGRAM_ID=$(solana address -k program-keypair.json)
-
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Generated Program ID: $PROGRAM_ID"
-
-      - name: Update Anchor.toml
-        run: |
-          sed -i \
-            "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
-            arcium/disc_mpc/Anchor.toml
-
-      - name: Update declare_id
-        run: |
-          while IFS= read -r file; do
-            sed -i \
-              "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
-              "$file"
-          done < <(find arcium/disc_mpc/programs -name "*.rs" -type f)
+          sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" arcium/disc_mpc/Anchor.toml
+          find arcium/disc_mpc/programs -name "*.rs" -type f -exec sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
 
       - name: Build
         run: |
-          source "$HOME/.cargo/env"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          export ANCHOR_VERSION="0.32.1"
-
           cd arcium/disc_mpc
           arcium build --skip-keys-sync
 
-      - name: Verify artifacts
-        run: |
-          test -f arcium/disc_mpc/build/compute_disc.arcis
-          test -f arcium/disc_mpc/build/compute_disc.hash
-
       - name: Deploy
         run: |
-          source "$HOME/.cargo/env"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          export ANCHOR_VERSION="0.32.1"
-
           cd arcium/disc_mpc
-
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -123,10 +61,8 @@ jobs:
 
       - name: Test deployed program
         run: |
-          source "$HOME/.cargo/env"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           cd arcium/disc_mpc
+          sudo prlimit --pid $$ --nofile=1048576:1048576
           arcium test --cluster devnet
 
       - name: Commit generated files
@@ -134,11 +70,6 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-
-          git add \
-            arcium/disc_mpc/build \
-            arcium/disc_mpc/Anchor.toml \
-            program-keypair.json 2>/dev/null || true
-
+          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml program-keypair.json 2>/dev/null || true
           git commit -m "fresh deploy $PROGRAM_ID" 2>/dev/null || echo "No changes to commit"
           git push 2>/dev/null || echo "Push failed"
