@@ -1,6 +1,7 @@
 [package]
 name = "disc_mpc"
 version = "0.1.0"
+description = "Created with Arcium & Anchor"
 edition = "2021"
 
 [lib]
@@ -19,7 +20,15 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = "0.32.1"
-arcium-client = "0.10.1"
-arcium-macros = "0.10.1"
-arcium-anchor = "0.10.1"
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+arcium-client = { default-features = false, version = "=0.10.1" }
+arcium-macros = "=0.10.1"
+arcium-anchor = "=0.10.1"
+# pin to avoid 1.13.*
+unicode-segmentation = { version = "=1.12.0"}
+# pin to avoid edition 2024 issues
+hashbrown = { version = "=0.16.1"}
+indexmap = { version = "=2.13.1"}
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
