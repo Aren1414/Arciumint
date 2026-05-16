@@ -69,7 +69,8 @@ jobs:
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
-            --outfile program-keypair.json
+            --outfile program-keypair.json \
+            --force
 
           PROGRAM_ID=$(solana address -k program-keypair.json)
 
