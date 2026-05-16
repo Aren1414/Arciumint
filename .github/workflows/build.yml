@@ -34,32 +34,6 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Backup current code
-        run: |
-          mkdir -p /tmp/backup/encrypted-ixs
-          mkdir -p /tmp/backup/programs
-          cp -r arcium/disc_mpc/encrypted-ixs/* /tmp/backup/encrypted-ixs/ 2>/dev/null || true
-          cp -r arcium/disc_mpc/programs/* /tmp/backup/programs/ 2>/dev/null || true
-          echo "Backup completed"
-
-      - name: Create fresh Arcium project
-        run: |
-          rm -rf arcium/disc_mpc
-          mkdir -p arcium/disc_mpc
-          cd arcium/disc_mpc
-          arcium init fresh_project
-          
-          mv fresh_project/* ./
-          mv fresh_project/.* ./. 2>/dev/null || true
-          rm -rf fresh_project
-
-      - name: Restore custom code
-        run: |
-          
-          cp -r /tmp/backup/encrypted-ixs/* arcium/disc_mpc/encrypted-ixs/ 2>/dev/null || true
-          cp -r /tmp/backup/programs/* arcium/disc_mpc/programs/ 2>/dev/null || true
-          echo "Custom code restored"
-
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
@@ -90,6 +64,6 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add arcium/disc_mpc/ program-keypair.json 2>/dev/null || true
+          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml program-keypair.json 2>/dev/null || true
           git commit -m "fresh deploy $PROGRAM_ID" 2>/dev/null || echo "No changes to commit"
           git push 2>/dev/null || echo "Push failed"
