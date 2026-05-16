@@ -34,19 +34,6 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Create temporary symlink to fool Anchor
-        run: |
-          cd arcium/disc_mpc/programs
-          # Anchor expects programs/<program_name>/src/lib.rs
-          # We create a symlink from programs/disc_mpc/src to programs/src
-          mkdir -p disc_mpc
-          ln -s ../src disc_mpc/src
-          # Also link Cargo.toml
-          ln -s ../Cargo.toml disc_mpc/Cargo.toml
-          # Update workspace Cargo.toml to point to new path
-          cd ..
-          sed -i 's|"programs"|"programs/disc_mpc"|' Cargo.toml
-
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
@@ -71,15 +58,6 @@ jobs:
         run: |
           cd arcium/disc_mpc
           arcium test --cluster devnet
-
-      - name: Remove temporary symlink (no changes to your repo)
-        if: always()
-        run: |
-          cd arcium/disc_mpc/programs
-          rm -f disc_mpc/src disc_mpc/Cargo.toml
-          rmdir disc_mpc 2>/dev/null || true
-          cd ..
-          sed -i 's|"programs/disc_mpc"|"programs"|' Cargo.toml
 
       - name: Commit generated files
         if: always()
