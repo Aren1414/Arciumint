@@ -7,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-disc_mpc = "2e3ducTpkJVpd1EQVn8458WmRe6SsLwjU6CDCDKESefu"
+disc_mpc = "BbtWjFrcKQmqSZJfFnL7JvrtZvwtFSj6U7Fx5MrSqEgi"
 
 [provider]
 cluster = "localnet"
