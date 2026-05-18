@@ -1,9 +1,17 @@
-use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use borsh::{BorshSerialize, BorshDeserialize};
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
+
+#[derive(AnchorSerialize, AnchorDeserialize, BorshSerialize, BorshDeserialize, Clone, Debug)]
+pub struct ComputeDiscOutput {
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
+}
 
 #[arcium_program]
 pub mod disc_mpc {
