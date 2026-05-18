@@ -9,7 +9,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,12 +29,10 @@ jobs:
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Arcium CLI + Correct Anchor CLI
+      - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          avm install 0.32.1
-          avm use 0.32.1
 
       - name: Generate Program ID
         run: |
