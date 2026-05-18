@@ -1,18 +1,15 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-use borsh::{BorshSerialize, BorshDeserialize};
+use ::borsh::{BorshSerialize, BorshDeserialize};
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
 
-#[derive(AnchorSerialize, AnchorDeserialize, BorshSerialize, BorshDeserialize, Clone, Debug)]
-pub struct ComputeDiscOutput {
-    pub d_score: u8,
-    pub i_score: u8,
-    pub s_score: u8,
-    pub c_score: u8,
-}
+// ComputeDiscOutput 
+// #[callback_accounts("compute_disc")]
+// alias/struct 
+// SignedComputationOutputs<ComputeDiscOutput> 
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -61,6 +58,7 @@ pub mod disc_mpc {
             1,
             0,
         )?;
+
         Ok(())
     }
 
@@ -88,6 +86,7 @@ pub mod disc_mpc {
 pub struct ComputeDisc<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
         init_if_needed,
         space = 9,
@@ -97,44 +96,53 @@ pub struct ComputeDisc<'info> {
         address = derive_sign_pda!(),
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+
     #[account(
         address = derive_mxe_pda!()
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
+
     #[account(
         mut,
         address = derive_mempool_pda!(mxe_account)
     )]
     pub mempool_account: UncheckedAccount<'info>,
+
     #[account(
         mut,
         address = derive_execpool_pda!(mxe_account)
     )]
     pub executing_pool: UncheckedAccount<'info>,
+
     #[account(
         mut,
         address = derive_comp_pda!(computation_offset, mxe_account)
     )]
     pub computation_account: UncheckedAccount<'info>,
+
     #[account(
         address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
     )]
     pub comp_def_account: Box<Account<'info, ComputationDefinitionAccount>>,
+
     #[account(
         mut,
         address = derive_cluster_pda!(mxe_account)
     )]
     pub cluster_account: Box<Account<'info, Cluster>>,
+
     #[account(
         mut,
         address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS,
     )]
     pub pool_account: Account<'info, FeePool>,
+
     #[account(
         mut,
         address = ARCIUM_CLOCK_ACCOUNT_ADDRESS
     )]
     pub clock_account: Account<'info, ClockAccount>,
+
     pub system_program: Program<'info, System>,
     pub arcium_program: Program<'info, Arcium>,
 }
@@ -143,19 +151,24 @@ pub struct ComputeDisc<'info> {
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
+
     #[account(
         address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
     )]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
     #[account(
         address = derive_mxe_pda!()
     )]
     pub mxe_account: Account<'info, MXEAccount>,
+
     pub computation_account: UncheckedAccount<'info>,
+
     #[account(
         address = derive_cluster_pda!(mxe_account)
     )]
     pub cluster_account: Account<'info, Cluster>,
+
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -165,20 +178,25 @@ pub struct ComputeDiscCallback<'info> {
 pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
         mut,
         address = derive_mxe_pda!()
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
+
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
+
     #[account(
         mut,
         address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
     )]
     pub address_lookup_table: UncheckedAccount<'info>,
+
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
+
     pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
 }
