@@ -1,3 +1,4 @@
+use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_macros::circuit_hash;
 
