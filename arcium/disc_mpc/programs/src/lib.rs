@@ -1,4 +1,3 @@
-use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use arcium_macros::circuit_hash;
 
@@ -8,7 +7,9 @@ declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
 pub mod disc_mpc {
     use super::*;
 
-    pub fn init_compute_disc_comp_def(ctx: Context<InitComputeDiscCompDef>) -> Result<()> {
+    pub fn init_compute_disc_comp_def(
+        ctx: Context<InitComputeDiscCompDef>,
+    ) -> Result<()> {
         init_comp_def(
             ctx.accounts,
             Some(arcium_client::idl::arcium::types::CircuitSource::OffChain(
@@ -29,7 +30,10 @@ pub mod disc_mpc {
         nonce: u128,
         ciphertexts: Vec<[u8; 32]>,
     ) -> Result<()> {
-        require!(ciphertexts.len() == 28, ErrorCode::InvalidCiphertextsLen);
+        require!(
+            ciphertexts.len() == 28,
+            ErrorCode::InvalidCiphertextsLen
+        );
 
         let mut builder = ArgBuilder::new()
             .x25519_pubkey(pubkey)
@@ -61,7 +65,10 @@ pub mod disc_mpc {
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
         let _result = output
-            .verify_output(&ctx.accounts.cluster_account, &ctx.accounts.computation_account)
+            .verify_output(
+                &ctx.accounts.cluster_account,
+                &ctx.accounts.computation_account,
+            )
             .map_err(|_| ErrorCode::AbortedComputation)?;
 
         msg!("Computation completed successfully.");
@@ -76,6 +83,7 @@ pub mod disc_mpc {
 pub struct ComputeDisc<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
         init_if_needed,
         space = 9,
@@ -85,25 +93,34 @@ pub struct ComputeDisc<'info> {
         address = derive_sign_pda!(),
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
+
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
+
     #[account(mut, address = derive_mempool_pda!(mxe_account))]
-    /// CHECK: This account's address is verified by the derive_mempool_pda! macro.
+    /// CHECK:
     pub mempool_account: UncheckedAccount<'info>,
+
     #[account(mut, address = derive_execpool_pda!(mxe_account))]
-    /// CHECK: This account's address is verified by the derive_execpool_pda! macro.
+    /// CHECK:
     pub executing_pool: UncheckedAccount<'info>,
+
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account))]
-    /// CHECK: This account's address is verified by the derive_comp_pda! macro.
+    /// CHECK:
     pub computation_account: UncheckedAccount<'info>,
+
     #[account(address = derive_comp_def_pda!(comp_def_offset("compute_disc")))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
     #[account(mut, address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Account<'info, Cluster>,
+
     #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
     pub pool_account: Account<'info, FeePool>,
+
     #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
     pub clock_account: Account<'info, ClockAccount>,
+
     pub system_program: Program<'info, System>,
     pub arcium_program: Program<'info, Arcium>,
 }
@@ -112,17 +129,22 @@ pub struct ComputeDisc<'info> {
 #[derive(Accounts)]
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
+
     #[account(address = derive_comp_def_pda!(comp_def_offset("compute_disc")))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
+
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
-    /// CHECK: This account's address is verified by the computation itself.
+
+    /// CHECK:
     pub computation_account: UncheckedAccount<'info>,
+
     #[account(address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Account<'info, Cluster>,
-    #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
-    /// CHECK: This account's address is verified by the account constraint.
-    pub instructions_sysvar: UncheckedAccount<'info>,
+
+    #[account(address = ::anchor_lang::solana_program::sysvar::instructions::ID)]
+    /// CHECK:
+    pub instructions_sysvar: AccountInfo<'info>,
 }
 
 #[init_computation_definition_accounts("compute_disc", payer)]
@@ -130,17 +152,22 @@ pub struct ComputeDiscCallback<'info> {
 pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(mut, address = derive_mxe_pda!())]
-    pub mxe_account: Account<'info, MXEAccount>,
+    pub mxe_account: Box<Account<'info, MXEAccount>>,
+
     #[account(mut)]
-    /// CHECK: This account is initialized by the Arcium program.
+    /// CHECK:
     pub comp_def_account: UncheckedAccount<'info>,
+
     #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
-    /// CHECK: This account's address is verified by the derive_mxe_lut_pda! macro.
+    /// CHECK:
     pub address_lookup_table: UncheckedAccount<'info>,
+
     #[account(address = LUT_PROGRAM_ID)]
-    /// CHECK: This account's address is the fixed LUT program ID.
+    /// CHECK:
     pub lut_program: UncheckedAccount<'info>,
+
     pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
 }
@@ -149,6 +176,7 @@ pub struct InitComputeDiscCompDef<'info> {
 pub enum ErrorCode {
     #[msg("The computation was aborted")]
     AbortedComputation,
+
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
     }
