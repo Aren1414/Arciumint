@@ -1,5 +1,5 @@
 [toolchain]
-anchor_version = "0.32.1"
+anchor_version = "1.0.1"
 package_manager = "yarn"
 
 [features]
@@ -7,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-disc_mpc = "2z2EF41bt5p5nZfXSgjGGMEmA6SrZ3T8XCYNhiP37tUo"
+disc_mpc = "D2htrQLXYafb7vcLcw2QGXDXLXiM1RZB9W25CSkB9JWo"
 
 [provider]
 cluster = "localnet"
