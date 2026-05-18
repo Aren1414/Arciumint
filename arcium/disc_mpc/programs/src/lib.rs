@@ -1,18 +1,13 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-use ::borsh::{BorshSerialize, BorshDeserialize};
+
+
+use anchor_lang::prelude::borsh;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
 
-#[derive(AnchorSerialize, AnchorDeserialize, BorshSerialize, BorshDeserialize, Clone, Debug)]
-pub struct ComputeDiscOutput {
-    pub d_score: u8,
-    pub i_score: u8,
-    pub s_score: u8,
-    pub c_score: u8,
-}
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -67,6 +62,8 @@ pub mod disc_mpc {
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
         ctx: Context<ComputeDiscCallback>,
+        
+    
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
         let _o = match output.verify_output(
@@ -232,4 +229,4 @@ mod solana_getrandom_shim {
     }
 
     getrandom::register_custom_getrandom!(solana_getrandom);
-    }
+      }
