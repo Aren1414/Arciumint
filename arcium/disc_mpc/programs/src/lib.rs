@@ -1,3 +1,4 @@
+use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 use borsh::{BorshSerialize, BorshDeserialize};
 
@@ -104,19 +105,16 @@ pub struct ComputeDisc<'info> {
         mut,
         address = derive_mempool_pda!(mxe_account)
     )]
-    /// CHECK: mempool_account, checked by the arcium program.
     pub mempool_account: UncheckedAccount<'info>,
     #[account(
         mut,
         address = derive_execpool_pda!(mxe_account)
     )]
-    /// CHECK: executing_pool, checked by the arcium program.
     pub executing_pool: UncheckedAccount<'info>,
     #[account(
         mut,
         address = derive_comp_pda!(computation_offset, mxe_account)
     )]
-    /// CHECK: computation_account, checked by the arcium program.
     pub computation_account: UncheckedAccount<'info>,
     #[account(
         address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
@@ -153,15 +151,12 @@ pub struct ComputeDiscCallback<'info> {
         address = derive_mxe_pda!()
     )]
     pub mxe_account: Account<'info, MXEAccount>,
-    /// CHECK: computation_account, checked by arcium program via constraints in the callback
-    /// context.
     pub computation_account: UncheckedAccount<'info>,
     #[account(
         address = derive_cluster_pda!(mxe_account)
     )]
     pub cluster_account: Account<'info, Cluster>,
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
-    /// CHECK: instructions_sysvar, checked by the account constraint
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
 
@@ -176,17 +171,13 @@ pub struct InitComputeDiscCompDef<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
     #[account(mut)]
-    /// CHECK: comp_def_account, checked by arcium program.
-    /// Can't check it here as it's not initialized yet.
     pub comp_def_account: UncheckedAccount<'info>,
     #[account(
         mut,
         address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
     )]
-    /// CHECK: address_lookup_table, checked by arcium program.
     pub address_lookup_table: UncheckedAccount<'info>,
     #[account(address = LUT_PROGRAM_ID)]
-    /// CHECK: lut_program is the Address Lookup Table program.
     pub lut_program: UncheckedAccount<'info>,
     pub arcium_program: Program<'info, Arcium>,
     pub system_program: Program<'info, System>,
