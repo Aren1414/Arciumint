@@ -1,9 +1,18 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use ::borsh::{BorshSerialize, BorshDeserialize};
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
+
+#[derive(AnchorSerialize, AnchorDeserialize, BorshSerialize, BorshDeserialize, Clone, Debug)]
+pub struct ComputeDiscOutput {
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
+}
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -23,7 +32,10 @@ pub mod disc_mpc {
         nonce: u128,
         ciphertexts: Vec<[u8; 32]>,
     ) -> Result<()> {
-        require!(ciphertexts.len() == 28, ErrorCode::InvalidCiphertextsLen);
+        require!(
+            ciphertexts.len() == 28,
+            ErrorCode::InvalidCiphertextsLen
+        );
 
         ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
@@ -49,7 +61,6 @@ pub mod disc_mpc {
             1,
             0,
         )?;
-
         Ok(())
     }
 
@@ -58,10 +69,13 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let _verified = output.verify_output(
+        let _o = match output.verify_output(
             &ctx.accounts.cluster_account,
             &ctx.accounts.computation_account,
-        ).map_err(|_| ErrorCode::AbortedComputation)?;
+        ) {
+            Ok(o) => o,
+            Err(_) => return Err(ErrorCode::AbortedComputation.into()),
+        };
 
         msg!("Computation completed successfully.");
         Ok(())
@@ -85,31 +99,53 @@ pub struct ComputeDisc<'info> {
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
 
-    #[account(address = derive_mxe_pda!())]
+    #[account(
+        address = derive_mxe_pda!()
+    )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK: validated by Arcium program
-    #[account(mut, address = derive_mempool_pda!(mxe_account))]
+    /// CHECK: Mempool PDA is validated by Arcium runtime; we only pass it through.
+    #[account(
+        mut,
+        address = derive_mempool_pda!(mxe_account)
+    )]
     pub mempool_account: UncheckedAccount<'info>,
 
-    /// CHECK: validated by Arcium program
-    #[account(mut, address = derive_execpool_pda!(mxe_account))]
+    /// CHECK: Exec pool PDA is validated by Arcium runtime; we only pass it through.
+    #[account(
+        mut,
+        address = derive_execpool_pda!(mxe_account)
+    )]
     pub executing_pool: UncheckedAccount<'info>,
 
-    /// CHECK: validated by Arcium program
-    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account))]
+    /// CHECK: Computation PDA is derived and validated by Arcium; no extra checks needed here.
+    #[account(
+        mut,
+        address = derive_comp_pda!(computation_offset, mxe_account)
+    )]
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
+    #[account(
+        address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
+    )]
     pub comp_def_account: Box<Account<'info, ComputationDefinitionAccount>>,
 
-    #[account(mut, address = derive_cluster_pda!(mxe_account))]
+    #[account(
+        mut,
+        address = derive_cluster_pda!(mxe_account)
+    )]
     pub cluster_account: Box<Account<'info, Cluster>>,
 
-    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
+    #[account(
+        mut,
+        address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS,
+    )]
     pub pool_account: Account<'info, FeePool>,
 
-    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
+    #[account(
+        mut,
+        address = ARCIUM_CLOCK_ACCOUNT_ADDRESS
+    )]
     pub clock_account: Account<'info, ClockAccount>,
 
     pub system_program: Program<'info, System>,
@@ -121,19 +157,25 @@ pub struct ComputeDisc<'info> {
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
 
-    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
+    #[account(
+        address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
+    )]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(address = derive_mxe_pda!())]
+    #[account(
+        address = derive_mxe_pda!()
+    )]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK: validated by Arcium program
+    /// CHECK: Computation account is only read by Arcium verification logic.
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(address = derive_cluster_pda!(mxe_account))]
+    #[account(
+        address = derive_cluster_pda!(mxe_account)
+    )]
     pub cluster_account: Account<'info, Cluster>,
 
-    /// CHECK: sysvar is fixed ID
+    /// CHECK: This is the Solana instructions sysvar; Arcium validates it internally.
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -144,18 +186,24 @@ pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(mut, address = derive_mxe_pda!())]
+    #[account(
+        mut,
+        address = derive_mxe_pda!()
+    )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK: created by Arcium
+    /// CHECK: Created/initialized by Arcium helper; we only pass it to init_computation_def.
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
-    /// CHECK: validated by Arcium
-    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
+    /// CHECK: LUT PDA is derived and validated by Arcium; no extra checks needed here.
+    #[account(
+        mut,
+        address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
+    )]
     pub address_lookup_table: UncheckedAccount<'info>,
 
-    /// CHECK: fixed program ID
+    /// CHECK: This is the LUT program id; constant well-known program.
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
@@ -169,4 +217,19 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
+}
+
+// ---------- getrandom shim for sbpf / Solana test target ----------
+
+#[cfg(target_os = "solana")]
+mod solana_getrandom_shim {
+    use getrandom::Error;
+
+    // We never actually call getrandom on-chain; this is only to satisfy
+    // dependencies that pull in `getrandom` for the sbpf target.
+    fn solana_getrandom(_buf: &mut [u8]) -> Result<(), Error> {
+        Err(Error::UNSUPPORTED)
+    }
+
+    getrandom::register_custom_getrandom!(solana_getrandom);
     }
