@@ -1,4 +1,13 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    account,
+    declare_id,
+    error_code,
+    instruction,
+    msg,
+    prelude::AccountInfo,
+    Accounts,
+};
+
 use arcium_anchor::prelude::*;
 use arcium_macros::circuit_hash;
 
@@ -180,4 +189,4 @@ pub enum ErrorCode {
 
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
-    }
+}
