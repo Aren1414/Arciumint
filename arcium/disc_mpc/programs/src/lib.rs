@@ -6,10 +6,13 @@ const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
 
-// ComputeDiscOutput 
-// #[callback_accounts("compute_disc")]
-// alias/struct 
-// SignedComputationOutputs<ComputeDiscOutput> 
+#[derive(AnchorSerialize, AnchorDeserialize, BorshSerialize, BorshDeserialize, Clone, Debug)]
+pub struct ComputeDiscOutput {
+    pub d_score: u8,
+    pub i_score: u8,
+    pub s_score: u8,
+    pub c_score: u8,
+}
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -50,7 +53,7 @@ pub mod disc_mpc {
             ctx.accounts,
             computation_offset,
             args,
-            vec![ComputeDiscCallback::callback_ix(
+            vec![ComputeDiscCallbackAccounts::callback_ix(
                 computation_offset,
                 &ctx.accounts.mxe_account,
                 &[],
@@ -58,13 +61,12 @@ pub mod disc_mpc {
             1,
             0,
         )?;
-
         Ok(())
     }
 
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
-        ctx: Context<ComputeDiscCallback>,
+        ctx: Context<ComputeDiscCallbackAccounts>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
         let _o = match output.verify_output(
@@ -102,18 +104,21 @@ pub struct ComputeDisc<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: PDA is fully constrained by `derive_mempool_pda!(mxe_account)` and only used as a raw account.
     #[account(
         mut,
         address = derive_mempool_pda!(mxe_account)
     )]
     pub mempool_account: UncheckedAccount<'info>,
 
+    /// CHECK: PDA is fully constrained by `derive_execpool_pda!(mxe_account)` and only used as a raw account.
     #[account(
         mut,
         address = derive_execpool_pda!(mxe_account)
     )]
     pub executing_pool: UncheckedAccount<'info>,
 
+    /// CHECK: PDA is fully constrained by `derive_comp_pda!(computation_offset, mxe_account)` and only used as a raw account.
     #[account(
         mut,
         address = derive_comp_pda!(computation_offset, mxe_account)
@@ -149,7 +154,7 @@ pub struct ComputeDisc<'info> {
 
 #[callback_accounts("compute_disc")]
 #[derive(Accounts)]
-pub struct ComputeDiscCallback<'info> {
+pub struct ComputeDiscCallbackAccounts<'info> {
     pub arcium_program: Program<'info, Arcium>,
 
     #[account(
@@ -162,6 +167,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: This account is derived by `derive_comp_pda!` and only passed to Arcium for verification.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(
@@ -169,6 +175,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub cluster_account: Account<'info, Cluster>,
 
+    /// CHECK: Instructions sysvar is constrained by its fixed ID and only read as a sysvar.
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -185,15 +192,18 @@ pub struct InitComputeDiscCompDef<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: This account is created/initialized by the `init_computation_definition_accounts` macro.
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
+    /// CHECK: Address is constrained by `derive_mxe_lut_pda!(mxe_account.lut_offset_slot)` and used as LUT account.
     #[account(
         mut,
         address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
     )]
     pub address_lookup_table: UncheckedAccount<'info>,
 
+    /// CHECK: Program id is constrained to `LUT_PROGRAM_ID` and only used as a program handle.
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
