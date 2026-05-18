@@ -20,7 +20,7 @@ custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "1.0.1", features = ["init-if-needed"] }
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
 arcium-client = { default-features = false, version = "=0.10.1" }
 arcium-macros = "=0.10.1"
 arcium-anchor = "=0.10.1"
@@ -30,6 +30,9 @@ unicode-segmentation = { version = "=1.12.0" }
 # pin to avoid edition 2024 issues
 hashbrown = { version = "=0.16.1" }
 indexmap = { version = "=2.13.1" }
+
+# Force getrandom into "custom" mode so sbpf target doesn't hit compile_error!
+getrandom = { version = "0.2.17", features = ["custom"], default-features = false }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
