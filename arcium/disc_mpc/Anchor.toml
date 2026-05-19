@@ -7,19 +7,16 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-disc_mpc = "HaoP3DwezWJ6C3dRfsj5Y2h9e74jZ7tfFXZM2bYKDQba"
+disc_mpc = "G2fprfmEkZWR5ySSUq8PKRLUqAJa6v9akyrHC8VYTHWK"
 
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
+[workspace]
+members = ["programs", "encrypted-ixs"]
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
 
 [hooks]
-
-[workspace]
-members = [
-    "programs",
-    "encrypted-ixs"
-]
