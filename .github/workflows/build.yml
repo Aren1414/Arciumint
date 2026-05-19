@@ -64,7 +64,6 @@ jobs:
             "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
             Anchor.toml
 
-          
           sed -i \
             "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
             programs/src/lib.rs
@@ -73,6 +72,7 @@ jobs:
         run: |
           cd arcium/disc_mpc
           mkdir -p target/deploy
+          
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
 
       - name: Generate Cargo.lock
