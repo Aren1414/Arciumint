@@ -64,6 +64,7 @@ jobs:
             "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
             Anchor.toml
 
+          
           sed -i \
             "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
             programs/src/lib.rs
