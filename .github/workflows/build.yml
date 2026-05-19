@@ -17,7 +17,9 @@ jobs:
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
+
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+
           chmod 600 ~/.config/solana/id.json
 
       - name: Install Rust
@@ -92,7 +94,7 @@ jobs:
         run: |
           cd arcium/disc_mpc
 
-          arcium build
+          arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
