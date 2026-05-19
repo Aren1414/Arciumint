@@ -39,10 +39,8 @@ unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-# Solana/SBPF compatibility
+# Solana / SBPF compatibility
 getrandom = { version = "0.2.17", features = ["custom"] }
 
 [lints.rust]
-unexpected_cfgs = { 
-    level = "warn",
-    check-cfg = ['cfg(target_os, values("solana"))']}
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
