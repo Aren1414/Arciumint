@@ -24,27 +24,22 @@ jobs:
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source "$HOME/.cargo/env"
-
           rustup default stable
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
-
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Verify Versions
         run: |
           source "$HOME/.cargo/env"
-
           rustc --version
           cargo --version
           solana --version
@@ -54,7 +49,6 @@ jobs:
       - name: Generate Program ID
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           cd arcium/disc_mpc
 
           solana-keygen new \
@@ -64,47 +58,41 @@ jobs:
             --force
 
           PROGRAM_ID=$(solana address -k program-keypair.json)
-
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
           sed -i \
             "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" \
             Anchor.toml
 
-          find programs -name "*.rs" -type f \
-            -exec sed -i \
-            "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
+          
+          sed -i \
+            "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" \
+            programs/src/lib.rs
 
       - name: Sync Anchor Keypair
         run: |
           cd arcium/disc_mpc
-
           mkdir -p target/deploy
-
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
 
       - name: Generate Cargo.lock
         run: |
           cd arcium/disc_mpc
-
           cargo generate-lockfile
 
       - name: Clean Cargo Cache
         run: |
           cd arcium/disc_mpc
-
           cargo clean
 
       - name: Build
         run: |
           cd arcium/disc_mpc
-
           arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
           cd arcium/disc_mpc
-
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -116,14 +104,12 @@ jobs:
       - name: Test
         run: |
           cd arcium/disc_mpc
-
           arcium test --cluster devnet
 
       - name: Commit generated files
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
           git config --global user.name "github-actions[bot]"
 
           git add \
