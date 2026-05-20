@@ -41,9 +41,10 @@ unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-# ONLY for Solana target
-[target.'cfg(target_os = "solana")'.dependencies]
-getrandom = { version = "0.2.17", features = ["custom"] }
+# IMPORTANT:
+# Do NOT disable default-features globally
+# Host builds need normal getrandom backend
+getrandom = "0.2.17"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
