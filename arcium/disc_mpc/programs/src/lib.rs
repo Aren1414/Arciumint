@@ -23,10 +23,7 @@ pub mod disc_mpc {
         nonce: u128,
         ciphertexts: Vec<[u8; 32]>,
     ) -> Result<()> {
-        require!(
-            ciphertexts.len() == 28,
-            ErrorCode::InvalidCiphertextsLen
-        );
+        require!(ciphertexts.len() == 28, ErrorCode::InvalidCiphertextsLen);
 
         ctx.accounts.sign_pda_account.bump = ctx.bumps.sign_pda_account;
 
@@ -52,6 +49,7 @@ pub mod disc_mpc {
             1,
             0,
         )?;
+
         Ok(())
     }
 
@@ -60,15 +58,11 @@ pub mod disc_mpc {
         ctx: Context<ComputeDiscCallback>,
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
-        let _o = match output.verify_output(
+        let _ = output.verify_output(
             &ctx.accounts.cluster_account,
             &ctx.accounts.computation_account,
-        ) {
-            Ok(o) => o,
-            Err(_) => return Err(ErrorCode::AbortedComputation.into()),
-        };
+        )?;
 
-        msg!("Computation completed successfully.");
         Ok(())
     }
 }
@@ -90,53 +84,28 @@ pub struct ComputeDisc<'info> {
     )]
     pub sign_pda_account: Account<'info, ArciumSignerAccount>,
 
-    #[account(
-        address = derive_mxe_pda!()
-    )]
+    #[account(address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK: Mempool PDA 
-    #[account(
-        mut,
-        address = derive_mempool_pda!(mxe_account)
-    )]
+    #[account(mut, address = derive_mempool_pda!(mxe_account))]
     pub mempool_account: UncheckedAccount<'info>,
 
-    /// CHECK: Exec pool PDA 
-    #[account(
-        mut,
-        address = derive_execpool_pda!(mxe_account)
-    )]
+    #[account(mut, address = derive_execpool_pda!(mxe_account))]
     pub executing_pool: UncheckedAccount<'info>,
 
-    /// CHECK: Computation PDA 
-    #[account(
-        mut,
-        address = derive_comp_pda!(computation_offset, mxe_account)
-    )]
+    #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account))]
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(
-        address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
-    )]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Box<Account<'info, ComputationDefinitionAccount>>,
 
-    #[account(
-        mut,
-        address = derive_cluster_pda!(mxe_account)
-    )]
+    #[account(mut, address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Box<Account<'info, Cluster>>,
 
-    #[account(
-        mut,
-        address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS,
-    )]
+    #[account(mut, address = ARCIUM_FEE_POOL_ACCOUNT_ADDRESS)]
     pub pool_account: Account<'info, FeePool>,
 
-    #[account(
-        mut,
-        address = ARCIUM_CLOCK_ACCOUNT_ADDRESS
-    )]
+    #[account(mut, address = ARCIUM_CLOCK_ACCOUNT_ADDRESS)]
     pub clock_account: Account<'info, ClockAccount>,
 
     pub system_program: Program<'info, System>,
@@ -148,25 +117,17 @@ pub struct ComputeDisc<'info> {
 pub struct ComputeDiscCallback<'info> {
     pub arcium_program: Program<'info, Arcium>,
 
-    #[account(
-        address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC)
-    )]
+    #[account(address = derive_comp_def_pda!(COMP_DEF_OFFSET_COMPUTE_DISC))]
     pub comp_def_account: Account<'info, ComputationDefinitionAccount>,
 
-    #[account(
-        address = derive_mxe_pda!()
-    )]
+    #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK: Computation account 
     pub computation_account: UncheckedAccount<'info>,
 
-    #[account(
-        address = derive_cluster_pda!(mxe_account)
-    )]
+    #[account(address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Account<'info, Cluster>,
 
-    /// CHECK: 
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -177,24 +138,15 @@ pub struct InitComputeDiscCompDef<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(
-        mut,
-        address = derive_mxe_pda!()
-    )]
+    #[account(mut, address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK: 
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
-    /// CHECK: LUT PDA 
-    #[account(
-        mut,
-        address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
-    )]
+    #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
     pub address_lookup_table: UncheckedAccount<'info>,
 
-    /// CHECK: 
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
@@ -210,19 +162,6 @@ pub enum ErrorCode {
     InvalidCiphertextsLen,
 }
 
-// ---------- getrandom shim for HOST (fixes cargo test) ----------
-#[cfg(not(target_os = "solana"))]
-mod host_getrandom_shim {
-    use getrandom::Error;
-
-    fn host_getrandom(_buf: &mut [u8]) -> Result<(), Error> {
-        Err(Error::UNSUPPORTED)
-    }
-
-    getrandom::register_custom_getrandom!(host_getrandom);
-}
-
-// ---------- getrandom shim for SBPF ----------
 #[cfg(target_os = "solana")]
 mod solana_getrandom_shim {
     use getrandom::Error;
@@ -232,4 +171,4 @@ mod solana_getrandom_shim {
     }
 
     getrandom::register_custom_getrandom!(solana_getrandom);
-    }
+}
