@@ -122,7 +122,7 @@ pub struct ComputeDisc<'info> {
         mut,
         address = derive_cluster_pda!(mxe_account)
     )]
-    pub cluster_account: Box<Account<'info, Cluster>,
+    pub cluster_account: Box<Account<'info, Cluster>>,
 
     #[account(
         mut,
@@ -155,6 +155,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: Computation account is only read by Arcium verification logic.
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(
@@ -162,6 +163,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub cluster_account: Account<'info, Cluster>,
 
+    /// CHECK: This is the Solana instructions sysvar; Arcium validates it internally.
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -178,15 +180,18 @@ pub struct InitComputeDiscCompDef<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: Created/initialized by Arcium helper; we only pass it to init_computation_def.
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
+    /// CHECK: LUT PDA is derived and validated by Arcium; no extra checks needed here.
     #[account(
         mut,
         address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
     )]
     pub address_lookup_table: UncheckedAccount<'info>,
 
+    /// CHECK: This is the LUT program id; constant well-known program.
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
