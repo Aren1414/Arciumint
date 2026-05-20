@@ -168,12 +168,3 @@ pub enum ErrorCode {
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
 }
-
-#[cfg(target_os = "solana")]
-mod solana_getrandom_shim {
-    use getrandom::Error;
-    fn solana_getrandom(_buf: &mut [u8]) -> Result<(), Error> {
-        Err(Error::UNSUPPORTED)
-    }
-    getrandom::register_custom_getrandom!(solana_getrandom);
-    }
