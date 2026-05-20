@@ -1,11 +1,11 @@
+#![cfg(not(test))]
+
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
 declare_id!("B43AmAinEGxWB7DW9ubjsJUqgWvm28ZBQuthMqqVtthk");
-
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -60,8 +60,6 @@ pub mod disc_mpc {
     #[arcium_callback(encrypted_ix = "compute_disc")]
     pub fn compute_disc_callback(
         ctx: Context<ComputeDiscCallback>,
-        
-    
         output: SignedComputationOutputs<ComputeDiscOutput>,
     ) -> Result<()> {
         let _o = match output.verify_output(
@@ -168,7 +166,7 @@ pub struct ComputeDiscCallback<'info> {
     #[account(
         address = derive_cluster_pda!(mxe_account)
     )]
-    pub cluster_account: Account<'info, Cluster>,
+    pub cluster_account: Account<'info, Cluster>>,
 
     /// CHECK: This is the Solana instructions sysvar; Arcium validates it internally.
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
@@ -215,7 +213,6 @@ pub enum ErrorCode {
 }
 
 // ---------- getrandom shim for sbpf / Solana test target ----------
-
 #[cfg(target_os = "solana")]
 mod solana_getrandom_shim {
     use getrandom::Error;
@@ -227,4 +224,4 @@ mod solana_getrandom_shim {
     }
 
     getrandom::register_custom_getrandom!(solana_getrandom);
-      }
+    }
