@@ -38,8 +38,8 @@ unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-# ONLY FIX YOU REQUESTED
-getrandom = { version = "0.2.17", features = ["custom"] }
+# FIXED: host + sbf + sbfv2 all use custom backend
+getrandom = { version = "0.2.17", default-features = false, features = ["custom"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
