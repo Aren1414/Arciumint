@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
+use crate::__client_accounts_compute_disc_callback::ComputeDiscCallback as _; 
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
@@ -95,18 +96,21 @@ pub struct ComputeDisc<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: Mempool PDA 
     #[account(
         mut,
         address = derive_mempool_pda!(mxe_account)
     )]
     pub mempool_account: UncheckedAccount<'info>,
 
+    /// CHECK: Exec pool PDA 
     #[account(
         mut,
         address = derive_execpool_pda!(mxe_account)
     )]
     pub executing_pool: UncheckedAccount<'info>,
 
+    /// CHECK: Computation PDA 
     #[account(
         mut,
         address = derive_comp_pda!(computation_offset, mxe_account)
@@ -155,7 +159,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub mxe_account: Account<'info, MXEAccount>,
 
-    /// CHECK: Computation account is only read by Arcium verification logic.
+    /// CHECK: Computation account 
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(
@@ -163,7 +167,7 @@ pub struct ComputeDiscCallback<'info> {
     )]
     pub cluster_account: Account<'info, Cluster>,
 
-    /// CHECK: This is the Solana instructions sysvar; Arcium validates it internally.
+    /// CHECK: 
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -180,18 +184,18 @@ pub struct InitComputeDiscCompDef<'info> {
     )]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
-    /// CHECK: Created/initialized by Arcium helper; we only pass it to init_computation_def.
+    /// CHECK: 
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
-    /// CHECK: LUT PDA is derived and validated by Arcium; no extra checks needed here.
+    /// CHECK: LUT PDA 
     #[account(
         mut,
         address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot)
     )]
     pub address_lookup_table: UncheckedAccount<'info>,
 
-    /// CHECK: This is the LUT program id; constant well-known program.
+    
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
