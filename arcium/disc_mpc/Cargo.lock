@@ -1602,7 +1602,6 @@ dependencies = [
  "arcium-anchor",
  "arcium-client",
  "arcium-macros",
- "getrandom 0.2.17",
  "hashbrown 0.16.1",
  "indexmap 2.13.1",
  "unicode-segmentation",
