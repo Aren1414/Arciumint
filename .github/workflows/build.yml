@@ -17,37 +17,29 @@ jobs:
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
-
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
-
           chmod 600 ~/.config/solana/id.json
 
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-
           source "$HOME/.cargo/env"
-
           rustup default stable
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Solana
         run: |
           curl -sSfL https://solana-install.solana.workers.dev | bash
-
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Verify Versions
         run: |
           source "$HOME/.cargo/env"
-
           rustc --version
           cargo --version
           solana --version
@@ -57,11 +49,8 @@ jobs:
       - name: Prepare Program Keypair
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           cd arcium/disc_mpc
-
           mkdir -p target/deploy
-
           rm -f target/deploy/disc_mpc-keypair.json
           rm -f program-keypair.json
 
@@ -74,7 +63,6 @@ jobs:
           cp target/deploy/disc_mpc-keypair.json program-keypair.json
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
-
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
           echo "Generated Program ID:"
@@ -83,20 +71,19 @@ jobs:
       - name: Sync Anchor Program IDs
         run: |
           cd arcium/disc_mpc
-
           anchor keys sync
-
           echo "Anchor.toml program id:"
           grep disc_mpc Anchor.toml
-
           echo "Rust declare_id:"
           grep -R "declare_id!" programs
 
       - name: Configure Cargo for SBPF
         run: |
           mkdir -p ~/.cargo
-
           cat > ~/.cargo/config.toml << 'EOF'
+          [target.sbfv2-solana-solana]
+          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
+
           [target.sbf-solana-solana]
           rustflags = ["--cfg", "getrandom_backend=\"custom\""]
           EOF
@@ -104,21 +91,17 @@ jobs:
       - name: Generate Cargo.lock
         run: |
           cd arcium/disc_mpc
-
           cargo generate-lockfile
 
       - name: Clean Build Cache
         run: |
           cd arcium/disc_mpc
-
           cargo clean
 
       - name: Build
         run: |
           cd arcium/disc_mpc
-
           mkdir -p target/deploy
-
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
 
           echo "Build keypair:"
@@ -129,7 +112,6 @@ jobs:
       - name: Deploy
         run: |
           cd arcium/disc_mpc
-
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -141,14 +123,12 @@ jobs:
       - name: Test
         run: |
           cd arcium/disc_mpc
-
           arcium test --cluster devnet
 
       - name: Commit generated files
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
           git config --global user.name "github-actions[bot]"
 
           git add \
