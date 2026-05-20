@@ -54,15 +54,16 @@ jobs:
           anchor --version
           arcium --version
 
-      - name: Generate Program ID
+      - name: Prepare Program Keypair
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           cd arcium/disc_mpc
 
-          rm -rf target/deploy
-
           mkdir -p target/deploy
+
+          rm -f target/deploy/disc_mpc-keypair.json
+          rm -f program-keypair.json
 
           solana-keygen new \
             --silent \
@@ -76,12 +77,20 @@ jobs:
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
-          echo "Generated Program ID: $PROGRAM_ID"
+          echo "Generated Program ID:"
+          echo "$PROGRAM_ID"
+
+      - name: Sync Anchor Program IDs
+        run: |
+          cd arcium/disc_mpc
 
           anchor keys sync
 
-          echo "Final Anchor Program ID:"
+          echo "Anchor.toml program id:"
           grep disc_mpc Anchor.toml
+
+          echo "Rust declare_id:"
+          grep -R "declare_id!" programs
 
       - name: Generate Cargo.lock
         run: |
@@ -89,30 +98,24 @@ jobs:
 
           cargo generate-lockfile
 
-      - name: Clean Cargo Cache
+      - name: Clean Build Cache
         run: |
           cd arcium/disc_mpc
 
           cargo clean
 
-      - name: Prepare Canonical Keypair
-        run: |
-          cd arcium/disc_mpc
-
-          rm -f target/deploy/*.json
-
-          cp program-keypair.json target/deploy/disc_mpc-keypair.json
-
-          echo "Canonical keypair:"
-          solana address -k target/deploy/disc_mpc-keypair.json
-
       - name: Build
         run: |
           cd arcium/disc_mpc
 
-          arcium build \
-            --skip-keys-sync \
-            --ignore-keys
+          mkdir -p target/deploy
+
+          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+
+          echo "Build keypair:"
+          solana address -k target/deploy/disc_mpc-keypair.json
+
+          arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
