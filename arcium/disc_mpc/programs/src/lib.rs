@@ -62,7 +62,6 @@ pub mod disc_mpc {
             &ctx.accounts.cluster_account,
             &ctx.accounts.computation_account,
         )?;
-
         Ok(())
     }
 }
@@ -87,12 +86,15 @@ pub struct ComputeDisc<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: validated by Arcium runtime
     #[account(mut, address = derive_mempool_pda!(mxe_account))]
     pub mempool_account: UncheckedAccount<'info>,
 
+    /// CHECK: validated by Arcium runtime
     #[account(mut, address = derive_execpool_pda!(mxe_account))]
     pub executing_pool: UncheckedAccount<'info>,
 
+    /// CHECK: validated by Arcium runtime
     #[account(mut, address = derive_comp_pda!(computation_offset, mxe_account))]
     pub computation_account: UncheckedAccount<'info>,
 
@@ -123,11 +125,13 @@ pub struct ComputeDiscCallback<'info> {
     #[account(address = derive_mxe_pda!())]
     pub mxe_account: Account<'info, MXEAccount>,
 
+    /// CHECK: read-only, validated by Arcium
     pub computation_account: UncheckedAccount<'info>,
 
     #[account(address = derive_cluster_pda!(mxe_account))]
     pub cluster_account: Account<'info, Cluster>,
 
+    /// CHECK: system sysvar
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
 }
@@ -141,12 +145,15 @@ pub struct InitComputeDiscCompDef<'info> {
     #[account(mut, address = derive_mxe_pda!())]
     pub mxe_account: Box<Account<'info, MXEAccount>>,
 
+    /// CHECK: created by Arcium helper
     #[account(mut)]
     pub comp_def_account: UncheckedAccount<'info>,
 
+    /// CHECK: validated by Arcium runtime
     #[account(mut, address = derive_mxe_lut_pda!(mxe_account.lut_offset_slot))]
     pub address_lookup_table: UncheckedAccount<'info>,
 
+    /// CHECK: constant program ID
     #[account(address = LUT_PROGRAM_ID)]
     pub lut_program: UncheckedAccount<'info>,
 
@@ -165,10 +172,8 @@ pub enum ErrorCode {
 #[cfg(target_os = "solana")]
 mod solana_getrandom_shim {
     use getrandom::Error;
-
     fn solana_getrandom(_buf: &mut [u8]) -> Result<(), Error> {
         Err(Error::UNSUPPORTED)
     }
-
     getrandom::register_custom_getrandom!(solana_getrandom);
-}
+    }
