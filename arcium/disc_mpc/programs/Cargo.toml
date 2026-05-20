@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "disc_mpc"
+test = false
+bench = false
+doctest = false
 
 [features]
 default = []
@@ -28,8 +31,7 @@ unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-# getrandom on unsupported target: use official "unsupported" backend
-getrandom = { version = "0.2.17", default-features = false, features = ["unsupported"] }
+getrandom = "0.2.17"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
