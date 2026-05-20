@@ -70,17 +70,6 @@ jobs:
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Configure Cargo for SBPF
-        run: |
-          mkdir -p ~/.cargo
-          cat > ~/.cargo/config.toml << 'EOF'
-          [target.sbf-solana-solana]
-          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
-
-          [target.sbfv2-solana-solana]
-          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
-          EOF
-
       - name: Generate Cargo.lock
         run: |
           cd arcium/disc_mpc
