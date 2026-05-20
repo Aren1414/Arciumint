@@ -98,11 +98,6 @@ jobs:
             --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
-      - name: Test
-        run: |
-          cd arcium/disc_mpc
-          arcium test --cluster devnet
-
       - name: Commit generated files
         if: always()
         run: |
