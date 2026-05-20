@@ -96,7 +96,12 @@ jobs:
         run: |
           cd arcium/disc_mpc
 
-          arcium build --skip-keys-sync
+          anchor build --skip-lint
+
+          arcium build \
+            --skip-keys-sync \
+            --ignore-keys
+  
 
       - name: Deploy
         run: |
