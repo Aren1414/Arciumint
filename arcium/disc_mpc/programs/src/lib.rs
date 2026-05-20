@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
-use crate::__client_accounts_compute_disc_callback::ComputeDiscCallback;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
