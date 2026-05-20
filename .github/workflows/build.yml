@@ -65,26 +65,19 @@ jobs:
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
-          echo "Generated Program ID:"
-          echo "$PROGRAM_ID"
-
       - name: Sync Anchor Program IDs
         run: |
           cd arcium/disc_mpc
           anchor keys sync
-          echo "Anchor.toml program id:"
-          grep disc_mpc Anchor.toml
-          echo "Rust declare_id:"
-          grep -R "declare_id!" programs
 
       - name: Configure Cargo for SBPF
         run: |
           mkdir -p ~/.cargo
           cat > ~/.cargo/config.toml << 'EOF'
-          [target.sbfv2-solana-solana]
+          [target.sbf-solana-solana]
           rustflags = ["--cfg", "getrandom_backend=\"custom\""]
 
-          [target.sbf-solana-solana]
+          [target.sbfv2-solana-solana]
           rustflags = ["--cfg", "getrandom_backend=\"custom\""]
           EOF
 
@@ -103,10 +96,6 @@ jobs:
           cd arcium/disc_mpc
           mkdir -p target/deploy
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
-
-          echo "Build keypair:"
-          solana address -k target/deploy/disc_mpc-keypair.json
-
           arcium build --skip-keys-sync
 
       - name: Deploy
