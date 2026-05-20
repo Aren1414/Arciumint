@@ -28,23 +28,18 @@ custom-panic = []
 
 [dependencies]
 
-# MUST match installed Anchor CLI
 anchor-lang = { version = "1.0.1", features = ["init-if-needed"] }
 
-# MUST match installed Arcium CLI
 arcium-client = { version = "=0.10.2", default-features = false }
 arcium-macros = "=0.10.2"
 arcium-anchor = "=0.10.2"
 
-# dependency pins
 unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-# IMPORTANT:
-# Do NOT disable default-features globally
-# Host builds need normal getrandom backend
-getrandom = "0.2.17"
+# ONLY FIX YOU REQUESTED
+getrandom = { version = "0.2.17", features = ["custom"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
