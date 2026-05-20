@@ -122,7 +122,7 @@ pub struct ComputeDisc<'info> {
         mut,
         address = derive_cluster_pda!(mxe_account)
     )]
-    pub cluster_account: Box<Account<'info, Cluster>>,
+    pub cluster_account: Box<Account<'info, Cluster>,
 
     #[account(
         mut,
@@ -160,7 +160,7 @@ pub struct ComputeDiscCallback<'info> {
     #[account(
         address = derive_cluster_pda!(mxe_account)
     )]
-    pub cluster_account: Account<'info, Cluster>>,
+    pub cluster_account: Account<'info, Cluster>,
 
     #[account(address = ::arcium_anchor::solana_instructions_sysvar::ID)]
     pub instructions_sysvar: UncheckedAccount<'info>,
