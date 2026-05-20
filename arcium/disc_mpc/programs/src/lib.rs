@@ -167,4 +167,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
-}
+    }
