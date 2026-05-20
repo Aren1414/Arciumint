@@ -60,17 +60,19 @@ jobs:
 
           cd arcium/disc_mpc
 
-          solana-keygen new \
-            --silent \
-            --no-bip39-passphrase \
-            --outfile program-keypair.json \
-            --force
+          rm -rf target/deploy
 
           mkdir -p target/deploy
 
-          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+          solana-keygen new \
+            --silent \
+            --no-bip39-passphrase \
+            --outfile target/deploy/disc_mpc-keypair.json \
+            --force
 
-          PROGRAM_ID=$(solana address -k program-keypair.json)
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
+
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
@@ -105,7 +107,7 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair program-keypair.json \
+            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
       - name: Test
