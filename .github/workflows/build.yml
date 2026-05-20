@@ -80,6 +80,9 @@ jobs:
 
           anchor keys sync
 
+          echo "Final Anchor Program ID:"
+          grep disc_mpc Anchor.toml
+
       - name: Generate Cargo.lock
         run: |
           cd arcium/disc_mpc
@@ -92,16 +95,24 @@ jobs:
 
           cargo clean
 
+      - name: Prepare Canonical Keypair
+        run: |
+          cd arcium/disc_mpc
+
+          rm -f target/deploy/*.json
+
+          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+
+          echo "Canonical keypair:"
+          solana address -k target/deploy/disc_mpc-keypair.json
+
       - name: Build
         run: |
           cd arcium/disc_mpc
 
-          anchor build --skip-lint
-
           arcium build \
             --skip-keys-sync \
             --ignore-keys
-  
 
       - name: Deploy
         run: |
