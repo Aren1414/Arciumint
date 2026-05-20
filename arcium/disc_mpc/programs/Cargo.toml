@@ -28,7 +28,7 @@ unicode-segmentation = "=1.12.0"
 hashbrown = "=0.16.1"
 indexmap = "=2.13.1"
 
-getrandom = { version = "0.2.17", default-features = false, features = ["custom"] }
+getrandom = "0.2.17"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
