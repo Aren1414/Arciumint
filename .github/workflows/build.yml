@@ -10,11 +10,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      
-      RUSTFLAGS: ""
-
     steps:
+      - name: Install system dependencies (FIX libc headers)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libc6-dev \
+            gcc \
+            g++ \
+            libssl-dev
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -41,7 +48,7 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor CLI
+      - name: Fix Anchor Version Sync
         run: |
           cargo install --locked anchor-cli --version 1.0.2 || true
 
@@ -60,6 +67,9 @@ jobs:
 
           cd arcium/disc_mpc
           mkdir -p target/deploy
+
+          rm -f target/deploy/disc_mpc-keypair.json
+          rm -f program-keypair.json
 
           solana-keygen new \
             --silent \
