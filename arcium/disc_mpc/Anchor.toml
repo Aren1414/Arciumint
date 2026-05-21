@@ -1,5 +1,5 @@
 [toolchain]
-anchor_version = "1.0.1"
+anchor_version = "1.0.2"
 package_manager = "yarn"
 
 [features]
@@ -10,7 +10,7 @@ skip-lint = false
 disc_mpc = "8pr35YALWraf5YeziE6KkKbnv1sQC8wgbbnoyMPXYhhf"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
