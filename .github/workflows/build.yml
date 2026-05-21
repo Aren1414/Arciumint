@@ -40,10 +40,9 @@ jobs:
       - name: Verify Versions
         run: |
           source "$HOME/.cargo/env"
+
           rustc --version
           cargo --version
-          rustc -vV
-          rustup target list --installed
           solana --version
           anchor --version
           arcium --version
@@ -82,8 +81,6 @@ jobs:
           cargo clean
 
       - name: Build
-        env:
-          RUSTFLAGS: '--cfg getrandom_backend="unsupported"'
         run: |
           cd arcium/disc_mpc
 
@@ -115,6 +112,7 @@ jobs:
           git add \
             arcium/disc_mpc/build \
             arcium/disc_mpc/Anchor.toml \
+            arcium/disc_mpc/Arcium.toml \
             arcium/disc_mpc/program-keypair.json \
             arcium/disc_mpc/Cargo.lock \
             arcium/disc_mpc/target/deploy \
