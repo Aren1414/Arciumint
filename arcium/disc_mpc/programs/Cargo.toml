@@ -29,7 +29,7 @@ arcium-anchor = "=0.10.2"
 unicode-segmentation = "=1.12.0"
 
 
-getrandom = { version = "0.2.17", features = ["custom"] }
+getrandom = { version = "0.2.17", default-features = false }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
