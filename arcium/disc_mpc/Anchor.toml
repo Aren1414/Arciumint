@@ -9,6 +9,9 @@ skip-lint = false
 [programs.localnet]
 disc_mpc = "8pr35YALWraf5YeziE6KkKbnv1sQC8wgbbnoyMPXYhhf"
 
+[programs.devnet]
+disc_mpc = "8pr35YALWraf5YeziE6KkKbnv1sQC8wgbbnoyMPXYhhf"
+
 [provider]
 cluster = "devnet"
 wallet = "~/.config/solana/id.json"
