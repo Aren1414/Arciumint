@@ -18,12 +18,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libc6-dev \
-            clang \
-            llvm
+            build-essential pkg-config libssl-dev libc6-dev clang llvm
 
       - name: Setup Solana Wallet
         run: |
@@ -50,33 +45,44 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Verify toolchain
-        run: |
-          rustc --version
-          cargo --version
-          solana --version || true
-          anchor --version || true
-          arcium --version || true
-
-      - name: Prepare Program Keypair
+      - name: Generate Program Keypair
         run: |
           cd arcium/disc_mpc
           mkdir -p target/deploy
-          solana-keygen new --silent --no-bip39-passphrase --outfile target/deploy/disc_mpc-keypair.json --force
+
+          solana-keygen new \
+            --silent \
+            --no-bip39-passphrase \
+            --outfile target/deploy/disc_mpc-keypair.json \
+            --force
+
           cp target/deploy/disc_mpc-keypair.json program-keypair.json
+
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
-      - name: Sync Program ID
+      - name: Inject Program ID into Rust (lib.rs)
         run: |
           cd arcium/disc_mpc
-          anchor keys sync --force
+
+          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" programs/src/lib.rs
+
+      - name: Inject Program ID into Anchor.toml
+        run: |
+          cd arcium/disc_mpc
+
+          sed -i "s/disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" Anchor.toml
+
+      - name: Sync Anchor Keys
+        run: |
+          cd arcium/disc_mpc
+          anchor keys sync
 
       - name: Build Program
         run: |
           cd arcium/disc_mpc
           cargo clean
-          arcium build --skip-keys-sync
+          arcium build
 
       - name: Deploy Program
         run: |
@@ -94,6 +100,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+
           git add arcium/disc_mpc || true
-          git commit -m "fresh deploy" || true
+          git commit -m "fresh deploy $PROGRAM_ID" || true
           git push || true
