@@ -2,9 +2,6 @@
 members = ["programs", "encrypted-ixs"]
 resolver = "2"
 
-[patch.crates-io]
-getrandom = "=0.2.16"
-
 [profile.release]
 overflow-checks = true
 lto = "fat"
