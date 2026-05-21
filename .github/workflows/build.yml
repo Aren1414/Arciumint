@@ -18,7 +18,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential pkg-config libssl-dev libc6-dev clang llvm
+            build-essential pkg-config libssl-dev libc6-dev clang llvm gcc
 
       - name: Setup Solana Wallet
         run: |
@@ -38,12 +38,15 @@ jobs:
 
       - name: Install Anchor
         run: |
-          cargo install --locked anchor-cli --version 1.0.2 || true
+          cargo install --locked anchor-cli --version 1.0.2
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Export PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Generate Program Keypair
         run: |
@@ -61,27 +64,19 @@ jobs:
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
-      - name: Inject Program ID into Rust (lib.rs)
-        run: |
-          cd arcium/disc_mpc
-
-          sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" programs/src/lib.rs
-
-      - name: Inject Program ID into Anchor.toml
-        run: |
-          cd arcium/disc_mpc
-
-          sed -i "s/disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" Anchor.toml
-
-      - name: Sync Anchor Keys
+      - name: Sync Anchor Program IDs
         run: |
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Build Program
+      - name: Force Cargo Clean
         run: |
           cd arcium/disc_mpc
           cargo clean
+
+      - name: Build Program (Arcium)
+        run: |
+          cd arcium/disc_mpc
           arcium build
 
       - name: Deploy Program
