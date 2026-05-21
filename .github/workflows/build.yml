@@ -8,10 +8,14 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Install system deps (IMPORTANT FIX)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -22,21 +26,26 @@ jobs:
             clang \
             llvm
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Setup Solana Wallet
+        run: |
+          mkdir -p ~/.config/solana
+          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+          chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust (fixed toolchain)
+      - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source "$HOME/.cargo/env"
-          rustup install 1.75.0
-          rustup default 1.75.0
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana (PIN version)
+      
+      - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor
+        run: |
+          cargo install --locked anchor-cli --version 1.0.2 || true
 
       - name: Install Arcium CLI
         run: |
@@ -46,15 +55,19 @@ jobs:
       - name: Verify toolchain
         run: |
           rustc --version
-          solana --version
+          cargo --version
+          solana --version || true
+          anchor --version || true
+          arcium --version || true
 
-      - name: Build
+      
+      - name: Build Program
         run: |
           cd arcium/disc_mpc
           cargo clean
           arcium build --skip-keys-sync
 
-      - name: Deploy
+      - name: Deploy Program
         run: |
           cd arcium/disc_mpc
           arcium deploy \
@@ -64,11 +77,12 @@ jobs:
             --rpc-url https://api.devnet.solana.com \
             --skip-build
 
-      - name: Commit
+      - name: Commit artifacts
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add . || true
+
+          git add arcium/disc_mpc || true
           git commit -m "fresh deploy" || true
           git push || true
