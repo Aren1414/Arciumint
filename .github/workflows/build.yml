@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      
+      RUSTFLAGS: ""
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +41,7 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Fix Anchor Version Sync
+      - name: Install Anchor CLI
         run: |
           cargo install --locked anchor-cli --version 1.0.2 || true
 
@@ -56,9 +60,6 @@ jobs:
 
           cd arcium/disc_mpc
           mkdir -p target/deploy
-
-          rm -f target/deploy/disc_mpc-keypair.json
-          rm -f program-keypair.json
 
           solana-keygen new \
             --silent \
