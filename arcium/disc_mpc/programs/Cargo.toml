@@ -6,9 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "disc_mpc"
-test = false
-bench = false
-doctest = false
 
 [features]
 default = []
@@ -18,15 +15,19 @@ no-idl = []
 no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build", "arcium-anchor/idl-build"]
 anchor-debug = []
-custom-heap = []
-custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
-arcium-client = { version = "=0.10.2", default-features = false }
+arcium-client = "=0.10.2"
 arcium-macros = "=0.10.2"
 arcium-anchor = "=0.10.2"
 unicode-segmentation = "=1.12.0"
+
+getrandom = { version = "0.2.17", default-features = false, features = ["custom"] }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+# host (tests / local tools)
+getrandom = { version = "0.2.17", features = ["std"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
