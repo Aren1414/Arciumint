@@ -42,6 +42,8 @@ jobs:
           source "$HOME/.cargo/env"
           rustc --version
           cargo --version
+          rustc -vV
+          rustup target list --installed
           solana --version
           anchor --version
           arcium --version
@@ -79,6 +81,19 @@ jobs:
         run: |
           cd arcium/disc_mpc
           cargo clean
+
+      - name: Debug getrandom dependency tree
+        run: |
+          cd arcium/disc_mpc
+
+          echo "========== NORMAL TREE =========="
+          cargo tree -i getrandom || true
+
+          echo "========== TEST TREE =========="
+          cargo tree -i getrandom --tests || true
+
+          echo "========== ALL FEATURES =========="
+          cargo tree -i getrandom --all-features || true
 
       - name: Build
         run: |
