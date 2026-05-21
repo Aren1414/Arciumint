@@ -7,7 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-disc_mpc = "7ZCt4AeudYC888qYEQrprRwvVYjoS7LQnEabR7NuaHZM"
+disc_mpc = "8gBnkvw3X3wJ3riAn3f1TH9xMevizjyRLa1oH8yF46CV"
 
 [programs.localnet]
 disc_mpc = "G5xvg6HiBNyhZVrHkNNATK89kbbSe79CU7U6mAdqgQ6h"
