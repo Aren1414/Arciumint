@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      
-      RUSTFLAGS: ""
+      RUSTFLAGS: --cfg getrandom_backend="wasm32"
 
     steps:
       - name: Checkout
@@ -107,6 +106,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc || true
-
           git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" || true
           git push || true
