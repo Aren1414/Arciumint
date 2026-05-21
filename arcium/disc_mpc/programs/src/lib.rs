@@ -3,7 +3,7 @@ use arcium_anchor::prelude::*;
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("EToM3aEKB7VgtbbYd2SYD266rWgZpTG8MGDUiwv8xNMf");
+declare_id!("AdvdGNeCtiY5PwFW6xgfHL826Vnpr5VygAQwzCiMsLF6");
 
 #[arcium_program]
 pub mod disc_mpc {
