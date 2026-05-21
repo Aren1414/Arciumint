@@ -10,9 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      RUSTFLAGS: --cfg getrandom_backend="unsupported"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,8 +51,11 @@ jobs:
       - name: Prepare Program Keypair
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           cd arcium/disc_mpc
+
           mkdir -p target/deploy
+
           rm -f target/deploy/disc_mpc-keypair.json
           rm -f program-keypair.json
 
@@ -68,6 +68,7 @@ jobs:
           cp target/deploy/disc_mpc-keypair.json program-keypair.json
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
       - name: Sync Anchor Program IDs
@@ -81,15 +82,21 @@ jobs:
           cargo clean
 
       - name: Build
+        env:
+          RUSTFLAGS: '--cfg getrandom_backend="unsupported"'
         run: |
           cd arcium/disc_mpc
+
           mkdir -p target/deploy
+
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
+
           arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
           cd arcium/disc_mpc
+
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -102,6 +109,7 @@ jobs:
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
           git config --global user.name "github-actions[bot]"
 
           git add \
