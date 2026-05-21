@@ -8,39 +8,34 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04   
 
     steps:
-      - name: Install system dependencies (FIX libc headers)
+      - name: Install system deps (IMPORTANT FIX)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             pkg-config \
+            libssl-dev \
             libc6-dev \
-            gcc \
-            g++ \
-            libssl-dev
+            clang \
+            llvm
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Solana Wallet
-        run: |
-          mkdir -p ~/.config/solana
-          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
-          chmod 600 ~/.config/solana/id.json
-
-      - name: Install Rust
+      - name: Install Rust (fixed toolchain)
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source "$HOME/.cargo/env"
-          rustup default stable
+          rustup install 1.75.0
+          rustup default 1.75.0
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana
+      - name: Install Solana (PIN version)
         run: |
-          curl -sSfL https://solana-install.solana.workers.dev | bash
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Arcium CLI
@@ -48,55 +43,15 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Fix Anchor Version Sync
+      - name: Verify toolchain
         run: |
-          cargo install --locked anchor-cli --version 1.0.2 || true
-
-      - name: Verify Versions
-        run: |
-          source "$HOME/.cargo/env"
           rustc --version
-          cargo --version
           solana --version
-          anchor --version
-          arcium --version
-
-      - name: Prepare Program Keypair
-        run: |
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
-          cd arcium/disc_mpc
-          mkdir -p target/deploy
-
-          rm -f target/deploy/disc_mpc-keypair.json
-          rm -f program-keypair.json
-
-          solana-keygen new \
-            --silent \
-            --no-bip39-passphrase \
-            --outfile target/deploy/disc_mpc-keypair.json \
-            --force
-
-          cp target/deploy/disc_mpc-keypair.json program-keypair.json
-
-          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
-          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-
-      - name: Sync Anchor Program IDs
-        run: |
-          cd arcium/disc_mpc
-          anchor keys sync
-
-      - name: Clean Build Cache
-        run: |
-          cd arcium/disc_mpc
-          cargo clean
 
       - name: Build
         run: |
           cd arcium/disc_mpc
-          mkdir -p target/deploy
-          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+          cargo clean
           arcium build --skip-keys-sync
 
       - name: Deploy
@@ -107,15 +62,13 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
-      - name: Commit generated files
+      - name: Commit
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-
-          git add arcium/disc_mpc || true
-          git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" || true
+          git add . || true
+          git commit -m "fresh deploy" || true
           git push || true
