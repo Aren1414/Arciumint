@@ -10,9 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      RUSTFLAGS: --cfg getrandom_backend="wasm32"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,6 +56,9 @@ jobs:
 
           cd arcium/disc_mpc
           mkdir -p target/deploy
+
+          rm -f target/deploy/disc_mpc-keypair.json
+          rm -f program-keypair.json
 
           solana-keygen new \
             --silent \
