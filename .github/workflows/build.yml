@@ -14,7 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -37,7 +36,6 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
@@ -60,7 +58,20 @@ jobs:
           anchor --version || true
           arcium --version || true
 
-      
+      - name: Prepare Program Keypair
+        run: |
+          cd arcium/disc_mpc
+          mkdir -p target/deploy
+          solana-keygen new --silent --no-bip39-passphrase --outfile target/deploy/disc_mpc-keypair.json --force
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+
+      - name: Sync Program ID
+        run: |
+          cd arcium/disc_mpc
+          anchor keys sync --force
+
       - name: Build Program
         run: |
           cd arcium/disc_mpc
@@ -75,6 +86,7 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
+            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
       - name: Commit artifacts
@@ -82,7 +94,6 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-
           git add arcium/disc_mpc || true
           git commit -m "fresh deploy" || true
           git push || true
