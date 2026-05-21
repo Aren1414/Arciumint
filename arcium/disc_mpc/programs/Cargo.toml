@@ -29,5 +29,8 @@ arcium-anchor = "=0.10.2"
 
 unicode-segmentation = "=1.12.0"
 
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+getrandom = { version = "0.2.17", features = ["custom"] }
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
