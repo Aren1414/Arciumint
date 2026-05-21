@@ -1602,6 +1602,7 @@ dependencies = [
  "arcium-anchor",
  "arcium-client",
  "arcium-macros",
+ "getrandom 0.2.17",
  "unicode-segmentation",
 ]
 
