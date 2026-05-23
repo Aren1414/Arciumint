@@ -48,11 +48,11 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor via AVM
+      - name: Install Anchor CLI (FIXED)
         run: |
-          cargo install --git https://github.com/solana-foundation/anchor avm --locked
-          avm install 1.0.2
-          avm use 1.0.2
+          cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          anchor --version
 
       - name: Install Arcium CLI
         run: |
@@ -88,7 +88,12 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add arcium/disc_mpc/Anchor.toml arcium/disc_mpc/Cargo.lock arcium/disc_mpc/target arcium/disc_mpc/build || true
+
+          git add arcium/disc_mpc/Anchor.toml \
+                   arcium/disc_mpc/Cargo.lock \
+                   arcium/disc_mpc/target \
+                   arcium/disc_mpc/build || true
+
           git commit -m "fresh deploy ${GITHUB_SHA}" || true
 
       - name: Push changes
