@@ -41,70 +41,95 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana (stable)
+      - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           solana --version
 
-      - name: Install Anchor 1.0.2
+      - name: Install Anchor
         run: |
           cargo install --locked anchor-cli --version 1.0.2
           anchor --version
 
-      - name: Install Arcium CLI (v0.10.3)
+      - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
           arcup self update || true
           arcup update || true
+
           arcium --version
 
-      - name: Generate Program Keypair (correct path)
+      - name: Generate SINGLE Program Keypair
         run: |
           cd arcium/disc_mpc
+
+          mkdir -p target/deploy
+
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
-            --outfile program-keypair.json \
+            --outfile target/deploy/disc_mpc-keypair.json \
             --force
 
-          PROGRAM_ID=$(solana address -k program-keypair.json)
-          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Program ID: $PROGRAM_ID"
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
 
-      - name: Sync Anchor Program IDs
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+
+          echo "Using Program ID: $PROGRAM_ID"
+
+      - name: Sync Program IDs Everywhere
         run: |
           cd arcium/disc_mpc
+
           anchor keys sync
 
-      - name: Force Cargo Clean
+          echo "------ CHECKING IDS ------"
+
+          grep declare_id programs/src/lib.rs || true
+
+          cat Anchor.toml || true
+
+          echo "Generated key:"
+          solana address -k target/deploy/disc_mpc-keypair.json
+
+      - name: Clean Cargo
         run: |
           cd arcium/disc_mpc
           cargo clean
 
-      - name: Build Program (Arcium)
+      - name: Build Program
         run: |
           cd arcium/disc_mpc
-          arcium build
+
+          arcium build --skip-keys-sync
 
       - name: Deploy Program
         run: |
           cd arcium/disc_mpc
+
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair program-keypair.json \
+            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
-      - name: Commit artifacts
+      - name: Commit Artifacts
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
+
           git add arcium/disc_mpc || true
+
           git commit -m "fresh deploy $PROGRAM_ID" || true
+
           git push || true
