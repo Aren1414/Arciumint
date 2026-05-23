@@ -43,6 +43,10 @@ jobs:
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
 
+          source "$HOME/.cargo/env"
+
+          rustup default stable
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Solana
@@ -74,6 +78,8 @@ jobs:
 
       - name: FULL RESET + Generate Program Keypair
         run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
           cd arcium/disc_mpc
 
           echo "Cleaning old artifacts..."
@@ -81,6 +87,7 @@ jobs:
           rm -rf target
           rm -rf .anchor
           rm -rf build
+          rm -f target/deploy/disc_mpc-keypair.json
           rm -f program-keypair.json
 
           mkdir -p target/deploy
@@ -90,10 +97,12 @@ jobs:
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
-            --outfile program-keypair.json \
+            --outfile target/deploy/disc_mpc-keypair.json \
             --force
 
-          PROGRAM_ID=$(solana address -k program-keypair.json)
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
+
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
@@ -108,16 +117,34 @@ jobs:
 
           echo "------ VERIFYING IDS ------"
 
-          echo "declare_id:"
-          grep declare_id programs/src/lib.rs || true
+          echo "Anchor.toml program id:"
+          grep disc_mpc Anchor.toml || true
 
           echo ""
-          echo "Anchor.toml:"
-          cat Anchor.toml || true
+          echo "Rust declare_id:"
+          grep -R "declare_id!" programs || true
 
           echo ""
           echo "Keypair Address:"
-          solana address -k program-keypair.json
+          solana address -k target/deploy/disc_mpc-keypair.json
+
+      - name: Configure Cargo for SBPF
+        run: |
+          mkdir -p ~/.cargo
+
+          cat > ~/.cargo/config.toml << 'EOF'
+          [target.sbfv2-solana-solana]
+          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
+
+          [target.sbf-solana-solana]
+          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
+          EOF
+
+      - name: Generate Cargo.lock
+        run: |
+          cd arcium/disc_mpc
+
+          cargo generate-lockfile
 
       - name: Clean Cargo Cache
         run: |
@@ -129,6 +156,13 @@ jobs:
         run: |
           cd arcium/disc_mpc
 
+          mkdir -p target/deploy
+
+          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+
+          echo "Build keypair:"
+          solana address -k target/deploy/disc_mpc-keypair.json
+
           arcium build --skip-keys-sync
 
       - name: Verify Final Program ID
@@ -136,12 +170,12 @@ jobs:
           cd arcium/disc_mpc
 
           echo "Final source declare_id:"
-          grep declare_id programs/src/lib.rs || true
+          grep -R "declare_id!" programs || true
 
           echo ""
 
-          echo "Final keypair:"
-          solana address -k program-keypair.json
+          echo "Final build keypair:"
+          solana address -k target/deploy/disc_mpc-keypair.json
 
       - name: Deploy Program
         run: |
@@ -152,7 +186,7 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair program-keypair.json \
+            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
       - name: Commit Artifacts
@@ -162,8 +196,15 @@ jobs:
 
           git config --global user.name "github-actions[bot]"
 
-          git add arcium/disc_mpc || true
+          git add \
+            arcium/disc_mpc/build \
+            arcium/disc_mpc/Anchor.toml \
+            arcium/disc_mpc/program-keypair.json \
+            arcium/disc_mpc/Cargo.lock \
+            arcium/disc_mpc/target/deploy \
+            2>/dev/null || true
 
-          git commit -m "fresh deploy $PROGRAM_ID" || true
+          git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" \
+            2>/dev/null || echo "No changes to commit"
 
-          git push || true
+          git push 2>/dev/null || echo "Push failed"
