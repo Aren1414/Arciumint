@@ -115,9 +115,15 @@ jobs:
 
           anchor keys sync
 
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+
+          echo "Setting localnet program id..."
+
+          sed -i "s|disc_mpc = \".*\"|disc_mpc = \"$PROGRAM_ID\"|g" Anchor.toml
+
           echo "------ VERIFYING IDS ------"
 
-          echo "Anchor.toml program id:"
+          echo "Anchor.toml program ids:"
           grep disc_mpc Anchor.toml || true
 
           echo ""
@@ -171,6 +177,11 @@ jobs:
 
           echo "Final source declare_id:"
           grep -R "declare_id!" programs || true
+
+          echo ""
+
+          echo "Final Anchor.toml:"
+          grep disc_mpc Anchor.toml || true
 
           echo ""
 
