@@ -66,22 +66,20 @@ jobs:
           . "$HOME/.cargo/env"
           cargo install --locked anchor-cli --version 1.0.2
 
-      - name: Install Arcium CLI (official CI method)
+      - name: Install Arcium CLI (official binary method)
         run: |
           . "$HOME/.cargo/env"
-          curl -sSfL https://install.arcium.com/ | bash -s -- --skip-deps
+          ARCIUM_VERSION="0.10.2"
+          curl -L "https://github.com/arcium/arcium/releases/download/v${ARCIUM_VERSION}/arcium-x86_64-unknown-linux-gnu" -o /usr/local/bin/arcium
+          chmod +x /usr/local/bin/arcium
 
       - name: Verify Versions
         run: |
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "=== Rust ==="
           rustc --version
-          echo "=== Solana ==="
           solana --version
-          echo "=== Anchor ==="
           anchor --version
-          echo "=== Arcium ==="
           arcium --version
 
       - name: Verify Directory
@@ -125,7 +123,6 @@ jobs:
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Building ==="
           arcium build
 
       - name: Deploy to Devnet
@@ -133,7 +130,6 @@ jobs:
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Deploying ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
