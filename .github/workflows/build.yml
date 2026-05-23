@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -18,7 +18,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential pkg-config libssl-dev libc6-dev clang llvm gcc curl git
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libc6-dev \
+            libc6-dev-i386 \
+            linux-libc-dev \
+            clang \
+            llvm \
+            gcc \
+            curl \
+            git
 
       - name: Setup Solana Wallet
         run: |
@@ -51,17 +61,16 @@ jobs:
           arcup update || true
           arcium --version
 
-      - name: Generate Program Keypair
+      - name: Generate Program Keypair (correct path)
         run: |
           cd arcium/disc_mpc
-          mkdir -p target/deploy
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
-            --outfile target/deploy/disc_mpc-keypair.json \
+            --outfile program-keypair.json \
             --force
-          cp target/deploy/disc_mpc-keypair.json program-keypair.json
-          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+
+          PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
       - name: Sync Anchor Program IDs
@@ -87,7 +96,7 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair target/deploy/disc_mpc-keypair.json \
+            --program-keypair program-keypair.json \
             --skip-build
 
       - name: Commit artifacts
@@ -97,4 +106,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add arcium/disc_mpc || true
           git commit -m "fresh deploy $PROGRAM_ID" || true
-          git push || true 
+          git push || true
