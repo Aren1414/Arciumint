@@ -69,8 +69,7 @@ jobs:
       - name: Install Arcium CLI
         run: |
           . "$HOME/.cargo/env"
-          # Skip dependency check since we already installed them
-          curl -sSfL https://install.arcium.com/ | bash
+          ARCIUM_SKIP_DEPS=1 curl -sSfL https://install.arcium.com/ | bash
 
       - name: Verify Versions
         run: |
