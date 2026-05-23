@@ -70,15 +70,27 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
+      # ================= FIX: PROGRAM ID SYNC =================
+      - name: Sync Program IDs (CRITICAL FIX)
+        run: |
+          cd arcium/disc_mpc
+
+          # clean state
+          rm -rf target .anchor build Cargo.lock
+          cargo clean
+
+          # THIS FIXES YOUR ERROR
+          anchor keys sync
+
+          # verify keypair exists
+          solana address -k target/deploy/disc_mpc-keypair.json
+
       # ================= BUILD =================
       - name: Build Program
         run: |
           cd arcium/disc_mpc
 
-          rm -rf target .anchor build Cargo.lock
-          cargo clean
-
-          arcium build --skip-keys-sync
+          arcium build
 
       # ================= DEPLOY =================
       - name: Deploy Program
@@ -109,6 +121,5 @@ jobs:
 
       # ================= PUSH =================
       - name: Push changes
-        if: always()
         run: |
-          git push origin HEAD:${{ github.ref_name }} || echo "Push failed (maybe no changes or protected branch)"
+          git push origin HEAD:${{ github.ref_name }} || echo "Push failed"
