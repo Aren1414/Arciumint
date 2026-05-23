@@ -17,7 +17,6 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-
           sudo apt-get install -y \
             build-essential \
             pkg-config \
@@ -29,51 +28,39 @@ jobs:
             llvm \
             gcc \
             curl \
-            git
+            git \
+            cmake
 
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
-
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
-
           chmod 600 ~/.config/solana/id.json
 
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-
           source "$HOME/.cargo/env"
-
           rustup default stable
-
+          rustup target add x86_64-unknown-linux-gnu
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
-          solana --version
 
       - name: Install Anchor
         run: |
           cargo install --locked anchor-cli --version 1.0.2
-
           anchor --version
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
-
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
           arcup self update || true
           arcup update || true
-
           arcium --version
 
       - name: FULL RESET + Generate Program Keypair
@@ -82,17 +69,11 @@ jobs:
 
           cd arcium/disc_mpc
 
-          echo "Cleaning old artifacts..."
-
-          rm -rf target
-          rm -rf .anchor
-          rm -rf build
-          rm -f target/deploy/disc_mpc-keypair.json
+          rm -rf target .anchor build
           rm -f program-keypair.json
+          rm -f target/deploy/disc_mpc-keypair.json
 
           mkdir -p target/deploy
-
-          echo "Generating fresh program keypair..."
 
           solana-keygen new \
             --silent \
@@ -105,11 +86,9 @@ jobs:
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Generated Program ID: $PROGRAM_ID"
 
-          echo "Generated Program ID:"
-          echo "$PROGRAM_ID"
-
-      - name: Sync Program IDs
+      - name: Sync Program IDs (devnet + localnet FIX)
         run: |
           cd arcium/disc_mpc
 
@@ -117,27 +96,20 @@ jobs:
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
-          echo "Setting localnet program id..."
+          echo "Updating Anchor.toml (devnet + localnet)"
 
+          # devnet
           sed -i "s|disc_mpc = \".*\"|disc_mpc = \"$PROGRAM_ID\"|g" Anchor.toml
 
-          echo "------ VERIFYING IDS ------"
+          # localnet (FIX IMPORTANT)
+          sed -i "/\[programs.localnet\]/!b;n;cdisc_mpc = \"$PROGRAM_ID\"" Anchor.toml
 
-          echo "Anchor.toml program ids:"
-          grep disc_mpc Anchor.toml || true
-
-          echo ""
-          echo "Rust declare_id:"
-          grep -R "declare_id!" programs || true
-
-          echo ""
-          echo "Keypair Address:"
-          solana address -k target/deploy/disc_mpc-keypair.json
+          echo "------ VERIFY ------"
+          grep disc_mpc Anchor.toml
 
       - name: Configure Cargo for SBPF
         run: |
           mkdir -p ~/.cargo
-
           cat > ~/.cargo/config.toml << 'EOF'
           [target.sbfv2-solana-solana]
           rustflags = ["--cfg", "getrandom_backend=\"custom\""]
@@ -146,16 +118,20 @@ jobs:
           rustflags = ["--cfg", "getrandom_backend=\"custom\""]
           EOF
 
+      # IMPORTANT FIX for ring / SBPF build instability
+      - name: Force safe crypto backend
+        run: |
+          echo "RUSTFLAGS=-C target-cpu=generic" >> $GITHUB_ENV
+          echo "CARGO_BUILD_JOBS=2" >> $GITHUB_ENV
+
       - name: Generate Cargo.lock
         run: |
           cd arcium/disc_mpc
-
           cargo generate-lockfile
 
       - name: Clean Cargo Cache
         run: |
           cd arcium/disc_mpc
-
           cargo clean
 
       - name: Build Program
@@ -163,11 +139,7 @@ jobs:
           cd arcium/disc_mpc
 
           mkdir -p target/deploy
-
           cp program-keypair.json target/deploy/disc_mpc-keypair.json
-
-          echo "Build keypair:"
-          solana address -k target/deploy/disc_mpc-keypair.json
 
           arcium build --skip-keys-sync
 
@@ -175,17 +147,8 @@ jobs:
         run: |
           cd arcium/disc_mpc
 
-          echo "Final source declare_id:"
           grep -R "declare_id!" programs || true
-
-          echo ""
-
-          echo "Final Anchor.toml:"
           grep disc_mpc Anchor.toml || true
-
-          echo ""
-
-          echo "Final build keypair:"
           solana address -k target/deploy/disc_mpc-keypair.json
 
       - name: Deploy Program
@@ -204,18 +167,9 @@ jobs:
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
           git config --global user.name "github-actions[bot]"
 
-          git add \
-            arcium/disc_mpc/build \
-            arcium/disc_mpc/Anchor.toml \
-            arcium/disc_mpc/program-keypair.json \
-            arcium/disc_mpc/Cargo.lock \
-            arcium/disc_mpc/target/deploy \
-            2>/dev/null || true
+          git add arcium/disc_mpc || true
 
-          git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" \
-            2>/dev/null || echo "No changes to commit"
-
-          git push 2>/dev/null || echo "Push failed"
+          git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" || true
+          git push || true
