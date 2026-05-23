@@ -7,10 +7,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-disc_mpc = "Fb5kKpiRjxqsaP3s2TgXqTxHpXkVNSuE8QhjUAHWxWNg"
+disc_mpc = "FJLL2vBLqaDKtyEupweaDW7Fy7iPZS5ToG4cb8XomLgR"
 
 [programs.localnet]
-disc_mpc = "Fb5kKpiRjxqsaP3s2TgXqTxHpXkVNSuE8QhjUAHWxWNg"
+disc_mpc = "FJLL2vBLqaDKtyEupweaDW7Fy7iPZS5ToG4cb8XomLgR"
 
 [provider]
 cluster = "devnet"
