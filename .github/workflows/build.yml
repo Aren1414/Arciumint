@@ -18,7 +18,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential pkg-config libssl-dev libc6-dev clang llvm gcc
+            build-essential \
+            pkg-config \
+            libssl-dev \
+            libc6-dev \
+            libc6-dev-i386 \
+            linux-libc-dev \
+            clang \
+            llvm \
+            gcc \
+            g++
 
       - name: Setup Solana Wallet
         run: |
@@ -30,10 +39,16 @@ jobs:
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          source "$HOME/.cargo/env"
 
       - name: Install Solana 3.1.10
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Export PATH
+        run: |
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install Anchor 1.0.2
@@ -43,16 +58,29 @@ jobs:
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          source "$HOME/.cargo/env"
 
       - name: Verify Versions
         run: |
+          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
           anchor --version
           arcium --version
 
-      - name: Export PATH
-        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Set Ring Build Variables
+        run: |
+          echo "RING_PREGENERATE_ASM=1" >> $GITHUB_ENV
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            arcium/disc_mpc/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Generate Program Keypair
         run: |
@@ -69,6 +97,7 @@ jobs:
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Program ID: $PROGRAM_ID"
 
       - name: Sync Anchor Program IDs
         run: |
@@ -83,11 +112,13 @@ jobs:
       - name: Build Program (Arcium)
         run: |
           cd arcium/disc_mpc
-          arcium build
+          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          RING_PREGENERATE_ASM=1 arcium build
 
       - name: Deploy Program
         run: |
           cd arcium/disc_mpc
+          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
