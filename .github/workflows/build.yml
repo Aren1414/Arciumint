@@ -24,7 +24,6 @@ jobs:
             clang \
             llvm \
             ca-certificates \
-            docker.io \
             yarn
 
       - name: Checkout Repository
@@ -48,7 +47,7 @@ jobs:
 
       - name: Install Rust
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo 'source $HOME/.cargo/env' >> ~/.bashrc
           source $HOME/.cargo/env
 
@@ -71,7 +70,6 @@ jobs:
         run: |
           source $HOME/.cargo/env
           curl -sSfL https://install.arcium.com/ | bash
-          # به‌روز کردن طبق مستندات
           arcup self update || true
           arcup update || true
           arcium --version
@@ -80,13 +78,9 @@ jobs:
         run: |
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "=== Rust ==="
           rustc --version
-          echo "=== Solana ==="
           solana --version
-          echo "=== Anchor ==="
           anchor --version
-          echo "=== Arcium ==="
           arcium --version
 
       - name: Verify Directory
@@ -130,7 +124,6 @@ jobs:
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Building ==="
           arcium build
 
       - name: Deploy to Devnet
@@ -138,7 +131,6 @@ jobs:
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Deploying ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
