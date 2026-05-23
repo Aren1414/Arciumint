@@ -14,7 +14,7 @@ jobs:
       options: --user root
 
     steps:
-      - name: Install basic system tools
+      - name: Install system dependencies
         run: |
           apt-get update
           apt-get install -y \
@@ -24,6 +24,9 @@ jobs:
             pkg-config \
             libssl-dev \
             libc6-dev \
+            libc6-dev-i386 \
+            linux-libc-dev \
+            libudev-dev \
             clang \
             llvm \
             ca-certificates
@@ -35,7 +38,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Configure Git Safe Directory
+      - name: Configure Git
         run: |
           git config --global --add safe.directory /__w/Arciumint/Arciumint
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -51,6 +54,7 @@ jobs:
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
           . "$HOME/.cargo/env"
+          echo 'source $HOME/.cargo/env' >> ~/.bashrc
 
       - name: Install Solana 3.1.10
         run: |
@@ -65,35 +69,31 @@ jobs:
       - name: Install Arcium CLI
         run: |
           . "$HOME/.cargo/env"
+          # Skip dependency check since we already installed them
           curl -sSfL https://install.arcium.com/ | bash
 
-      - name: Verify Installed Versions
+      - name: Verify Versions
         run: |
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "=== Rust Version ==="
+          echo "=== Rust ==="
           rustc --version
-          cargo --version
-          echo "=== Solana Version ==="
+          echo "=== Solana ==="
           solana --version
-          echo "=== Anchor Version ==="
+          echo "=== Anchor ==="
           anchor --version
-          echo "=== Arcium Version ==="
+          echo "=== Arcium ==="
           arcium --version
 
-      - name: Verify Directory Structure
+      - name: Verify Directory
         run: |
           echo "=== Current Directory ==="
           pwd
-          echo "=== Directory Contents ==="
           ls -la
-          echo "=== Arcium Directory Check ==="
           if [ -d "arcium/disc_mpc" ]; then
-            echo "✓ arcium/disc_mpc exists"
-            ls -la arcium/disc_mpc
+            echo "✓ arcium/disc_mpc found"
           else
             echo "✗ arcium/disc_mpc NOT FOUND"
-            echo "Available directories:"
             find . -type d -maxdepth 3
             exit 1
           fi
@@ -111,34 +111,30 @@ jobs:
             --outfile target/deploy/disc_mpc-keypair.json \
             --force
 
-          cp target/deploy/disc_mpc-keypair.json program-keypair.json
-
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "=== Generated Program ID ==="
-          echo "$PROGRAM_ID"
+          echo "Program ID: $PROGRAM_ID"
 
-      - name: Sync Anchor Program IDs
+      - name: Sync Program IDs
         run: |
           . "$HOME/.cargo/env"
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Build Arcium Program
+      - name: Build Program
         run: |
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Starting Arcium Build ==="
+          echo "=== Building ==="
           arcium build
-          echo "=== Build Completed Successfully ==="
 
       - name: Deploy to Devnet
         run: |
           . "$HOME/.cargo/env"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Starting Deployment ==="
+          echo "=== Deploying ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -146,58 +142,25 @@ jobs:
             --rpc-url https://api.devnet.solana.com \
             --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
-          echo "=== Deployment Completed ==="
 
-      - name: Display Deployment Info
+      - name: Show Results
         if: success()
         run: |
-          echo "=== Deployment Summary ==="
+          echo "=== Success ==="
           echo "Program ID: $PROGRAM_ID"
-          echo "Cluster: Devnet"
-          echo "Cluster Offset: 456"
-          echo "Recovery Set Size: 4"
+          echo "Cluster: Devnet (456)"
 
-      - name: Commit and Push Changes
+      - name: Commit Changes
         if: always()
         run: |
           cd /__w/Arciumint/Arciumint
           
-          # Check if there are changes
           if [[ -n $(git status --porcelain) ]]; then
-            echo "=== Changes detected ==="
-            git status
-            
-            # Add changes
             git add arcium/disc_mpc/target/deploy/*.json || true
             git add arcium/disc_mpc/target/idl/*.json || true
             git add arcium/disc_mpc/target/types/*.ts || true
-            git add arcium/disc_mpc/program-keypair.json || true
             
-            # Commit
-            git commit -m "Deploy: Program ID $PROGRAM_ID to Devnet [skip ci]" || echo "Nothing to commit"
+            git commit -m "Deploy $PROGRAM_ID [skip ci]" || true
             
-            # Push with retry
-            echo "=== Pushing changes ==="
-            for i in {1..3}; do
-              if git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}; then
-                echo "✓ Push successful"
-                break
-              else
-                echo "Push attempt $i failed, retrying..."
-                sleep 5
-              fi
-            done
-          else
-            echo "=== No changes to commit ==="
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }} || true
           fi
-
-      - name: Cleanup on Failure
-        if: failure()
-        run: |
-          echo "=== Build/Deploy Failed ==="
-          echo "Check the logs above for error details"
-          echo "Common issues:"
-          echo "1. RPC connection problems"
-          echo "2. Insufficient SOL in wallet"
-          echo "3. Network congestion"
-          echo "4. Directory structure mismatch"
