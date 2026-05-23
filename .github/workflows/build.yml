@@ -9,28 +9,23 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:22.04
-      options: --user root
 
     steps:
       - name: Install system dependencies
         run: |
-          apt-get update
-          apt-get install -y \
-            sudo \
+          sudo apt-get update
+          sudo apt-get install -y \
             curl \
             git \
             build-essential \
             pkg-config \
             libssl-dev \
-            libc6-dev \
-            libc6-dev-i386 \
-            linux-libc-dev \
             libudev-dev \
             clang \
             llvm \
-            ca-certificates
+            ca-certificates \
+            docker.io \
+            yarn
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -41,9 +36,9 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global --add safe.directory /__w/Arciumint/Arciumint
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git.config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git.config --global user.name "github-actions[bot]"
 
       - name: Setup Solana Wallet
         run: |
@@ -53,36 +48,32 @@ jobs:
 
       - name: Install Rust
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
-          . "$HOME/.cargo/env"
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo 'source $HOME/.cargo/env' >> ~/.bashrc
+          source $HOME/.cargo/env
 
       - name: Install Solana 3.1.10
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
 
       - name: Install Anchor 1.0.2
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           cargo install --locked anchor-cli --version 1.0.2
 
       - name: Install Arcium CLI
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           curl -sSfL https://install.arcium.com/ | bash
 
       - name: Verify Versions
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          echo "=== Rust ==="
           rustc --version
-          echo "=== Solana ==="
           solana --version
-          echo "=== Anchor ==="
           anchor --version
-          echo "=== Arcium ==="
           arcium --version
 
       - name: Verify Directory
@@ -100,7 +91,7 @@ jobs:
 
       - name: Generate Program Keypair
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           mkdir -p target/deploy
@@ -117,24 +108,22 @@ jobs:
 
       - name: Sync Program IDs
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           cd arcium/disc_mpc
           anchor keys sync
 
       - name: Build Program
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Building ==="
           arcium build
 
       - name: Deploy to Devnet
         run: |
-          . "$HOME/.cargo/env"
+          source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          echo "=== Deploying ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -153,7 +142,7 @@ jobs:
       - name: Commit Changes
         if: always()
         run: |
-          cd /__w/Arciumint/Arciumint
+          cd $GITHUB_WORKSPACE
           
           if [[ -n $(git status --porcelain) ]]; then
             git add arcium/disc_mpc/target/deploy/*.json || true
