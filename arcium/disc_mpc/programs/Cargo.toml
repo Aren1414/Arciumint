@@ -23,10 +23,10 @@ custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
-arcium-client = "=0.10.2"
-arcium-macros = "=0.10.2"
-arcium-anchor = "=0.10.2"
-unicode-segmentation = "=1.12.0"
+arcium-client = "=0.10.3"
+arcium-macros = "=0.10.3"
+arcium-anchor = "=0.10.3"
+unicode-segmentation = "=1.13.2"
 
 getrandom = { version = "0.2.17", default-features = false, features = ["custom"] }
 
