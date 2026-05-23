@@ -9,25 +9,27 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+      options: --user root
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
+      - name: Install basic system tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
+            curl \
+            git \
             build-essential \
             pkg-config \
             libssl-dev \
             libc6-dev \
-            libc6-dev-i386 \
-            linux-libc-dev \
             clang \
             llvm \
-            gcc \
-            g++
+            ca-certificates
+
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Solana Wallet
         run: |
@@ -37,44 +39,44 @@ jobs:
 
       - name: Install Rust
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          source "$HOME/.cargo/env"
+          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+          echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
+          . "$HOME/.cargo/env"
 
       - name: Install Solana 3.1.10
         run: |
+          . "$HOME/.cargo/env"
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Export PATH
-        run: |
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> $HOME/.bashrc
 
       - name: Install Anchor 1.0.2
         run: |
+          . "$HOME/.cargo/env"
           cargo install --locked anchor-cli --version 1.0.2
 
       - name: Install Arcium CLI
         run: |
+          . "$HOME/.cargo/env"
           curl -sSfL https://install.arcium.com/ | bash
-          source "$HOME/.cargo/env"
 
-      - name: Verify Versions
+      - name: Verify Installed Versions
         run: |
-          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          . "$HOME/.cargo/env"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "=== Rust Version ==="
+          rustc --version
+          cargo --version
+          echo "=== Solana Version ==="
           solana --version
+          echo "=== Anchor Version ==="
           anchor --version
+          echo "=== Arcium Version ==="
           arcium --version
-
-      - name: Set Build Variables
-        run: |
-          echo "RING_PREGENERATE_ASM=1" >> $GITHUB_ENV
-          echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> $GITHUB_ENV
-          echo "RUST_BACKTRACE=1" >> $GITHUB_ENV
 
       - name: Generate Program Keypair
         run: |
+          . "$HOME/.cargo/env"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
           mkdir -p target/deploy
 
@@ -88,31 +90,30 @@ jobs:
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Program ID: $PROGRAM_ID"
+          echo "=== Generated Program ID ==="
+          echo "$PROGRAM_ID"
 
       - name: Sync Anchor Program IDs
         run: |
+          . "$HOME/.cargo/env"
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Complete Clean
+      - name: Build Arcium Program
         run: |
+          . "$HOME/.cargo/env"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          cargo clean
-          rm -rf target/
-          rm -rf encrypted-ixs/target/
-          rm -rf ~/.cargo/registry/src/*/ring-*
+          echo "=== Starting Arcium Build ==="
+          arcium build
+          echo "=== Build Completed Successfully ==="
 
-      - name: Build Program (Arcium)
+      - name: Deploy to Devnet
         run: |
+          . "$HOME/.cargo/env"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
-          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          RING_PREGENERATE_ASM=1 RUST_BACKTRACE=1 arcium build
-
-      - name: Deploy Program
-        run: |
-          cd arcium/disc_mpc
-          export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "=== Starting Deployment ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -120,13 +121,37 @@ jobs:
             --rpc-url https://api.devnet.solana.com \
             --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
+          echo "=== Deployment Completed ==="
 
-      - name: Commit artifacts
+      - name: Display Deployment Info
+        if: success()
+        run: |
+          echo "=== Deployment Summary ==="
+          echo "Program ID: $PROGRAM_ID"
+          echo "Cluster: Devnet"
+          echo "Cluster Offset: 456"
+          echo "Recovery Set Size: 4"
+
+      - name: Commit Build Artifacts
         if: always()
         run: |
+          # Configure git for container
+          git config --global --add safe.directory /__w/Arciumint/Arciumint
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
-          git add arcium/disc_mpc || true
-          git commit -m "fresh deploy $PROGRAM_ID" || true
+          # Add and commit changes
+          cd arcium/disc_mpc
+          git add . || true
+          git commit -m "Deploy: Program ID $PROGRAM_ID [skip ci]" || true
           git push || true
+
+      - name: Cleanup on Failure
+        if: failure()
+        run: |
+          echo "=== Build/Deploy Failed ==="
+          echo "Check the logs above for error details"
+          echo "Common issues:"
+          echo "1. RPC connection problems - try a different RPC endpoint"
+          echo "2. Insufficient SOL in wallet"
+          echo "3. Network congestion"
