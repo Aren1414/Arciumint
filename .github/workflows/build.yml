@@ -90,12 +90,10 @@ jobs:
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
-            --outfile target/deploy/disc_mpc-keypair.json \
+            --outfile program-keypair.json \
             --force
 
-          cp target/deploy/disc_mpc-keypair.json program-keypair.json
-
-          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
+          PROGRAM_ID=$(solana address -k program-keypair.json)
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
@@ -119,7 +117,7 @@ jobs:
 
           echo ""
           echo "Keypair Address:"
-          solana address -k target/deploy/disc_mpc-keypair.json
+          solana address -k program-keypair.json
 
       - name: Clean Cargo Cache
         run: |
@@ -130,8 +128,6 @@ jobs:
       - name: Build Program
         run: |
           cd arcium/disc_mpc
-
-          anchor keys sync
 
           arcium build --skip-keys-sync
 
@@ -145,7 +141,7 @@ jobs:
           echo ""
 
           echo "Final keypair:"
-          solana address -k target/deploy/disc_mpc-keypair.json
+          solana address -k program-keypair.json
 
       - name: Deploy Program
         run: |
@@ -156,7 +152,7 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
-            --program-keypair target/deploy/disc_mpc-keypair.json \
+            --program-keypair program-keypair.json \
             --skip-build
 
       - name: Commit Artifacts
