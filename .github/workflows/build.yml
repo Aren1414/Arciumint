@@ -28,8 +28,18 @@ jobs:
             llvm \
             ca-certificates
 
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure Git Safe Directory
+        run: |
+          git config --global --add safe.directory /__w/Arciumint/Arciumint
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Setup Solana Wallet
         run: |
@@ -40,14 +50,12 @@ jobs:
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
-          echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
           . "$HOME/.cargo/env"
 
       - name: Install Solana 3.1.10
         run: |
           . "$HOME/.cargo/env"
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
-          echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> $HOME/.bashrc
 
       - name: Install Anchor 1.0.2
         run: |
@@ -72,6 +80,23 @@ jobs:
           anchor --version
           echo "=== Arcium Version ==="
           arcium --version
+
+      - name: Verify Directory Structure
+        run: |
+          echo "=== Current Directory ==="
+          pwd
+          echo "=== Directory Contents ==="
+          ls -la
+          echo "=== Arcium Directory Check ==="
+          if [ -d "arcium/disc_mpc" ]; then
+            echo "✓ arcium/disc_mpc exists"
+            ls -la arcium/disc_mpc
+          else
+            echo "✗ arcium/disc_mpc NOT FOUND"
+            echo "Available directories:"
+            find . -type d -maxdepth 3
+            exit 1
+          fi
 
       - name: Generate Program Keypair
         run: |
@@ -132,19 +157,39 @@ jobs:
           echo "Cluster Offset: 456"
           echo "Recovery Set Size: 4"
 
-      - name: Commit Build Artifacts
+      - name: Commit and Push Changes
         if: always()
         run: |
-          # Configure git for container
-          git config --global --add safe.directory /__w/Arciumint/Arciumint
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-
-          # Add and commit changes
-          cd arcium/disc_mpc
-          git add . || true
-          git commit -m "Deploy: Program ID $PROGRAM_ID [skip ci]" || true
-          git push || true
+          cd /__w/Arciumint/Arciumint
+          
+          # Check if there are changes
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "=== Changes detected ==="
+            git status
+            
+            # Add changes
+            git add arcium/disc_mpc/target/deploy/*.json || true
+            git add arcium/disc_mpc/target/idl/*.json || true
+            git add arcium/disc_mpc/target/types/*.ts || true
+            git add arcium/disc_mpc/program-keypair.json || true
+            
+            # Commit
+            git commit -m "Deploy: Program ID $PROGRAM_ID to Devnet [skip ci]" || echo "Nothing to commit"
+            
+            # Push with retry
+            echo "=== Pushing changes ==="
+            for i in {1..3}; do
+              if git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}; then
+                echo "✓ Push successful"
+                break
+              else
+                echo "Push attempt $i failed, retrying..."
+                sleep 5
+              fi
+            done
+          else
+            echo "=== No changes to commit ==="
+          fi
 
       - name: Cleanup on Failure
         if: failure()
@@ -152,6 +197,7 @@ jobs:
           echo "=== Build/Deploy Failed ==="
           echo "Check the logs above for error details"
           echo "Common issues:"
-          echo "1. RPC connection problems - try a different RPC endpoint"
+          echo "1. RPC connection problems"
           echo "2. Insufficient SOL in wallet"
           echo "3. Network congestion"
+          echo "4. Directory structure mismatch"
