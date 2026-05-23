@@ -10,6 +10,11 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
+    env:
+      RUST_BACKTRACE: 1
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: "-C target-cpu=mvp"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,18 +23,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libc6-dev \
-            libc6-dev-i386 \
-            linux-libc-dev \
-            clang \
-            llvm \
-            gcc \
-            curl \
-            git \
-            cmake
+            build-essential pkg-config libssl-dev \
+            clang llvm gcc curl git cmake
 
       - name: Setup Solana Wallet
         run: |
@@ -45,7 +40,7 @@ jobs:
           rustup target add x86_64-unknown-linux-gnu
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana
+      - name: Install Solana (FIXED STABLE TOOLCHAIN)
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
@@ -53,25 +48,24 @@ jobs:
       - name: Install Anchor
         run: |
           cargo install --locked anchor-cli --version 1.0.2
-          anchor --version
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          arcup self update || true
-          arcup update || true
-          arcium --version
+
+      # CRITICAL FIX: prevent SBPF ring crash
+      - name: Force SBPF safe build flags
+        run: |
+          echo "RUSTFLAGS=-C target-cpu=mvp -C link-arg=-z -C link-arg=nostartfiles" >> $GITHUB_ENV
+          echo "CARGO_BUILD_JOBS=2" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
 
       - name: FULL RESET + Generate Program Keypair
         run: |
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-
           cd arcium/disc_mpc
 
-          rm -rf target .anchor build
-          rm -f program-keypair.json
-          rm -f target/deploy/disc_mpc-keypair.json
+          rm -rf target .anchor build program-keypair.json
 
           mkdir -p target/deploy
 
@@ -84,11 +78,9 @@ jobs:
           cp target/deploy/disc_mpc-keypair.json program-keypair.json
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
-
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Generated Program ID: $PROGRAM_ID"
 
-      - name: Sync Program IDs (devnet + localnet FIX)
+      - name: Sync Program IDs (FIXED localnet)
         run: |
           cd arcium/disc_mpc
 
@@ -96,59 +88,26 @@ jobs:
 
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
-          echo "Updating Anchor.toml (devnet + localnet)"
-
           # devnet
           sed -i "s|disc_mpc = \".*\"|disc_mpc = \"$PROGRAM_ID\"|g" Anchor.toml
 
-          # localnet (FIX IMPORTANT)
-          sed -i "/\[programs.localnet\]/!b;n;cdisc_mpc = \"$PROGRAM_ID\"" Anchor.toml
+          # localnet (SAFE replace)
+          awk -v id="$PROGRAM_ID" '
+            $0 ~ /\[programs.localnet\]/ {print; getline; print "disc_mpc = \"" id "\""; next}
+            {print}
+          ' Anchor.toml > tmp && mv tmp Anchor.toml
 
-          echo "------ VERIFY ------"
-          grep disc_mpc Anchor.toml
-
-      - name: Configure Cargo for SBPF
-        run: |
-          mkdir -p ~/.cargo
-          cat > ~/.cargo/config.toml << 'EOF'
-          [target.sbfv2-solana-solana]
-          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
-
-          [target.sbf-solana-solana]
-          rustflags = ["--cfg", "getrandom_backend=\"custom\""]
-          EOF
-
-      # IMPORTANT FIX for ring / SBPF build instability
-      - name: Force safe crypto backend
-        run: |
-          echo "RUSTFLAGS=-C target-cpu=generic" >> $GITHUB_ENV
-          echo "CARGO_BUILD_JOBS=2" >> $GITHUB_ENV
-
-      - name: Generate Cargo.lock
+      - name: Build Program (SBPF SAFE)
         run: |
           cd arcium/disc_mpc
-          cargo generate-lockfile
-
-      - name: Clean Cargo Cache
-        run: |
-          cd arcium/disc_mpc
-          cargo clean
-
-      - name: Build Program
-        run: |
-          cd arcium/disc_mpc
-
-          mkdir -p target/deploy
-          cp program-keypair.json target/deploy/disc_mpc-keypair.json
 
           arcium build --skip-keys-sync
 
-      - name: Verify Final Program ID
+      - name: Verify
         run: |
           cd arcium/disc_mpc
 
-          grep -R "declare_id!" programs || true
-          grep disc_mpc Anchor.toml || true
+          grep disc_mpc Anchor.toml
           solana address -k target/deploy/disc_mpc-keypair.json
 
       - name: Deploy Program
@@ -170,6 +129,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc || true
-
           git commit -m "fresh deploy ${PROGRAM_ID:-unknown}" || true
           git push || true
