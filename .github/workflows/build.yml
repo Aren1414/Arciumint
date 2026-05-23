@@ -8,43 +8,17 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            curl \
-            git \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libudev-dev \
-            clang \
-            llvm \
-            ca-certificates \
-            yarn \
-            gnupg
-
-      - name: Install Solana CLI 3.1.10 (Debian repo method)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y solana-cli
-          solana --version
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Configure Git
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+            build-essential pkg-config libssl-dev libc6-dev clang llvm gcc curl git
 
       - name: Setup Solana Wallet
         run: |
@@ -55,77 +29,60 @@ jobs:
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-          echo 'source $HOME/.cargo/env' >> ~/.bashrc
-          source $HOME/.cargo/env
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor 1.0.2 (via avm)
+      - name: Install Solana (stable channel)
         run: |
-          source $HOME/.cargo/env
-          cargo install --git https://github.com/solana-foundation/anchor avm --locked --force
-          avm install 1.0.2
-          avm use 1.0.2
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana --version
+
+      - name: Install Anchor 1.0.2
+        run: |
+          cargo install --locked anchor-cli --version 1.0.2
           anchor --version
 
-      - name: Install Arcium CLI v0.10.3
+      - name: Install Arcium CLI (v0.10.3)
         run: |
-          source $HOME/.cargo/env
           curl -sSfL https://install.arcium.com/ | bash
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           arcup self update || true
           arcup update || true
           arcium --version
 
-      - name: Verify Versions
-        run: |
-          source $HOME/.cargo/env
-          rustc --version
-          solana --version
-          anchor --version
-          arcium --version
-
-      - name: Verify Directory
-        run: |
-          echo "=== Current Directory ==="
-          pwd
-          ls -la
-          if [ -d "arcium/disc_mpc" ]; then
-            echo "✓ arcium/disc_mpc found"
-          else
-            echo "✗ arcium/disc_mpc NOT FOUND"
-            find . -maxdepth 4 -type d
-            exit 1
-          fi
+      - name: Export PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Generate Program Keypair
         run: |
-          source $HOME/.cargo/env
           cd arcium/disc_mpc
           mkdir -p target/deploy
-
           solana-keygen new \
             --silent \
             --no-bip39-passphrase \
             --outfile target/deploy/disc_mpc-keypair.json \
             --force
-
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
           PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
-          echo "Program ID: $PROGRAM_ID"
 
-      - name: Sync Program IDs
+      - name: Sync Anchor Program IDs
         run: |
-          source $HOME/.cargo/env
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Build Program
+      - name: Force Cargo Clean
         run: |
-          source $HOME/.cargo/env
+          cd arcium/disc_mpc
+          cargo clean
+
+      - name: Build Program (Arcium)
+        run: |
           cd arcium/disc_mpc
           arcium build
 
-      - name: Deploy to Devnet
+      - name: Deploy Program
         run: |
-          source $HOME/.cargo/env
           cd arcium/disc_mpc
           arcium deploy \
             --cluster-offset 456 \
@@ -135,24 +92,11 @@ jobs:
             --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
-      - name: Show Results
-        if: success()
-        run: |
-          echo "=== Success ==="
-          echo "Program ID: $PROGRAM_ID"
-          echo "Cluster: Devnet (456)"
-
-      - name: Commit Changes
+      - name: Commit artifacts
         if: always()
         run: |
-          cd "$GITHUB_WORKSPACE"
-          
-          if [[ -n $(git status --porcelain) ]]; then
-            git add arcium/disc_mpc/target/deploy/*.json || true
-            git add arcium/disc_mpc/target/idl/*.json || true
-            git add arcium/disc_mpc/target/types/*.ts || true
-            
-            git commit -m "Deploy $PROGRAM_ID [skip ci]" || true
-            
-            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }} || true
-          fi
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add arcium/disc_mpc || true
+          git commit -m "fresh deploy $PROGRAM_ID" || true
+          git push || true
