@@ -24,7 +24,14 @@ jobs:
             clang \
             llvm \
             ca-certificates \
-            yarn
+            yarn \
+            gnupg
+
+      - name: Install Solana CLI 3.1.10 (Debian repo method)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y solana-cli
+          solana --version
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -51,14 +58,13 @@ jobs:
           echo 'source $HOME/.cargo/env' >> ~/.bashrc
           source $HOME/.cargo/env
 
-      - name: Install Anchor 1.0.2 + Solana 3.1.10 (via avm)
+      - name: Install Anchor 1.0.2 (via avm)
         run: |
           source $HOME/.cargo/env
           cargo install --git https://github.com/solana-foundation/anchor avm --locked --force
           avm install 1.0.2
           avm use 1.0.2
           anchor --version
-          solana --version
 
       - name: Install Arcium CLI v0.10.3
         run: |
