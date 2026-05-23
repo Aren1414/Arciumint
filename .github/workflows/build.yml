@@ -31,9 +31,12 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana (stable channel)
+      - name: Install Solana (stable)
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
@@ -49,9 +52,6 @@ jobs:
           arcup self update || true
           arcup update || true
           arcium --version
-
-      - name: Export PATH
-        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Generate Program Keypair
         run: |
