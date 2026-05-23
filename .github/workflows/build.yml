@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Install system dependencies
@@ -36,9 +36,9 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-          git.config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git.config --global user.name "github-actions[bot]"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Setup Solana Wallet
         run: |
@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Rust
         run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
           echo 'source $HOME/.cargo/env' >> ~/.bashrc
           source $HOME/.cargo/env
 
@@ -56,24 +56,37 @@ jobs:
         run: |
           source $HOME/.cargo/env
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
 
-      - name: Install Anchor 1.0.2
+      - name: Install Anchor 1.0.2 (via avm)
         run: |
           source $HOME/.cargo/env
-          cargo install --locked anchor-cli --version 1.0.2
+          cargo install --git https://github.com/solana-foundation/anchor avm --locked --force
+          avm install 1.0.2
+          avm use 1.0.2
+          anchor --version
 
-      - name: Install Arcium CLI
+      - name: Install Arcium CLI v0.10.3
         run: |
           source $HOME/.cargo/env
           curl -sSfL https://install.arcium.com/ | bash
+          # به‌روز کردن طبق مستندات
+          arcup self update || true
+          arcup update || true
+          arcium --version
 
       - name: Verify Versions
         run: |
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "=== Rust ==="
           rustc --version
+          echo "=== Solana ==="
           solana --version
+          echo "=== Anchor ==="
           anchor --version
+          echo "=== Arcium ==="
           arcium --version
 
       - name: Verify Directory
@@ -85,7 +98,7 @@ jobs:
             echo "✓ arcium/disc_mpc found"
           else
             echo "✗ arcium/disc_mpc NOT FOUND"
-            find . -type d -maxdepth 3
+            find . -maxdepth 4 -type d
             exit 1
           fi
 
@@ -117,6 +130,7 @@ jobs:
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
+          echo "=== Building ==="
           arcium build
 
       - name: Deploy to Devnet
@@ -124,6 +138,7 @@ jobs:
           source $HOME/.cargo/env
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
+          echo "=== Deploying ==="
           arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
@@ -142,7 +157,7 @@ jobs:
       - name: Commit Changes
         if: always()
         run: |
-          cd $GITHUB_WORKSPACE
+          cd "$GITHUB_WORKSPACE"
           
           if [[ -n $(git status --porcelain) ]]; then
             git add arcium/disc_mpc/target/deploy/*.json || true
@@ -151,5 +166,5 @@ jobs:
             
             git commit -m "Deploy $PROGRAM_ID [skip ci]" || true
             
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }} || true
+            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }} || true
           fi
