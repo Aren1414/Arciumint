@@ -15,6 +15,8 @@ jobs:
       RUSTFLAGS: "-C target-cpu=generic"
       C_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
       CPLUS_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
+      CC: clang
+      CXX: clang++
 
     steps:
       - name: Checkout
@@ -48,7 +50,7 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor CLI (FIXED)
+      - name: Install Anchor CLI
         run: |
           cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -66,11 +68,18 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
+      - name: Force program keypair sync
+        run: |
+          cd arcium/disc_mpc
+
+          rm -rf target .anchor build Cargo.lock
+          cargo clean
+
+          anchor keys sync
+
       - name: Build Program
         run: |
           cd arcium/disc_mpc
-          rm -rf target .anchor build Cargo.lock
-          cargo clean
           arcium build --skip-keys-sync
 
       - name: Deploy Program
@@ -90,7 +99,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc/Anchor.toml \
-                   arcium/disc_mpc/Cargo.lock \
                    arcium/disc_mpc/target \
                    arcium/disc_mpc/build || true
 
