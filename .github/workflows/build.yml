@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04   
 
     steps:
       - name: Checkout
@@ -34,9 +34,7 @@ jobs:
       - name: Install Solana (stable)
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
 
