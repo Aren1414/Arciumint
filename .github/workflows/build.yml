@@ -31,12 +31,12 @@ jobs:
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Solana
+      - name: Install Solana 3.1.10
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor
+      - name: Install Anchor 1.0.2
         run: |
           cargo install --locked anchor-cli --version 1.0.2
 
@@ -44,6 +44,12 @@ jobs:
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Verify Versions
+        run: |
+          solana --version
+          anchor --version
+          arcium --version
 
       - name: Export PATH
         run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
