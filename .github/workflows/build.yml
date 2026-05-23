@@ -36,7 +36,9 @@ jobs:
             llvm \
             git \
             curl \
-            cmake
+            cmake \
+            gcc-multilib \
+            g++-multilib
 
       - name: Install Rust
         run: |
