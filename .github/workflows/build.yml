@@ -72,6 +72,7 @@ jobs:
 
           PROGRAM_ID=$(solana address -k program-keypair.json)
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          echo "Program ID: $PROGRAM_ID"
 
       - name: Sync Anchor Program IDs
         run: |
