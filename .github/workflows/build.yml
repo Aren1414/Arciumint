@@ -67,20 +67,11 @@ jobs:
           anchor --version
           arcium --version
 
-      - name: Set Ring Build Variables
+      - name: Set Build Variables
         run: |
           echo "RING_PREGENERATE_ASM=1" >> $GITHUB_ENV
-
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            arcium/disc_mpc/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> $GITHUB_ENV
+          echo "RUST_BACKTRACE=1" >> $GITHUB_ENV
 
       - name: Generate Program Keypair
         run: |
@@ -104,16 +95,19 @@ jobs:
           cd arcium/disc_mpc
           anchor keys sync
 
-      - name: Force Cargo Clean
+      - name: Complete Clean
         run: |
           cd arcium/disc_mpc
           cargo clean
+          rm -rf target/
+          rm -rf encrypted-ixs/target/
+          rm -rf ~/.cargo/registry/src/*/ring-*
 
       - name: Build Program (Arcium)
         run: |
           cd arcium/disc_mpc
           export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          RING_PREGENERATE_ASM=1 arcium build
+          RING_PREGENERATE_ASM=1 RUST_BACKTRACE=1 arcium build
 
       - name: Deploy Program
         run: |
