@@ -66,10 +66,10 @@ jobs:
           . "$HOME/.cargo/env"
           cargo install --locked anchor-cli --version 1.0.2
 
-      - name: Install Arcium CLI
+      - name: Install Arcium CLI (Cargo method - official CI method)
         run: |
           . "$HOME/.cargo/env"
-          ARCIUM_SKIP_DEPS=1 curl -sSfL https://install.arcium.com/ | bash
+          cargo install --locked arcium-cli
 
       - name: Verify Versions
         run: |
@@ -154,10 +154,10 @@ jobs:
         run: |
           cd /__w/Arciumint/Arciumint
           
-          if [[ -n $(git status --porcelain) ]]; then
+          if [[ -n $(git.status --porcelain) ]]; then
             git add arcium/disc_mpc/target/deploy/*.json || true
-            git add arcium/disc_mpc/target/idl/*.json || true
-            git add arcium/disc_mpc/target/types/*.ts || true
+            git.add arcium/disc_mpc/target/idl/*.json || true
+            git.add arcium/disc_mpc/target/types/*.ts || true
             
             git commit -m "Deploy $PROGRAM_ID [skip ci]" || true
             
