@@ -13,6 +13,7 @@ jobs:
     env:
       RUST_BACKTRACE: 1
       RUSTFLAGS: "-C target-cpu=generic"
+      CARGO_TERM_COLOR: always
 
     steps:
       - name: Checkout
@@ -20,7 +21,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ================= SYSTEM =================
       - name: Install system deps
         run: |
           sudo apt-get update
@@ -34,7 +34,6 @@ jobs:
             curl \
             cmake
 
-      # ================= RUST =================
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -42,57 +41,63 @@ jobs:
           source "$HOME/.cargo/env"
           rustup default stable
 
-      # ================= SOLANA =================
       - name: Install Solana CLI v3
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      # ================= ANCHOR =================
       - name: Install Anchor via AVM
         run: |
           cargo install --git https://github.com/solana-foundation/anchor avm --locked
           avm install 1.0.2
           avm use 1.0.2
-          anchor --version
 
-      # ================= ARCIUM =================
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           arcup update
 
-      # ================= WALLET =================
       - name: Setup wallet
         run: |
           mkdir -p ~/.config/solana
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      # ================= FIX: PROGRAM ID SYNC =================
-      - name: Sync Program IDs (CRITICAL FIX)
+      - name: Prepare program state
         run: |
           cd arcium/disc_mpc
 
-          # clean state
           rm -rf target .anchor build Cargo.lock
           cargo clean
 
-          # THIS FIXES YOUR ERROR
+          mkdir -p target/deploy
+
+          solana-keygen new \
+            --silent \
+            --no-bip39-passphrase \
+            --outfile target/deploy/disc_mpc-keypair.json \
+            --force
+
+          cp target/deploy/disc_mpc-keypair.json program-keypair.json
+
           anchor keys sync
 
-          # verify keypair exists
-          solana address -k target/deploy/disc_mpc-keypair.json
-
-      # ================= BUILD =================
-      - name: Build Program
+      - name: Sync Anchor Program ID
         run: |
           cd arcium/disc_mpc
 
-          arcium build
+          PROGRAM_ID=$(solana address -k target/deploy/disc_mpc-keypair.json)
 
-      # ================= DEPLOY =================
+          sed -i "s|disc_mpc = \".*\"|disc_mpc = \"$PROGRAM_ID\"|g" Anchor.toml
+
+          grep disc_mpc Anchor.toml
+
+      - name: Build Program
+        run: |
+          cd arcium/disc_mpc
+          arcium build --skip-keys-sync
+
       - name: Deploy Program
         run: |
           cd arcium/disc_mpc
@@ -102,24 +107,19 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
+            --program-keypair target/deploy/disc_mpc-keypair.json \
             --skip-build
 
-      # ================= GIT COMMIT =================
       - name: Commit artifacts
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
-          git add arcium/disc_mpc/Anchor.toml \
-                   arcium/disc_mpc/Cargo.lock \
-                   arcium/disc_mpc/target \
-                   arcium/disc_mpc/build \
-                   2>/dev/null || true
+          git add arcium/disc_mpc || true
+          git commit -m "fresh deploy ${GITHUB_SHA}" || true
 
-          git commit -m "fresh deploy ${GITHUB_SHA}" || echo "No changes to commit"
-
-      # ================= PUSH =================
       - name: Push changes
+        if: always()
         run: |
-          git push origin HEAD:${{ github.ref_name }} || echo "Push failed"
+          git push origin HEAD:${{ github.ref_name }} || true
