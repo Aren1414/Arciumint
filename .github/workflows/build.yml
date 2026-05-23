@@ -17,6 +17,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
+
           sudo apt-get install -y \
             build-essential \
             pkg-config \
@@ -33,18 +34,23 @@ jobs:
       - name: Setup Solana Wallet
         run: |
           mkdir -p ~/.config/solana
+
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+
           chmod 600 ~/.config/solana/id.json
 
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
           solana --version
@@ -52,11 +58,13 @@ jobs:
       - name: Install Anchor
         run: |
           cargo install --locked anchor-cli --version 1.0.2
+
           anchor --version
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
+
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
           arcup self update || true
@@ -64,11 +72,20 @@ jobs:
 
           arcium --version
 
-      - name: Generate SINGLE Program Keypair
+      - name: FULL RESET + Generate Program Keypair
         run: |
           cd arcium/disc_mpc
 
+          echo "Cleaning old artifacts..."
+
+          rm -rf target
+          rm -rf .anchor
+          rm -rf build
+          rm -f program-keypair.json
+
           mkdir -p target/deploy
+
+          echo "Generating fresh program keypair..."
 
           solana-keygen new \
             --silent \
@@ -82,33 +99,53 @@ jobs:
 
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
 
-          echo "Using Program ID: $PROGRAM_ID"
+          echo "Generated Program ID:"
+          echo "$PROGRAM_ID"
 
-      - name: Sync Program IDs Everywhere
+      - name: Sync Program IDs
         run: |
           cd arcium/disc_mpc
 
           anchor keys sync
 
-          echo "------ CHECKING IDS ------"
+          echo "------ VERIFYING IDS ------"
 
+          echo "declare_id:"
           grep declare_id programs/src/lib.rs || true
 
+          echo ""
+          echo "Anchor.toml:"
           cat Anchor.toml || true
 
-          echo "Generated key:"
+          echo ""
+          echo "Keypair Address:"
           solana address -k target/deploy/disc_mpc-keypair.json
 
-      - name: Clean Cargo
+      - name: Clean Cargo Cache
         run: |
           cd arcium/disc_mpc
+
           cargo clean
 
       - name: Build Program
         run: |
           cd arcium/disc_mpc
 
+          anchor keys sync
+
           arcium build --skip-keys-sync
+
+      - name: Verify Final Program ID
+        run: |
+          cd arcium/disc_mpc
+
+          echo "Final source declare_id:"
+          grep declare_id programs/src/lib.rs || true
+
+          echo ""
+
+          echo "Final keypair:"
+          solana address -k target/deploy/disc_mpc-keypair.json
 
       - name: Deploy Program
         run: |
@@ -126,6 +163,7 @@ jobs:
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
           git config --global user.name "github-actions[bot]"
 
           git add arcium/disc_mpc || true
