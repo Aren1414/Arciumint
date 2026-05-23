@@ -97,4 +97,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add arcium/disc_mpc || true
           git commit -m "fresh deploy $PROGRAM_ID" || true
-          git push || true
+          git push || true 
