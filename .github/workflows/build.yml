@@ -17,8 +17,6 @@ jobs:
       CPLUS_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
       CC: clang
       CXX: clang++
-      RING_PREGENERATE_ASM: 1
-      RING_ASM: 1
 
     steps:
       - name: Checkout
@@ -84,6 +82,8 @@ jobs:
       - name: Build Program
         run: |
           cd arcium/disc_mpc
+          export RING_PREGENERATE_ASM=1
+          export RING_ASM=1
           arcium build --skip-keys-sync
 
       - name: Deploy Program
