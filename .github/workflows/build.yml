@@ -17,6 +17,8 @@ jobs:
       CPLUS_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
       CC: clang
       CXX: clang++
+      RING_PREGENERATE_ASM: 1
+      RING_ASM: 1
 
     steps:
       - name: Checkout
@@ -78,15 +80,6 @@ jobs:
           cargo clean
 
           anchor keys sync
-
-      - name: Patch ring for Solana SBF
-        run: |
-          cd arcium/disc_mpc
-          mkdir -p .cargo
-          cat > .cargo/config.toml << 'EOF'
-          [patch.crates-io]
-          ring = { git = "https://github.com/solana-labs/ring", branch = "solana" }
-          EOF
 
       - name: Build Program
         run: |
