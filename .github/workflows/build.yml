@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Anchor CLI 0.32.1
         run: |
-          cargo install --locked anchor-cli --version 0.32.1
+          cargo install --locked anchor-cli --version 0.32.1 --force
           anchor --version
 
       - name: Install Arcium CLI
