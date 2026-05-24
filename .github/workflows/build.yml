@@ -29,6 +29,11 @@ jobs:
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
       - name: Install Anchor CLI 0.32.1
         run: |
           cargo install --locked anchor-cli --version 0.32.1 --force
@@ -64,7 +69,6 @@ jobs:
       - name: Build
         run: |
           cd arcium/disc_mpc
-          export RING_PREGENERATE_ASM=0
           arcium build --skip-keys-sync
 
       - name: Deploy
