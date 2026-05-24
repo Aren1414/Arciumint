@@ -29,12 +29,6 @@ jobs:
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Update Solana to version 2.3.0
-        run: |
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana-install update 2.3.0
-          solana --version
-
       - name: Install Anchor CLI 0.32.1
         run: |
           cargo install --locked anchor-cli --version 0.32.1
