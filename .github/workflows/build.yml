@@ -8,85 +8,84 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
-    env:
-      RUST_BACKTRACE: 1
-      RUSTFLAGS: "-C target-cpu=generic"
-      C_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
-      CPLUS_INCLUDE_PATH: /usr/include/x86_64-linux-gnu:/usr/include
-      CC: clang
-      CXX: clang++
-
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install system deps
+      - name: Setup Solana Wallet
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            pkg-config \
-            libssl-dev \
-            libc6-dev \
-            clang \
-            llvm \
-            git \
-            curl \
-            cmake \
-            gcc-multilib \
-            g++-multilib
+          mkdir -p ~/.config/solana
+          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
+          chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust
+      - name: Install Rust and Solana
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           source "$HOME/.cargo/env"
-          rustup default stable
-
-      - name: Install Solana CLI v3
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v3.1.10/install)"
+          rustup toolchain install nightly --profile minimal
+          rustup default nightly
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Install Anchor CLI
+      - name: Update Solana to version 2.3.0
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor anchor-cli --locked
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana-install update 2.3.0
+          solana --version
+
+      - name: Install Anchor CLI 0.32.1
+        run: |
+          cargo install --locked anchor-cli --version 0.32.1
           anchor --version
 
       - name: Install Arcium CLI
         run: |
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          arcup update
 
-      - name: Setup wallet
-        run: |
-          mkdir -p ~/.config/solana
-          echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
-          chmod 600 ~/.config/solana/id.json
-
-      - name: Force program keypair sync
+      - name: Patch Cargo.toml dependencies
         run: |
           cd arcium/disc_mpc
+          if ! grep -q "\[patch.crates-io\]" Cargo.toml; then
+            echo "" >> Cargo.toml
+            echo "[patch.crates-io]" >> Cargo.toml
+            echo "anchor-lang = \"0.32.1\"" >> Cargo.toml
+            echo "borsh = \"0.10.4\"" >> Cargo.toml
+            echo "borsh-derive = \"0.10.4\"" >> Cargo.toml
+            echo "solana-program = \"1.18.11\"" >> Cargo.toml
+          fi
 
-          rm -rf target .anchor build Cargo.lock
-          cargo clean
-
-          anchor keys sync
-
-      - name: Build Program
+      - name: Clean previous builds
         run: |
           cd arcium/disc_mpc
-          export RING_PREGENERATE_ASM=1
-          export RING_ASM=1
+          cargo clean || true
+          rm -rf target || true
+
+      - name: Generate Program ID
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          cd arcium/disc_mpc
+          solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json --force
+          PROGRAM_ID=$(solana address -k program-keypair.json)
+          echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+          sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" Anchor.toml
+          find programs -name "*.rs" -type f -exec sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
+
+      - name: Sync Anchor Keypair
+        run: |
+          cd arcium/disc_mpc
+          mkdir -p target/deploy
+          cp program-keypair.json target/deploy/disc_mpc-keypair.json
+
+      - name: Build
+        run: |
+          cd arcium/disc_mpc
+          export RING_PREGENERATE_ASM=0
           arcium build --skip-keys-sync
 
-      - name: Deploy Program
+      - name: Deploy
         run: |
           cd arcium/disc_mpc
           arcium deploy \
@@ -94,20 +93,19 @@ jobs:
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
             --rpc-url https://api.devnet.solana.com \
+            --program-keypair program-keypair.json \
             --skip-build
 
-      - name: Commit artifacts
+      - name: Test
+        run: |
+          cd arcium/disc_mpc
+          arcium test --cluster devnet
+
+      - name: Commit generated files
         if: always()
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-
-          git add arcium/disc_mpc/Anchor.toml \
-                   arcium/disc_mpc/target \
-                   arcium/disc_mpc/build || true
-
-          git commit -m "fresh deploy ${GITHUB_SHA}" || true
-
-      - name: Push changes
-        run: |
-          git push origin HEAD:${{ github.ref_name }} || true
+          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml arcium/disc_mpc/program-keypair.json 2>/dev/null || true
+          git commit -m "fresh deploy $PROGRAM_ID" 2>/dev/null || echo "No changes to commit"
+          git push 2>/dev/null || echo "Push failed"
