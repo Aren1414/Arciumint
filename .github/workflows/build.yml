@@ -39,18 +39,6 @@ jobs:
           curl -sSfL https://install.arcium.com/ | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Patch Cargo.toml dependencies
-        run: |
-          cd arcium/disc_mpc
-          if ! grep -q "\[patch.crates-io\]" Cargo.toml; then
-            echo "" >> Cargo.toml
-            echo "[patch.crates-io]" >> Cargo.toml
-            echo "anchor-lang = \"0.32.1\"" >> Cargo.toml
-            echo "borsh = \"0.10.4\"" >> Cargo.toml
-            echo "borsh-derive = \"0.10.4\"" >> Cargo.toml
-            echo "solana-program = \"1.18.11\"" >> Cargo.toml
-          fi
-
       - name: Clean previous builds
         run: |
           cd arcium/disc_mpc
