@@ -19,7 +19,7 @@ mod solana_getrandom {
 
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("B9pyK1Ak72w2N3sLQW5AgL8b6rwkcNqiFxYRSLa2FuMU");
+declare_id!("HUrUMF65Zxt86Ad9ce4GgQkQjEA8bkUsq7fxUBwqtmBH");
 
 #[arcium_program]
 pub mod disc_mpc {
