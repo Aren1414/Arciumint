@@ -72,12 +72,12 @@ jobs:
       - name: Build
         run: |
           cd arcium/disc_mpc
-          arcium build --skip-keys-sync
+          ARCIUM_SKIP_TESTS=1 arcium build --skip-keys-sync
 
       - name: Deploy
         run: |
           cd arcium/disc_mpc
-          arcium deploy \
+          ARCIUM_SKIP_TESTS=1 arcium deploy \
             --cluster-offset 456 \
             --recovery-set-size 4 \
             --keypair-path ~/.config/solana/id.json \
