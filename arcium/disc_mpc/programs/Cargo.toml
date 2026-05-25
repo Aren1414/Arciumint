@@ -27,7 +27,9 @@ arcium-client = { version = "0.10.3", default-features = false }
 arcium-macros = { version = "0.10.3" }
 arcium-anchor = { version = "0.10.3" }
 unicode-segmentation = "=1.13.2"
-getrandom = { version = "0.2.17", features = ["dummy"] }
+
+# نسخهٔ صحیح: getrandom با feature = "custom"
+getrandom = { version = "0.2.17", features = ["custom"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
