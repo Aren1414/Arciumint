@@ -6,9 +6,6 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "disc_mpc"
-test = false
-doctest = false
-bench = false
 
 [features]
 default = []
