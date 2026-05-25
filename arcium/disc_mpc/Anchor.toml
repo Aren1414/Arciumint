@@ -22,4 +22,7 @@ members = ["programs", "encrypted-ixs"]
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
 
+[test]
+skip-build = true
+
 [hooks]
