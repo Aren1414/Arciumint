@@ -32,11 +32,11 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential
+          sudo apt-get install -y cmake build-essential pkg-config libudev-dev libssl-dev
 
-      - name: Install Anchor CLI 0.32.1
+      - name: Install Anchor CLI 1.0.2
         run: |
-          cargo install --locked anchor-cli --version 0.32.1 --force
+          cargo install --locked anchor-cli --version 1.0.2 --force
           anchor --version
 
       - name: Install Arcium CLI
@@ -71,6 +71,11 @@ jobs:
           cd arcium/disc_mpc
           arcium build --skip-keys-sync
 
+      - name: Local Test
+        run: |
+          cd arcium/disc_mpc
+          arcium test
+
       - name: Deploy
         run: |
           cd arcium/disc_mpc
@@ -82,7 +87,7 @@ jobs:
             --program-keypair program-keypair.json \
             --skip-build
 
-      - name: Test
+      - name: Devnet Test
         run: |
           cd arcium/disc_mpc
           arcium test --cluster devnet
