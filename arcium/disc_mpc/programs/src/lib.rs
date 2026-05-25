@@ -1,25 +1,9 @@
 use anchor_lang::prelude::*;
 use arcium_anchor::prelude::*;
 
-#[cfg(target_os = "solana")]
-mod solana_getrandom {
-    use getrandom::{register_custom_getrandom, Error};
-    use core::num::NonZeroU32;
-
-    const UNSUPPORTED_CODE: u32 = Error::CUSTOM_START;
-
-    pub fn solana_stub(buf: &mut [u8]) -> Result<(), Error> {
-        
-        let code = NonZeroU32::new(UNSUPPORTED_CODE).unwrap();
-        Err(Error::from(code))
-    }
-
-    register_custom_getrandom!(solana_stub);
-}
-
 const COMP_DEF_OFFSET_COMPUTE_DISC: u32 = comp_def_offset("compute_disc");
 
-declare_id!("HUrUMF65Zxt86Ad9ce4GgQkQjEA8bkUsq7fxUBwqtmBH");
+declare_id!("B9pyK1Ak72w2N3sLQW5AgL8b6rwkcNqiFxYRSLa2FuMU");
 
 #[arcium_program]
 pub mod disc_mpc {
@@ -183,4 +167,4 @@ pub enum ErrorCode {
     AbortedComputation,
     #[msg("Invalid ciphertexts length, expected 28")]
     InvalidCiphertextsLen,
-    }
+}
