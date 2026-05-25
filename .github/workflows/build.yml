@@ -54,11 +54,14 @@ jobs:
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           cd arcium/disc_mpc
+
           solana-keygen new --silent --no-bip39-passphrase --outfile program-keypair.json --force
           PROGRAM_ID=$(solana address -k program-keypair.json)
+
           echo "PROGRAM_ID=$PROGRAM_ID" >> $GITHUB_ENV
+
           sed -i "s/^disc_mpc = \".*\"/disc_mpc = \"$PROGRAM_ID\"/g" Anchor.toml
-          find programs -name "*.rs" -type f -exec sed -i "s/declare_id!(\".*\")/declare_id!(\"$PROGRAM_ID\")/g" {} \;
+          sed -i "s|declare_id!(\".*\")|declare_id!(\"$PROGRAM_ID\")|g" programs/src/lib.rs
 
       - name: Sync Anchor Keypair
         run: |
@@ -97,6 +100,6 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml arcium/disc_mpc/program-keypair.json 2>/dev/null || true
+          git add arcium/disc_mpc/build arcium/disc_mpc/Anchor.toml arcium/disc_mpc/program-keypair.json arcium/disc_mpc/programs/src/lib.rs 2>/dev/null || true
           git commit -m "fresh deploy $PROGRAM_ID" 2>/dev/null || echo "No changes to commit"
           git push 2>/dev/null || echo "Push failed"
