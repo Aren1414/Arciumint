@@ -1,6 +1,7 @@
 [workspace]
 members = ["programs", "encrypted-ixs"]
 resolver = "2"
+exclude = ["tests", "programs/tests"]
 
 [workspace.dependencies]
 anchor-lang = "1.0.2"
