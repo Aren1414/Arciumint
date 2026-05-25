@@ -13,21 +13,26 @@ cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
+
 idl-build = [
     "anchor-lang/idl-build",
     "arcium-anchor/idl-build"
 ]
+
 anchor-debug = []
 custom-heap = []
 custom-panic = []
 
 [dependencies]
 anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
+
 arcium-client = { version = "0.10.3", default-features = false }
 arcium-macros = { version = "0.10.3" }
 arcium-anchor = { version = "0.10.3" }
+
 unicode-segmentation = "=1.13.2"
 
+[target.'cfg(target_os = "solana")'.dependencies]
 getrandom = { version = "0.2.17", default-features = false, features = ["custom"] }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
