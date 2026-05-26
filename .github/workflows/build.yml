@@ -9,6 +9,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,13 +20,20 @@ jobs:
           echo '${{ secrets.SOLANA_KEYPAIR }}' > ~/.config/solana/id.json
           chmod 600 ~/.config/solana/id.json
 
-      - name: Install Rust and Solana
+      
+      - name: Setup Arcium
+        uses: arcium-hq/setup-arcium@v0.10.3
+        with:
+          runner-arch-os: x86_64_linux
+
+      - name: Install Rust + Solana
         run: |
           curl https://sh.rustup.rs -sSf | sh -s -- -y
           source "$HOME/.cargo/env"
           rustup toolchain install nightly --profile minimal
           rustup default nightly
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
           curl -sSfL https://solana-install.solana.workers.dev | bash
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
@@ -38,11 +46,6 @@ jobs:
         run: |
           cargo install --locked anchor-cli --version 1.0.2 --force
           anchor --version
-
-      - name: Install Arcium CLI
-        run: |
-          curl -sSfL https://install.arcium.com/ | bash
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Clean previous builds
         run: |
